@@ -48,6 +48,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Module } from '@/types';
 
 interface PromptField {
   id: string;
@@ -300,6 +301,29 @@ const ModuleEditor = () => {
     return Object.keys(errors).length === 0;
   }, [formData, prompts]);
 
+  const MODULES_STORAGE_KEY = 'wisefamilies_modules';
+
+  const getStoredModules = (): Module[] => {
+    const stored = localStorage.getItem(MODULES_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.map((m: any) => ({
+          ...m,
+          createdAt: new Date(m.createdAt),
+          updatedAt: new Date(m.updatedAt),
+        }));
+      } catch {
+        return [...mockModules];
+      }
+    }
+    return [...mockModules];
+  };
+
+  const saveModulesToStorage = (modules: Module[]) => {
+    localStorage.setItem(MODULES_STORAGE_KEY, JSON.stringify(modules));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -309,17 +333,49 @@ const ModuleEditor = () => {
     }
 
     setIsSaving(true);
+    
+    // Get current modules from storage
+    const storedModules = getStoredModules();
+    
+    const newModule: Module = {
+      id: isNew ? `module-${Date.now()}` : moduleId!,
+      title: formData.title,
+      orderNumber: formData.orderNumber,
+      description: formData.description,
+      videoUrl: formData.videoUrl || undefined,
+      videoType: formData.videoType as 'youtube' | 'vimeo' | 'none',
+      systemPrompt: formData.systemPrompt,
+      status: formData.status as 'draft' | 'published',
+      nextModuleId: formData.nextModuleId === 'auto' ? undefined : formData.nextModuleId,
+      createdAt: isNew ? new Date() : (existingModule?.createdAt || new Date()),
+      updatedAt: new Date(),
+    };
+
+    let updatedModules: Module[];
+    if (isNew) {
+      updatedModules = [...storedModules, newModule];
+    } else {
+      updatedModules = storedModules.map(m => m.id === moduleId ? newModule : m);
+    }
+
+    // Sort by order number
+    updatedModules.sort((a, b) => a.orderNumber - b.orderNumber);
+    saveModulesToStorage(updatedModules);
+
     setTimeout(() => {
       setIsSaving(false);
       setLastSaved(new Date());
       toast.success(isNew ? 'Module created!' : 'Module saved!');
       if (isNew) {
-        navigate('/admin/modules');
+        navigate('/admin/modules?filter=draft');
       }
-    }, 1000);
+    }, 500);
   };
 
   const handleDelete = () => {
+    const storedModules = getStoredModules();
+    const updatedModules = storedModules.filter(m => m.id !== moduleId);
+    saveModulesToStorage(updatedModules);
     toast.success('Module deleted');
     navigate('/admin/modules');
   };
