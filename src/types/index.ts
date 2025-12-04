@@ -15,9 +15,10 @@ export interface Module {
   description: string;
   orderNumber: number;
   videoUrl: string;
-  videoType: 'youtube' | 'vimeo' | 'direct';
+  videoType: 'youtube' | 'vimeo' | 'direct' | 'none';
   systemPrompt: string;
   status: 'draft' | 'published';
+  nextModuleId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,8 +68,11 @@ export interface Purchase {
 
 export interface Settings {
   courseTitle: string;
+  courseDescription: string;
   coursePrice: number;
   llmProvider: 'openai' | 'anthropic' | 'openrouter';
   llmModel: string;
   llmTemperature: number;
+  llmMaxTokens: number;
+  defaultSystemPrompt: string;
 }

@@ -133,10 +133,13 @@ export const mockProgress: Progress[] = [
 
 export const mockSettings: Settings = {
   courseTitle: 'AI-Ready Parenting Framework',
+  courseDescription: 'A comprehensive 14-day course helping parents navigate the AI age with confidence.',
   coursePrice: 69,
-  llmProvider: 'openai',
-  llmModel: 'gpt-4',
+  llmProvider: 'anthropic',
+  llmModel: 'claude-sonnet-4-20250514',
   llmTemperature: 0.7,
+  llmMaxTokens: 1024,
+  defaultSystemPrompt: 'You are a helpful, warm parenting coach helping parents navigate technology and AI with their children. Be practical, empathetic, and give actionable advice. Keep responses conversational but substantive.',
 };
 
 export const mockStats = {
