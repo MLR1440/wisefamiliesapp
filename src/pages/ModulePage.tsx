@@ -1,96 +1,85 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { mockUser, mockModules, mockModulePrompts } from '@/data/mockData';
-import { ArrowRight, ArrowLeft, Send, Sparkles, Play } from 'lucide-react';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import VideoPlayer from '@/components/module/VideoPlayer';
+import ChatInterface from '@/components/module/ChatInterface';
+import { useModule } from '@/hooks/useModules';
+import { useProgress } from '@/hooks/useProgress';
+import { supabase } from '@/integrations/supabase/client';
+import { mockUser } from '@/data/mockData';
 
 const ModulePage = () => {
   const { moduleId } = useParams();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const navigate = useNavigate();
+  const { module, prompts, loading } = useModule(moduleId);
+  const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
+  
+  // For now, use a temporary user ID (will be replaced with auth)
+  const userId = 'temp-user-' + (typeof window !== 'undefined' ? localStorage.getItem('temp_user_id') || (() => {
+    const id = Math.random().toString(36).substring(7);
+    localStorage.setItem('temp_user_id', id);
+    return id;
+  })() : 'default');
+  
+  const { isCompleted, hasStarted, markStarted, markCompleted } = useProgress(userId, moduleId || '');
 
-  const module = mockModules.find((m) => m.id === moduleId);
-  const moduleIndex = mockModules.findIndex((m) => m.id === moduleId);
-  const prompts = mockModulePrompts.filter((p) => p.moduleId === moduleId);
-  const nextModule = mockModules[moduleIndex + 1];
-  const prevModule = mockModules[moduleIndex - 1];
+  // Fetch all modules for navigation
+  useEffect(() => {
+    const fetchModules = async () => {
+      const { data } = await supabase
+        .from('modules')
+        .select('id, title, description, order_number')
+        .eq('status', 'published')
+        .order('order_number');
+      if (data) setModules(data);
+    };
+    fetchModules();
+  }, []);
 
-  if (!module) {
+  const moduleIndex = modules.findIndex((m) => m.id === moduleId);
+  const nextModule = modules[moduleIndex + 1];
+  const prevModule = modules[moduleIndex - 1];
+
+  const handleFirstInteraction = () => {
+    markStarted();
+  };
+
+  const handleComplete = async (checked: boolean) => {
+    if (checked) {
+      await markCompleted();
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Module not found</p>
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+        <main className="container py-8 md:py-12 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
       </div>
     );
   }
 
-  const handlePromptClick = (promptText: string) => {
-    setHasInteracted(true);
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: promptText,
-    };
-    setMessages([...messages, userMessage]);
-
-    // Simulate AI response
-    setIsTyping(true);
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Great question! This is a simulated response about "${promptText.substring(0, 50)}...". In the full implementation, this would connect to your configured LLM provider to provide personalized guidance based on your parenting situation.`,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
-
-    setHasInteracted(true);
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputValue,
-    };
-    setMessages([...messages, userMessage]);
-    setInputValue('');
-
-    // Simulate AI response
-    setIsTyping(true);
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Thank you for sharing that. This is a simulated response to your question. In the full implementation, this would provide personalized AI coaching based on the module's system prompt and your specific parenting situation.`,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  // Extract YouTube video ID for embedding
-  const getYouTubeEmbedUrl = (url: string) => {
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-  };
-
-  const embedUrl = getYouTubeEmbedUrl(module.videoUrl);
+  if (!module) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+        <main className="container py-8 md:py-12">
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-muted-foreground mb-4">Module not found</p>
+            <Link to="/dashboard">
+              <Button variant="soft">Back to Dashboard</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,9 +97,11 @@ const ModulePage = () => {
 
         {/* Module header */}
         <div className="mb-8">
-          <span className="mb-2 inline-block text-sm font-medium text-secondary">
-            Module {moduleIndex + 1} of {mockModules.length}
-          </span>
+          {modules.length > 0 && (
+            <span className="mb-2 inline-block text-sm font-medium text-secondary">
+              Module {moduleIndex + 1} of {modules.length}
+            </span>
+          )}
           <h1 className="mb-3 font-heading text-3xl font-bold text-foreground md:text-4xl">
             {module.title}
           </h1>
@@ -121,113 +112,23 @@ const ModulePage = () => {
           {/* Main content - Video & Chat */}
           <div className="lg:col-span-3 space-y-8">
             {/* Video Section */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-              {embedUrl ? (
-                <div className="aspect-video">
-                  <iframe
-                    src={embedUrl}
-                    title={module.title}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <div className="flex aspect-video items-center justify-center bg-muted">
-                  <div className="text-center">
-                    <Play className="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
-                    <p className="text-muted-foreground">Video player placeholder</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <VideoPlayer
+              videoUrl={module.video_url}
+              videoType={module.video_type}
+              title={module.title}
+            />
 
             {/* Chat Section */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-              <div className="border-b border-border bg-muted/50 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-accent" />
-                  <h2 className="font-heading font-semibold text-foreground">
-                    AI Coaching Assistant
-                  </h2>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Ask questions about this module or get personalized parenting guidance
-                </p>
-              </div>
-
-              {/* Messages area */}
-              <div className="h-[400px] overflow-y-auto p-6">
-                {messages.length === 0 ? (
-                  <div className="space-y-4">
-                    <p className="text-center text-muted-foreground">
-                      Start a conversation with one of these prompts:
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {prompts.map((prompt) => (
-                        <button
-                          key={prompt.id}
-                          onClick={() => handlePromptClick(prompt.promptText)}
-                          className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft"
-                        >
-                          <span className="text-sm font-medium text-foreground">
-                            {prompt.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${
-                          message.role === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                            message.role === 'user'
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-muted text-foreground'
-                          }`}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {isTyping && (
-                      <div className="flex justify-start">
-                        <div className="rounded-2xl bg-muted px-4 py-3">
-                          <div className="flex gap-1">
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '0ms' }} />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '150ms' }} />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '300ms' }} />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Input area */}
-              <form
-                onSubmit={handleSendMessage}
-                className="flex items-center gap-3 border-t border-border bg-muted/30 p-4"
-              >
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask a question..."
-                  className="flex-1"
-                />
-                <Button type="submit" size="icon" disabled={!inputValue.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
-            </div>
+            <ChatInterface
+              moduleId={module.id}
+              userId={userId}
+              starterPrompts={prompts.map(p => ({
+                id: p.id,
+                label: p.label,
+                prompt_text: p.prompt_text,
+              }))}
+              onFirstInteraction={handleFirstInteraction}
+            />
           </div>
 
           {/* Sidebar - Navigation */}
@@ -238,7 +139,7 @@ const ModulePage = () => {
                 <Checkbox
                   id="complete"
                   checked={isCompleted}
-                  onCheckedChange={(checked) => setIsCompleted(checked as boolean)}
+                  onCheckedChange={handleComplete}
                 />
                 <label
                   htmlFor="complete"
@@ -263,15 +164,15 @@ const ModulePage = () => {
                 </p>
                 <Link to={`/course/${nextModule.id}`}>
                   <Button
-                    variant={hasInteracted ? 'cta' : 'soft'}
+                    variant={hasStarted ? 'cta' : 'soft'}
                     className="mt-4 w-full gap-2"
-                    disabled={!hasInteracted}
+                    disabled={!hasStarted}
                   >
                     Continue to Next Module
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                {!hasInteracted && (
+                {!hasStarted && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     Complete at least one prompt to continue
                   </p>
