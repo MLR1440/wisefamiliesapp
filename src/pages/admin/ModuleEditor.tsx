@@ -28,8 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { mockAdminUser, mockModules, mockModulePrompts, mockSettings } from '@/data/mockData';
-import { ArrowLeft, Plus, Trash2, Save, GripVertical, ExternalLink, Play, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { mockAdminUser, mockSettings } from '@/data/mockData';
+import { ArrowLeft, Plus, Trash2, Save, GripVertical, ExternalLink, Play, HelpCircle, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DndContext,
@@ -48,7 +48,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Module } from '@/types';
+import { useModule, useModules } from '@/hooks/useModules';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PromptField {
   id: string;
@@ -169,36 +170,64 @@ const ModuleEditor = () => {
   const navigate = useNavigate();
   const isNew = moduleId === 'new';
   
-  const existingModule = mockModules.find((m) => m.id === moduleId);
-  const existingPrompts = mockModulePrompts.filter((p) => p.moduleId === moduleId);
+  const { module: existingModule, prompts: existingPrompts, loading: moduleLoading } = useModule(moduleId);
+  const { modules: allModules, createModule, updateModule, deleteModule } = useModules();
 
   const [formData, setFormData] = useState({
-    title: existingModule?.title || 'New Module',
-    orderNumber: existingModule?.orderNumber || mockModules.length + 1,
-    description: existingModule?.description || '',
-    videoUrl: existingModule?.videoUrl || '',
-    videoType: existingModule?.videoType || 'none',
-    systemPrompt: existingModule?.systemPrompt || mockSettings.defaultSystemPrompt,
-    status: existingModule?.status || 'draft',
-    nextModuleId: existingModule?.nextModuleId || 'auto',
+    title: 'New Module',
+    orderNumber: 1,
+    description: '',
+    videoUrl: '',
+    videoType: 'none',
+    systemPrompt: mockSettings.defaultSystemPrompt,
+    status: 'draft',
+    nextModuleId: 'auto',
   });
 
-  const [prompts, setPrompts] = useState<PromptField[]>(
-    existingPrompts.length > 0
-      ? existingPrompts.map((p) => ({
-          id: p.id,
-          label: p.label,
-          promptText: p.promptText,
-        }))
-      : [{ id: '1', label: '', promptText: '' }]
-  );
+  const [prompts, setPrompts] = useState<PromptField[]>([
+    { id: '1', label: '', promptText: '' }
+  ]);
 
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(existingModule ? existingModule.updatedAt : null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Load existing module data
+  useEffect(() => {
+    if (existingModule) {
+      setFormData({
+        title: existingModule.title,
+        orderNumber: existingModule.order_number,
+        description: existingModule.description,
+        videoUrl: existingModule.video_url,
+        videoType: existingModule.video_type,
+        systemPrompt: existingModule.system_prompt,
+        status: existingModule.status,
+        nextModuleId: existingModule.next_module_id || 'auto',
+      });
+      setLastSaved(new Date(existingModule.updated_at));
+    }
+    
+    if (existingPrompts.length > 0) {
+      setPrompts(existingPrompts.map(p => ({
+        id: p.id,
+        label: p.label,
+        promptText: p.prompt_text,
+      })));
+    }
+  }, [existingModule, existingPrompts]);
+
+  // Set default order number for new modules
+  useEffect(() => {
+    if (isNew && allModules.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        orderNumber: allModules.length + 1
+      }));
+    }
+  }, [isNew, allModules.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -301,29 +330,6 @@ const ModuleEditor = () => {
     return Object.keys(errors).length === 0;
   }, [formData, prompts]);
 
-  const MODULES_STORAGE_KEY = 'wisefamilies_modules';
-
-  const getStoredModules = (): Module[] => {
-    const stored = localStorage.getItem(MODULES_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        return parsed.map((m: any) => ({
-          ...m,
-          createdAt: new Date(m.createdAt),
-          updatedAt: new Date(m.updatedAt),
-        }));
-      } catch {
-        return [...mockModules];
-      }
-    }
-    return [...mockModules];
-  };
-
-  const saveModulesToStorage = (modules: Module[]) => {
-    localStorage.setItem(MODULES_STORAGE_KEY, JSON.stringify(modules));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -333,51 +339,64 @@ const ModuleEditor = () => {
     }
 
     setIsSaving(true);
-    
-    // Get current modules from storage
-    const storedModules = getStoredModules();
-    
-    const newModule: Module = {
-      id: isNew ? `module-${Date.now()}` : moduleId!,
-      title: formData.title,
-      orderNumber: formData.orderNumber,
-      description: formData.description,
-      videoUrl: formData.videoUrl || undefined,
-      videoType: formData.videoType as 'youtube' | 'vimeo' | 'none',
-      systemPrompt: formData.systemPrompt,
-      status: formData.status as 'draft' | 'published',
-      nextModuleId: formData.nextModuleId === 'auto' ? undefined : formData.nextModuleId,
-      createdAt: isNew ? new Date() : (existingModule?.createdAt || new Date()),
-      updatedAt: new Date(),
-    };
 
-    let updatedModules: Module[];
-    if (isNew) {
-      updatedModules = [...storedModules, newModule];
-    } else {
-      updatedModules = storedModules.map(m => m.id === moduleId ? newModule : m);
-    }
+    try {
+      const moduleData = {
+        title: formData.title,
+        order_number: formData.orderNumber,
+        description: formData.description,
+        video_url: formData.videoUrl,
+        video_type: formData.videoType,
+        system_prompt: formData.systemPrompt,
+        status: formData.status,
+        next_module_id: formData.nextModuleId === 'auto' ? null : formData.nextModuleId,
+      };
 
-    // Sort by order number
-    updatedModules.sort((a, b) => a.orderNumber - b.orderNumber);
-    saveModulesToStorage(updatedModules);
+      let savedModuleId: string;
 
-    setTimeout(() => {
-      setIsSaving(false);
+      if (isNew) {
+        const newModule = await createModule(moduleData);
+        savedModuleId = newModule.id;
+      } else {
+        await updateModule(moduleId!, moduleData);
+        savedModuleId = moduleId!;
+      }
+
+      // Save prompts - delete existing and insert new
+      await supabase.from('module_prompts').delete().eq('module_id', savedModuleId);
+      
+      const validPrompts = prompts.filter(p => p.label.trim() || p.promptText.trim());
+      if (validPrompts.length > 0) {
+        const inserts = validPrompts.map((p, idx) => ({
+          module_id: savedModuleId,
+          label: p.label,
+          prompt_text: p.promptText,
+          order_number: idx + 1,
+        }));
+        await supabase.from('module_prompts').insert(inserts);
+      }
+
       setLastSaved(new Date());
       toast.success(isNew ? 'Module created!' : 'Module saved!');
+      
       if (isNew) {
         navigate('/admin/modules?filter=draft');
       }
-    }, 500);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save module');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    const storedModules = getStoredModules();
-    const updatedModules = storedModules.filter(m => m.id !== moduleId);
-    saveModulesToStorage(updatedModules);
-    toast.success('Module deleted');
-    navigate('/admin/modules');
+  const handleDelete = async () => {
+    try {
+      await deleteModule(moduleId!);
+      toast.success('Module deleted');
+      navigate('/admin/modules');
+    } catch (error) {
+      toast.error('Failed to delete module');
+    }
   };
 
   const handleTestVideo = () => {
@@ -432,8 +451,19 @@ const ModuleEditor = () => {
 
   // Get next module for preview
   const nextModule = formData.nextModuleId === 'auto'
-    ? mockModules.find(m => m.orderNumber === formData.orderNumber + 1)
-    : mockModules.find(m => m.id === formData.nextModuleId);
+    ? allModules.find(m => m.order_number === formData.orderNumber + 1)
+    : allModules.find(m => m.id === formData.nextModuleId);
+
+  if (moduleLoading && !isNew) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+        <main className="container py-8 md:py-12 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -732,11 +762,11 @@ const ModuleEditor = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="auto">Auto (next by order)</SelectItem>
-                    {mockModules
+                    {allModules
                       .filter(m => m.id !== moduleId)
                       .map(module => (
                         <SelectItem key={module.id} value={module.id}>
-                          {module.orderNumber}. {module.title}
+                          {module.order_number}. {module.title}
                         </SelectItem>
                       ))}
                   </SelectContent>
