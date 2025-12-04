@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,32 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Module } from '@/types';
+
+const MODULES_STORAGE_KEY = 'wisefamilies_modules';
+
+// Utility to get modules from localStorage or mock data
+const getStoredModules = (): Module[] => {
+  const stored = localStorage.getItem(MODULES_STORAGE_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      // Convert date strings back to Date objects
+      return parsed.map((m: any) => ({
+        ...m,
+        createdAt: new Date(m.createdAt),
+        updatedAt: new Date(m.updatedAt),
+      }));
+    } catch {
+      return [...mockModules];
+    }
+  }
+  return [...mockModules];
+};
+
+// Utility to save modules to localStorage
+const saveModulesToStorage = (modules: Module[]) => {
+  localStorage.setItem(MODULES_STORAGE_KEY, JSON.stringify(modules));
+};
 
 interface SortableModuleItemProps {
   module: Module;
@@ -138,9 +165,26 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
   );
 };
 
+type FilterTab = 'all' | 'published' | 'draft';
+
 const AdminModules = () => {
-  const [modules, setModules] = useState<Module[]>([...mockModules].sort((a, b) => a.orderNumber - b.orderNumber));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [modules, setModules] = useState<Module[]>([]);
   const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
+  const currentFilter = (searchParams.get('filter') as FilterTab) || 'all';
+
+  // Load modules from storage on mount
+  useEffect(() => {
+    const storedModules = getStoredModules();
+    setModules(storedModules.sort((a, b) => a.orderNumber - b.orderNumber));
+  }, []);
+
+  // Save modules whenever they change
+  useEffect(() => {
+    if (modules.length > 0) {
+      saveModulesToStorage(modules);
+    }
+  }, [modules]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -182,6 +226,25 @@ const AdminModules = () => {
     }
   };
 
+  const handleFilterChange = (value: string) => {
+    if (value === 'all') {
+      searchParams.delete('filter');
+    } else {
+      searchParams.set('filter', value);
+    }
+    setSearchParams(searchParams);
+  };
+
+  // Filter modules based on current tab
+  const filteredModules = modules.filter(m => {
+    if (currentFilter === 'published') return m.status === 'published';
+    if (currentFilter === 'draft') return m.status === 'draft';
+    return true;
+  });
+
+  const draftCount = modules.filter(m => m.status === 'draft').length;
+  const publishedCount = modules.filter(m => m.status === 'published').length;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
@@ -197,7 +260,7 @@ const AdminModules = () => {
         </Link>
 
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
               Course Modules
@@ -214,19 +277,34 @@ const AdminModules = () => {
           </Link>
         </div>
 
+        {/* Filter Tabs */}
+        <Tabs value={currentFilter} onValueChange={handleFilterChange} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="all">
+              All ({modules.length})
+            </TabsTrigger>
+            <TabsTrigger value="published">
+              Published ({publishedCount})
+            </TabsTrigger>
+            <TabsTrigger value="draft">
+              Drafts ({draftCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {/* Modules list */}
-        {modules.length > 0 ? (
+        {filteredModules.length > 0 ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={modules.map(m => m.id)}
+              items={filteredModules.map(m => m.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-3">
-                {modules.map((module, index) => (
+                {filteredModules.map((module, index) => (
                   <SortableModuleItem
                     key={module.id}
                     module={module}
@@ -240,7 +318,13 @@ const AdminModules = () => {
           </DndContext>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
-            <p className="mb-4 text-muted-foreground">No modules yet</p>
+            <p className="mb-4 text-muted-foreground">
+              {currentFilter === 'draft' 
+                ? 'No draft modules' 
+                : currentFilter === 'published' 
+                  ? 'No published modules' 
+                  : 'No modules yet'}
+            </p>
             <Link to="/admin/modules/new">
               <Button variant="cta" className="gap-2">
                 <Plus className="h-4 w-4" />
