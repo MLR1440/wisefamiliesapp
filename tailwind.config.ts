@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        heading: ["Poppins", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +61,35 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        teal: {
+          50: "hsl(178 58% 95%)",
+          100: "hsl(178 55% 90%)",
+          200: "hsl(178 52% 80%)",
+          300: "hsl(178 50% 65%)",
+          400: "hsl(178 55% 45%)",
+          500: "hsl(178 58% 35%)",
+          600: "hsl(178 58% 24%)",
+          700: "hsl(178 60% 18%)",
+          800: "hsl(178 62% 12%)",
+          900: "hsl(178 65% 8%)",
+        },
+        coral: {
+          50: "hsl(14 70% 95%)",
+          100: "hsl(14 68% 90%)",
+          200: "hsl(14 65% 80%)",
+          300: "hsl(14 70% 70%)",
+          400: "hsl(14 70% 63%)",
+          500: "hsl(14 72% 55%)",
+          600: "hsl(14 75% 45%)",
+        },
+        orange: {
+          50: "hsl(29 87% 95%)",
+          100: "hsl(29 85% 90%)",
+          200: "hsl(29 85% 80%)",
+          300: "hsl(29 87% 67%)",
+          400: "hsl(29 85% 55%)",
+          500: "hsl(29 80% 45%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +98,21 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s infinite",
       },
     },
   },
