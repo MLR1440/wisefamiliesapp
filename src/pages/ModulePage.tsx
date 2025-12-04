@@ -118,8 +118,9 @@ const ModulePage = () => {
               title={module.title}
             />
 
-            {/* Chat Section */}
+            {/* Chat Section - key forces remount on module change */}
             <ChatInterface
+              key={module.id}
               moduleId={module.id}
               userId={userId}
               starterPrompts={prompts.map(p => ({
