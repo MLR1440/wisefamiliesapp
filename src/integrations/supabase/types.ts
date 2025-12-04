@@ -14,7 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      module_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          module_id: string
+          order_number: number
+          prompt_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          module_id: string
+          order_number?: number
+          prompt_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          module_id?: string
+          order_number?: number
+          prompt_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_prompts_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          next_module_id: string | null
+          order_number: number
+          status: string
+          system_prompt: string
+          title: string
+          updated_at: string
+          video_type: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          next_module_id?: string | null
+          order_number?: number
+          status?: string
+          system_prompt?: string
+          title: string
+          updated_at?: string
+          video_type?: string
+          video_url?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          next_module_id?: string | null
+          order_number?: number
+          status?: string
+          system_prompt?: string
+          title?: string
+          updated_at?: string
+          video_type?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modules_next_module_id_fkey"
+            columns: ["next_module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
