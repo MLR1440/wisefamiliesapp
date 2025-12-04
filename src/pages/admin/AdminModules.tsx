@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { mockAdminUser, mockModules, mockModulePrompts } from '@/data/mockData';
-import { Plus, Edit, GripVertical, Eye, ArrowLeft, Trash2, Video, MessageSquare } from 'lucide-react';
+import { mockAdminUser } from '@/data/mockData';
+import { Plus, Edit, GripVertical, Eye, ArrowLeft, Trash2, Video, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DndContext,
@@ -34,42 +34,17 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Module } from '@/types';
-
-const MODULES_STORAGE_KEY = 'wisefamilies_modules';
-
-// Utility to get modules from localStorage or mock data
-const getStoredModules = (): Module[] => {
-  const stored = localStorage.getItem(MODULES_STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      // Convert date strings back to Date objects
-      return parsed.map((m: any) => ({
-        ...m,
-        createdAt: new Date(m.createdAt),
-        updatedAt: new Date(m.updatedAt),
-      }));
-    } catch {
-      return [...mockModules];
-    }
-  }
-  return [...mockModules];
-};
-
-// Utility to save modules to localStorage
-const saveModulesToStorage = (modules: Module[]) => {
-  localStorage.setItem(MODULES_STORAGE_KEY, JSON.stringify(modules));
-};
+import { useModules, DbModule } from '@/hooks/useModules';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SortableModuleItemProps {
-  module: Module;
+  module: DbModule;
   index: number;
-  promptsCount: number;
   onDelete: (id: string) => void;
 }
 
-const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableModuleItemProps) => {
+const SortableModuleItem = ({ module, index, onDelete }: SortableModuleItemProps) => {
+  const [promptsCount, setPromptsCount] = useState(0);
   const {
     attributes,
     listeners,
@@ -79,13 +54,24 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
     isDragging,
   } = useSortable({ id: module.id });
 
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('module_prompts')
+        .select('*', { count: 'exact', head: true })
+        .eq('module_id', module.id);
+      setPromptsCount(count || 0);
+    };
+    fetchCount();
+  }, [module.id]);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const hasVideo = module.videoUrl && module.videoType !== 'none';
+  const hasVideo = module.video_url && module.video_type !== 'none';
 
   return (
     <div
@@ -93,7 +79,6 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
       style={style}
       className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-soft"
     >
-      {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
@@ -102,12 +87,10 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
         <GripVertical className="h-5 w-5" />
       </button>
 
-      {/* Order number */}
       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 font-heading font-semibold text-primary">
         {index + 1}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="font-heading font-semibold text-foreground truncate">
@@ -122,7 +105,6 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
         </p>
       </div>
 
-      {/* Indicators */}
       <div className="hidden items-center gap-3 sm:flex">
         {hasVideo ? (
           <div className="flex items-center gap-1.5 text-sm text-primary">
@@ -139,7 +121,6 @@ const SortableModuleItem = ({ module, index, promptsCount, onDelete }: SortableM
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <Link to={`/course/${module.id}`}>
           <Button variant="ghost" size="icon" title="Preview">
@@ -169,22 +150,9 @@ type FilterTab = 'all' | 'published' | 'draft';
 
 const AdminModules = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [modules, setModules] = useState<Module[]>([]);
+  const { modules, loading, deleteModule, reorderModules } = useModules();
   const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
   const currentFilter = (searchParams.get('filter') as FilterTab) || 'all';
-
-  // Load modules from storage on mount
-  useEffect(() => {
-    const storedModules = getStoredModules();
-    setModules(storedModules.sort((a, b) => a.orderNumber - b.orderNumber));
-  }, []);
-
-  // Save modules whenever they change
-  useEffect(() => {
-    if (modules.length > 0) {
-      saveModulesToStorage(modules);
-    }
-  }, [modules]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -193,35 +161,31 @@ const AdminModules = () => {
     })
   );
 
-  const getPromptsCount = useCallback((moduleId: string) => {
-    return mockModulePrompts.filter(p => p.moduleId === moduleId).length;
-  }, []);
-
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setModules((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        
-        const newItems = arrayMove(items, oldIndex, newIndex);
-        // Update order numbers
-        const reordered = newItems.map((item, idx) => ({
-          ...item,
-          orderNumber: idx + 1,
-        }));
-        
+      const oldIndex = modules.findIndex((item) => item.id === active.id);
+      const newIndex = modules.findIndex((item) => item.id === over.id);
+      const reordered = arrayMove(modules, oldIndex, newIndex);
+      
+      try {
+        await reorderModules(reordered);
         toast.success('Module order updated');
-        return reordered;
-      });
+      } catch (error) {
+        toast.error('Failed to update order');
+      }
     }
   };
 
-  const handleDeleteModule = () => {
+  const handleDeleteModule = async () => {
     if (deleteModuleId) {
-      setModules(modules.filter(m => m.id !== deleteModuleId));
-      toast.success('Module deleted');
+      try {
+        await deleteModule(deleteModuleId);
+        toast.success('Module deleted');
+      } catch (error) {
+        toast.error('Failed to delete module');
+      }
       setDeleteModuleId(null);
     }
   };
@@ -235,7 +199,6 @@ const AdminModules = () => {
     setSearchParams(searchParams);
   };
 
-  // Filter modules based on current tab
   const filteredModules = modules.filter(m => {
     if (currentFilter === 'published') return m.status === 'published';
     if (currentFilter === 'draft') return m.status === 'draft';
@@ -245,12 +208,22 @@ const AdminModules = () => {
   const draftCount = modules.filter(m => m.status === 'draft').length;
   const publishedCount = modules.filter(m => m.status === 'published').length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+        <main className="container py-8 md:py-12 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
 
       <main className="container py-8 md:py-12">
-        {/* Back link */}
         <Link
           to="/admin"
           className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -259,7 +232,6 @@ const AdminModules = () => {
           Back to Admin
         </Link>
 
-        {/* Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
@@ -277,7 +249,6 @@ const AdminModules = () => {
           </Link>
         </div>
 
-        {/* Filter Tabs */}
         <Tabs value={currentFilter} onValueChange={handleFilterChange} className="mb-6">
           <TabsList>
             <TabsTrigger value="all">
@@ -292,7 +263,6 @@ const AdminModules = () => {
           </TabsList>
         </Tabs>
 
-        {/* Modules list */}
         {filteredModules.length > 0 ? (
           <DndContext
             sensors={sensors}
@@ -309,7 +279,6 @@ const AdminModules = () => {
                     key={module.id}
                     module={module}
                     index={index}
-                    promptsCount={getPromptsCount(module.id)}
                     onDelete={setDeleteModuleId}
                   />
                 ))}
@@ -335,7 +304,6 @@ const AdminModules = () => {
         )}
       </main>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteModuleId} onOpenChange={() => setDeleteModuleId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
