@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export interface ChatMessage {
   id: string;
@@ -16,6 +17,7 @@ interface UseChatOptions {
 export const useChat = ({ moduleId, userId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -56,8 +58,8 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
             })));
           }
         }
-      } catch (error) {
-        console.error('Error loading conversation:', error);
+      } catch (err) {
+        console.error('Error loading conversation:', err);
       } finally {
         setIsLoadingHistory(false);
       }
@@ -101,6 +103,7 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
     if (!content.trim() || isLoading) return;
 
     setIsLoading(true);
+    setError(null);
     
     // Add user message to UI immediately
     const userMessage: ChatMessage = {
@@ -196,23 +199,32 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
           prev.map(m => m.id === assistantMessageId ? { ...m, id: savedAssistantMsg.id } : m)
         );
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
         console.log('Request aborted');
       } else {
-        console.error('Chat error:', error);
-        // Add error message
-        setMessages(prev => [...prev, {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          content: `Sorry, I encountered an error: ${error.message}. Please try again.`,
-        }]);
+        console.error('Chat error:', err);
+        setError(err.message || 'Failed to get response');
+        // Remove the failed user message from UI if no response was started
+        setMessages(prev => {
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.role === 'user' && lastMsg.id.startsWith('temp-')) {
+            return prev.slice(0, -1);
+          }
+          return prev;
+        });
       }
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
   }, [messages, moduleId, userId, isLoading, conversationId]);
+
+  // Retry last failed message
+  const retryLastMessage = useCallback((content: string) => {
+    setError(null);
+    sendMessage(content);
+  }, [sendMessage]);
 
   // Clear conversation
   const clearConversation = useCallback(async () => {
@@ -222,6 +234,7 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
     }
     setMessages([]);
     setConversationId(null);
+    setError(null);
   }, [conversationId]);
 
   // Cancel ongoing request
@@ -233,8 +246,10 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
     messages,
     isLoading,
     isLoadingHistory,
+    error,
     sendMessage,
     clearConversation,
+    retryLastMessage,
     cancelRequest,
     hasHistory: messages.length > 0,
   };
