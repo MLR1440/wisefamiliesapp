@@ -205,12 +205,20 @@ const AdminDashboard = () => {
           <h2 className="mb-3 md:mb-4 font-heading text-lg md:text-xl font-semibold text-foreground">
             Quick Actions
           </h2>
-          <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-5">
             <Link to="/admin/modules">
               <Button variant="outline" className="h-auto w-full flex-col gap-1 md:gap-2 p-4 md:p-6">
                 <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 <span className="font-semibold text-sm md:text-base">Manage Modules</span>
                 <span className="text-xs text-muted-foreground">{modules.length} modules</span>
+              </Button>
+            </Link>
+
+            <Link to="/admin/users">
+              <Button variant="outline" className="h-auto w-full flex-col gap-1 md:gap-2 p-4 md:p-6">
+                <Users className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                <span className="font-semibold text-sm md:text-base">Manage Users</span>
+                <span className="text-xs text-muted-foreground">View all users</span>
               </Button>
             </Link>
 
