@@ -3,9 +3,11 @@ import { Lock, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const Paywall = () => {
   const [loading, setLoading] = useState(false);
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
 
   const handlePurchase = async () => {
     setLoading(true);
@@ -58,7 +60,9 @@ const Paywall = () => {
       </div>
 
       <div className="mb-6">
-        <div className="text-4xl font-bold text-foreground">$99</div>
+        <div className="text-4xl font-bold text-foreground">
+          {priceLoading ? '...' : formattedPrice}
+        </div>
         <div className="text-sm text-muted-foreground">one-time payment</div>
       </div>
 

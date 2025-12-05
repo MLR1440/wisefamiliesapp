@@ -1,8 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
+  const { formattedPrice } = useCoursePrice();
+
   return (
     <section className="bg-gradient-hero py-20 md:py-28">
       <div className="container">
@@ -16,7 +19,7 @@ const CTA = () => {
           </p>
           <Link to="/signup">
             <Button variant="cta" size="xl" className="gap-2">
-              Get Instant Access — $69
+              Get Instant Access — {formattedPrice}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>

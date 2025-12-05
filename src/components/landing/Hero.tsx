@@ -1,8 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const Hero = () => {
+  const { formattedPrice } = useCoursePrice();
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-muted/50 to-background py-20 md:py-32">
       {/* Background decoration */}
@@ -37,7 +40,7 @@ const Hero = () => {
           <div className="flex flex-col items-center justify-center gap-4 animate-fade-up sm:flex-row" style={{ animationDelay: '0.3s' }}>
             <Link to="/signup">
               <Button variant="cta" size="xl" className="gap-2">
-                Get Instant Access — $69
+                Get Instant Access — {formattedPrice}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
