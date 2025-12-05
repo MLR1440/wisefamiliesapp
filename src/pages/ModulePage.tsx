@@ -18,7 +18,7 @@ import { toast } from '@/hooks/use-toast';
 const ModulePage = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, hasAccess, checkingPayment } = useAuth();
   const { module, prompts, loading } = useModule(moduleId);
   const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
@@ -88,11 +88,18 @@ const ModulePage = () => {
     }
   };
 
+  // Redirect if user doesn't have access
+  useEffect(() => {
+    if (!checkingPayment && !hasAccess) {
+      navigate('/dashboard');
+    }
+  }, [checkingPayment, hasAccess, navigate]);
+
   // Loading state with skeletons
-  if (loading) {
+  if (loading || checkingPayment) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
+        <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
         <main className="container py-6 md:py-12">
           <Skeleton className="mb-6 h-4 w-32" />
           <div className="mb-8">
@@ -115,10 +122,15 @@ const ModulePage = () => {
     );
   }
 
+  // Don't render if no access (will redirect)
+  if (!hasAccess) {
+    return null;
+  }
+
   if (!module) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
+        <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
         <main className="container py-8 md:py-12">
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-muted-foreground mb-4">Module not found</p>
@@ -133,7 +145,7 @@ const ModulePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
+      <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
 
       <main className="container py-6 md:py-12">
         {/* Back navigation */}
