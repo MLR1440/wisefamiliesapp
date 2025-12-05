@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Play, CheckCircle2, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import Paywall from '@/components/Paywall';
 
 interface Module {
   id: string;
@@ -23,7 +24,7 @@ interface UserProgress {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, hasAccess, checkingPayment, isAdmin } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,27 +88,90 @@ const Dashboard = () => {
     return status === 'current';
   }) || modules[0];
 
-  if (loading) {
+  if (loading || checkingPayment) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={userName} />
+        <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} />
         <main className="container py-8 md:py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            {checkingPayment && (
+              <p className="text-sm text-muted-foreground">Verifying access...</p>
+            )}
+          </div>
         </main>
+      </div>
+    );
+  }
+
+  // Show paywall if user doesn't have access (not admin and hasn't purchased)
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar isLoggedIn hasPurchased={false} userName={userName} />
+        <main className="container py-8 md:py-12">
+          <div className="mb-8">
+            <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
+              Welcome, {userName}!
+            </h1>
+            <p className="text-muted-foreground">
+              Get started with the AI-Ready Parenting framework
+            </p>
+          </div>
+          
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div>
+              <Paywall />
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="font-heading text-lg font-semibold text-foreground">
+                Course Preview
+              </h3>
+              {modules.slice(0, 3).map((module, index) => (
+                <div
+                  key={module.id}
+                  className="flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4"
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Module {index + 1}</p>
+                    <h4 className="font-medium text-foreground">{module.title}</h4>
+                  </div>
+                </div>
+              ))}
+              {modules.length > 3 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  + {modules.length - 3} more modules
+                </p>
+              )}
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased userName={userName} />
+      <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} />
       
       <main className="container py-8 md:py-12">
         {/* Welcome section */}
         <div className="mb-8">
-          <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
-            Welcome back, {userName}!
-          </h1>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="font-heading text-3xl font-bold text-foreground">
+              Welcome back, {userName}!
+            </h1>
+            {isAdmin && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                Admin
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Continue your AI-Ready Parenting journey
           </p>

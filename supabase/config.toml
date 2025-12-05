@@ -2,3 +2,9 @@ project_id = "vfswqkrxwrjzimpzvhen"
 
 [functions.chat]
 verify_jwt = true
+
+[functions.create-payment]
+verify_jwt = true
+
+[functions.check-payment]
+verify_jwt = true
