@@ -48,22 +48,34 @@ serve(async (req) => {
     // Check if user has a Stripe customer record
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
-    if (customers.data.length === 0) {
-      logStep("No customer found, user has not purchased");
-      return new Response(JSON.stringify({ hasPurchased: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+    let customerId: string | undefined;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found Stripe customer", { customerId });
+    } else {
+      logStep("No customer found, checking sessions by email");
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
     // Check for successful payments for our course product
-    const sessions = await stripe.checkout.sessions.list({
-      customer: customerId,
-      limit: 100,
-    });
+    // Search by customer if exists, otherwise search all recent sessions and filter by email
+    let sessions;
+    if (customerId) {
+      sessions = await stripe.checkout.sessions.list({
+        customer: customerId,
+        limit: 100,
+      });
+    } else {
+      // Search recent sessions and filter by customer_email
+      sessions = await stripe.checkout.sessions.list({
+        limit: 100,
+      });
+      // Filter to only sessions matching user's email
+      sessions.data = sessions.data.filter(
+        (s: { customer_email?: string | null; customer_details?: { email?: string | null } | null }) => 
+          s.customer_email === user.email || s.customer_details?.email === user.email
+      );
+      logStep("Filtered sessions by email", { count: sessions.data.length });
+    }
 
     let hasPurchased = false;
     let purchaseDate = null;
