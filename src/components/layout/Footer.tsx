@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import wiseFamiliesLogo from '@/assets/wise-families-logo.jpg';
 
 const Footer = () => {
   return (
@@ -8,9 +9,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero">
-                <span className="font-heading text-lg font-bold text-primary-foreground">W</span>
-              </div>
+              <img 
+                src={wiseFamiliesLogo} 
+                alt="WiseFamilies" 
+                className="h-10 w-10 rounded-full object-cover"
+              />
               <span className="font-heading text-xl font-semibold text-foreground">WiseFamilies</span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
