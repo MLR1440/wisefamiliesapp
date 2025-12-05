@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +50,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useModule, useModules } from '@/hooks/useModules';
+import { useChapters } from '@/hooks/useChapters';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PromptField {
@@ -168,6 +169,7 @@ const getVimeoId = (url: string): string | null => {
 
 const ModuleEditor = () => {
   const { moduleId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const isNew = moduleId === 'new';
@@ -176,6 +178,10 @@ const ModuleEditor = () => {
   
   const { module: existingModule, prompts: existingPrompts, loading: moduleLoading } = useModule(moduleId);
   const { modules: allModules, createModule, updateModule, deleteModule } = useModules();
+  const { chapters } = useChapters();
+  
+  // Get chapter from URL params for new modules
+  const initialChapterId = searchParams.get('chapter') || '';
 
   const [formData, setFormData] = useState({
     title: 'New Module',
@@ -186,6 +192,7 @@ const ModuleEditor = () => {
     systemPrompt: mockSettings.defaultSystemPrompt,
     status: 'draft',
     nextModuleId: 'auto',
+    chapterId: initialChapterId,
   });
 
   const [prompts, setPrompts] = useState<PromptField[]>([
@@ -210,6 +217,7 @@ const ModuleEditor = () => {
         systemPrompt: existingModule.system_prompt,
         status: existingModule.status,
         nextModuleId: existingModule.next_module_id || 'auto',
+        chapterId: existingModule.chapter_id || '',
       });
       setLastSaved(new Date(existingModule.updated_at));
     }
@@ -354,6 +362,7 @@ const ModuleEditor = () => {
         system_prompt: formData.systemPrompt,
         status: formData.status,
         next_module_id: formData.nextModuleId === 'auto' ? null : formData.nextModuleId,
+        chapter_id: formData.chapterId || null,
       };
 
       let savedModuleId: string;
@@ -583,6 +592,28 @@ const ModuleEditor = () => {
                   placeholder="Brief description of what students will learn in this module..."
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="chapter">Chapter</Label>
+                <Select
+                  value={formData.chapterId || 'none'}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, chapterId: value === 'none' ? '' : value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a chapter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No chapter (unassigned)</SelectItem>
+                    {chapters.map((chapter) => (
+                      <SelectItem key={chapter.id} value={chapter.id}>
+                        {chapter.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

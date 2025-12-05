@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
-export type DbModule = Tables<'modules'>;
+export type DbModule = Tables<'modules'> & { chapter_id?: string | null };
 export type DbModulePrompt = Tables<'module_prompts'>;
 
 export const useModules = () => {
