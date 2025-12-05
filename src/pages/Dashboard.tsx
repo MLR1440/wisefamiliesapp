@@ -4,9 +4,9 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { mockUser } from '@/data/mockData';
 import { Play, CheckCircle2, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Module {
   id: string;
@@ -23,21 +23,21 @@ interface UserProgress {
 }
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Temp user ID (will be replaced with auth)
-  const userId = typeof window !== 'undefined' 
-    ? localStorage.getItem('temp_user_id') || (() => {
-        const id = Math.random().toString(36).substring(7);
-        localStorage.setItem('temp_user_id', id);
-        return id;
-      })() 
-    : 'default';
+  const userId = user?.id || '';
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
       // Fetch published modules
       const { data: modulesData } = await supabase
         .from('modules')
@@ -90,7 +90,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+        <Navbar isLoggedIn hasPurchased userName={userName} />
         <main className="container py-8 md:py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
@@ -100,13 +100,13 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+      <Navbar isLoggedIn hasPurchased userName={userName} />
       
       <main className="container py-8 md:py-12">
         {/* Welcome section */}
         <div className="mb-8">
           <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
-            Welcome back, {mockUser.firstName}!
+            Welcome back, {userName}!
           </h1>
           <p className="text-muted-foreground">
             Continue your AI-Ready Parenting journey

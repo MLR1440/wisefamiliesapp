@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -20,33 +22,67 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public pages */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          
-          {/* Student pages */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/course/:moduleId" element={<ModulePage />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          
-          {/* Admin pages */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/modules" element={<AdminModules />} />
-          <Route path="/admin/modules/:moduleId" element={<ModuleEditor />} />
-          <Route path="/admin/prompts" element={<AdminPrompts />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public pages */}
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            
+            {/* Student pages - Protected */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/course/:moduleId" element={
+              <ProtectedRoute>
+                <ModulePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/progress" element={
+              <ProtectedRoute>
+                <ProgressPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin pages - Protected + Admin role required */}
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/modules" element={
+              <ProtectedRoute requireAdmin>
+                <AdminModules />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/modules/:moduleId" element={
+              <ProtectedRoute requireAdmin>
+                <ModuleEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/prompts" element={
+              <ProtectedRoute requireAdmin>
+                <AdminPrompts />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute requireAdmin>
+                <AdminSettings />
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { mockAdminUser } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 import { sampleModules } from '@/data/sampleContent';
 import { Users, Activity, Award, BookOpen, Settings, FileText, Monitor, Database, Loader2, TrendingUp, MessageSquare } from 'lucide-react';
 import { useAnalyticsData } from '@/hooks/useAnalytics';
@@ -29,12 +29,15 @@ interface AnalyticsStats {
 }
 
 const AdminDashboard = () => {
+  const { user, isAdmin } = useAuth();
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const { fetchStats } = useAnalyticsData();
   const { modules } = useModules();
+  
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
 
   useEffect(() => {
     const loadStats = async () => {
@@ -102,7 +105,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+      <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
 
       <main className="container py-6 md:py-12">
         {/* Mobile notice */}

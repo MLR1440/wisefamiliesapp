@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Json } from '@/integrations/supabase/types';
 
 type EventType = 
@@ -18,23 +19,16 @@ interface EventData {
   [key: string]: unknown;
 }
 
-// Generate a simple user ID for tracking (until auth is implemented)
-const getUserId = (): string => {
-  let userId = localStorage.getItem('wisefamilies_user_id');
-  if (!userId) {
-    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('wisefamilies_user_id', userId);
-  }
-  return userId;
-};
-
 export const useAnalytics = () => {
+  const { user } = useAuth();
+
   const trackEvent = useCallback(async (eventType: EventType, eventData?: EventData) => {
+    if (!user?.id) return;
+    
     try {
-      const userId = getUserId();
       
       await supabase.from('events').insert([{
-        user_id: userId,
+        user_id: user.id,
         event_type: eventType,
         event_data: (eventData || {}) as Json,
       }]);

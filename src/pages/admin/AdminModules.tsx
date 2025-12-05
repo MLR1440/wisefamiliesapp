@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { mockAdminUser } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit, GripVertical, Eye, ArrowLeft, Trash2, Video, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -149,10 +149,13 @@ const SortableModuleItem = ({ module, index, onDelete }: SortableModuleItemProps
 type FilterTab = 'all' | 'published' | 'draft';
 
 const AdminModules = () => {
+  const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { modules, loading, deleteModule, reorderModules } = useModules();
   const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
   const currentFilter = (searchParams.get('filter') as FilterTab) || 'all';
+  
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -211,7 +214,7 @@ const AdminModules = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+        <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
         <main className="container py-8 md:py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
@@ -221,7 +224,7 @@ const AdminModules = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+      <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
 
       <main className="container py-8 md:py-12">
         <Link
