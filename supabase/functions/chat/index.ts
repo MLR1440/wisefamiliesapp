@@ -120,9 +120,6 @@ serve(async (req) => {
       }
     );
   }
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
 
   try {
     const body = await req.json();
@@ -156,14 +153,27 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get guardrail appendix from course_settings
+    let guardrailAppendix = '';
+    const { data: guardrailSetting } = await supabase
+      .from('course_settings')
+      .select('value')
+      .eq('key', 'guardrail_appendix')
+      .single();
+    
+    if (guardrailSetting?.value) {
+      guardrailAppendix = guardrailSetting.value;
+      console.log('Guardrail appendix loaded');
+    }
+
     // Get module's system prompt if module_id provided
     let systemPrompt = "You are a helpful and empathetic parenting coach for the WiseFamilies platform. Help parents navigate challenges with technology and screen time for their children. Provide practical, actionable advice while being supportive and non-judgmental. Keep responses conversational and warm.";
     
     if (module_id) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
       // Verify module exists and is published
       const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
@@ -192,6 +202,13 @@ serve(async (req) => {
       }
     }
 
+    // Combine system prompt with guardrail appendix
+    const fullSystemPrompt = guardrailAppendix 
+      ? `${systemPrompt}\n\n---\n\n${guardrailAppendix}`
+      : systemPrompt;
+
+    console.log('System prompt length:', fullSystemPrompt.length);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -201,7 +218,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: fullSystemPrompt },
           ...validation.sanitized!,
         ],
         stream: true,
