@@ -128,6 +128,9 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
         content: m.content,
       }));
 
+      // Get current session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+
       // Stream response
       abortControllerRef.current = new AbortController();
       
@@ -135,7 +138,7 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ messages: apiMessages, module_id: moduleId }),
         signal: abortControllerRef.current.signal,

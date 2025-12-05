@@ -1,8 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavbarProps {
   isLoggedIn?: boolean;
@@ -14,8 +14,16 @@ interface NavbarProps {
 const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, userName }: NavbarProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -35,11 +43,6 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
               <Link to="/dashboard">
                 <Button variant={isActive('/dashboard') ? 'soft' : 'ghost'} size="sm">
                   Dashboard
-                </Button>
-              </Link>
-              <Link to="/course/1">
-                <Button variant={isActive('/course') || location.pathname.startsWith('/course/') ? 'soft' : 'ghost'} size="sm">
-                  Course
                 </Button>
               </Link>
               <Link to="/progress">
@@ -63,16 +66,16 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                   </Button>
                 </Link>
               )}
-              <Link to="/settings">
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
               <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">{userName}</span>
               </div>
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 text-muted-foreground"
+                onClick={handleLogout}
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
@@ -113,11 +116,6 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                     Dashboard
                   </Button>
                 </Link>
-                <Link to="/course/1" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant={isActive('/course') ? 'soft' : 'ghost'} className="w-full justify-start">
-                    Course
-                  </Button>
-                </Link>
                 <Link to="/progress" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant={isActive('/progress') ? 'soft' : 'ghost'} className="w-full justify-start">
                     Progress
@@ -140,7 +138,11 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium">{userName}</span>
                 </div>
-                <Button variant="ghost" className="w-full justify-start gap-2 text-muted-foreground">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start gap-2 text-muted-foreground"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4" />
                   Logout
                 </Button>

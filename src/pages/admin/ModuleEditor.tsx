@@ -28,7 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { mockAdminUser, mockSettings } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
+import { mockSettings } from '@/data/mockData';
 import { ArrowLeft, Plus, Trash2, Save, GripVertical, ExternalLink, Play, HelpCircle, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -168,7 +169,10 @@ const getVimeoId = (url: string): string | null => {
 const ModuleEditor = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const isNew = moduleId === 'new';
+  
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
   
   const { module: existingModule, prompts: existingPrompts, loading: moduleLoading } = useModule(moduleId);
   const { modules: allModules, createModule, updateModule, deleteModule } = useModules();
@@ -457,7 +461,7 @@ const ModuleEditor = () => {
   if (moduleLoading && !isNew) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+        <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
         <main className="container py-8 md:py-12 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
@@ -467,7 +471,7 @@ const ModuleEditor = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+      <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
 
       <main className="container max-w-4xl py-8 md:py-12">
         {/* Top bar */}

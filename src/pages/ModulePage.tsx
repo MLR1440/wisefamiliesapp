@@ -10,26 +10,23 @@ import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
 import { useProgress } from '@/hooks/useProgress';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { mockUser } from '@/data/mockData';
 import { VideoSkeleton, ChatSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 
 const ModulePage = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const { module, prompts, loading } = useModule(moduleId);
   const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
   const moduleStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef(false);
   
-  // For now, use a temporary user ID (will be replaced with auth)
-  const userId = 'temp-user-' + (typeof window !== 'undefined' ? localStorage.getItem('temp_user_id') || (() => {
-    const id = Math.random().toString(36).substring(7);
-    localStorage.setItem('temp_user_id', id);
-    return id;
-  })() : 'default');
+  const userId = user?.id || '';
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
   
   const { isCompleted, hasStarted, markStarted, markCompleted } = useProgress(userId, moduleId || '');
 
@@ -95,7 +92,7 @@ const ModulePage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+        <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
         <main className="container py-6 md:py-12">
           <Skeleton className="mb-6 h-4 w-32" />
           <div className="mb-8">
@@ -121,7 +118,7 @@ const ModulePage = () => {
   if (!module) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+        <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
         <main className="container py-8 md:py-12">
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-muted-foreground mb-4">Module not found</p>
@@ -136,7 +133,7 @@ const ModulePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+      <Navbar isLoggedIn hasPurchased userName={userName} isAdmin={isAdmin} />
 
       <main className="container py-6 md:py-12">
         {/* Back navigation */}

@@ -1,30 +1,72 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [user, authLoading, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    
+    // Validate input
+    const result = loginSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === 'email') fieldErrors.email = err.message;
+        if (err.path[0] === 'password') fieldErrors.password = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate login - in production this would call Supabase auth
-    setTimeout(() => {
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (error) {
       setIsLoading(false);
-      toast.success('Welcome back!');
-      navigate('/dashboard');
-    }, 1000);
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please confirm your email before logging in');
+      } else {
+        toast.error(error.message || 'Failed to sign in');
+      }
+      return;
+    }
+    
+    setIsLoading(false);
+    toast.success('Welcome back!');
   };
 
   return (
@@ -67,12 +109,13 @@ const Login = () => {
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  className="pl-10"
+                  className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </div>
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -91,7 +134,7 @@ const Login = () => {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="pl-10 pr-10"
+                  className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
@@ -104,6 +147,7 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
             <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading}>

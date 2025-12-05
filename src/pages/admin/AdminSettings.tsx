@@ -13,11 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockAdminUser, mockSettings } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
+import { mockSettings } from '@/data/mockData';
 import { ArrowLeft, Save, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
+  const { user, isAdmin } = useAuth();
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
   const [showApiKey, setShowApiKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -121,7 +124,7 @@ const AdminSettings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
+      <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
 
       <main className="container max-w-3xl py-8 md:py-12">
         {/* Back link */}
