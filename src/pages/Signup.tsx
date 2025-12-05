@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,23 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
+  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name too long'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { signUp, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,23 +30,60 @@ const Signup = () => {
     password: '',
   });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     
     if (!agreed) {
       toast.error('Please agree to the terms and conditions');
       return;
     }
 
+    // Validate form data
+    const result = signupSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate signup - in production this would call Supabase auth
-    setTimeout(() => {
+    try {
+      const { error } = await signUp(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      );
+
+      if (error) {
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          setErrors({ email: 'This email is already registered. Please sign in instead.' });
+        } else {
+          toast.error(error.message || 'Failed to create account');
+        }
+      } else {
+        toast.success('Account created successfully!');
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred');
+    } finally {
       setIsLoading(false);
-      toast.success('Account created! Redirecting to checkout...');
-      // In production, redirect to Stripe checkout
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
