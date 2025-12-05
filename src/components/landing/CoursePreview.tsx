@@ -1,8 +1,32 @@
-import { mockModules } from '@/data/mockData';
-import { Play, Clock, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Play, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  order_number: number;
+}
 
 const CoursePreview = () => {
-  const publishedModules = mockModules.filter(m => m.status === 'published');
+  const [modules, setModules] = useState<Module[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      const { data } = await supabase
+        .from('modules')
+        .select('id, title, description, order_number')
+        .eq('status', 'published')
+        .order('order_number', { ascending: true });
+      
+      setModules(data || []);
+      setLoading(false);
+    };
+
+    fetchModules();
+  }, []);
 
   return (
     <section className="bg-muted/50 py-20 md:py-28">
@@ -12,39 +36,52 @@ const CoursePreview = () => {
             Course Curriculum
           </h2>
           <p className="text-lg text-muted-foreground">
-            6 comprehensive modules designed to transform your family's relationship with AI
+            {modules.length > 0 
+              ? `${modules.length} comprehensive modules designed to transform your family's relationship with AI`
+              : "Comprehensive modules designed to transform your family's relationship with AI"
+            }
           </p>
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <div className="space-y-4">
-            {publishedModules.map((module, index) => (
-              <div
-                key={module.id}
-                className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-soft"
-              >
-                {/* Module number */}
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 font-heading font-semibold text-primary">
-                  {index + 1}
-                </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : modules.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Course content coming soon!
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {modules.map((module, index) => (
+                <div
+                  key={module.id}
+                  className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/30 hover:shadow-soft"
+                >
+                  {/* Module number */}
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 font-heading font-semibold text-primary">
+                    {index + 1}
+                  </div>
 
-                {/* Content */}
-                <div className="flex-1">
-                  <h3 className="mb-1 font-heading text-lg font-semibold text-foreground">
-                    {module.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {module.description}
-                  </p>
-                </div>
+                  {/* Content */}
+                  <div className="flex-1">
+                    <h3 className="mb-1 font-heading text-lg font-semibold text-foreground">
+                      {module.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {module.description}
+                    </p>
+                  </div>
 
-                {/* Play icon */}
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-secondary group-hover:text-secondary-foreground">
-                  <Play className="h-4 w-4" />
+                  {/* Play icon */}
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-secondary group-hover:text-secondary-foreground">
+                    <Play className="h-4 w-4" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Course stats */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
