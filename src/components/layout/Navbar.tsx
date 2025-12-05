@@ -30,7 +30,7 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2">
           <img 
             src={wiseFamiliesLogo} 
             alt="WiseFamilies" 
