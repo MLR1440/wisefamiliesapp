@@ -69,6 +69,22 @@ interface SortablePromptProps {
   onMoveDown: (id: string) => void;
 }
 
+// Character limits
+const CHAR_LIMITS = {
+  systemPrompt: 6000,
+  promptText: 800,
+  buttonLabel: 50,
+};
+
+const CharacterCounter = ({ current, limit }: { current: number; limit: number }) => {
+  const isOverLimit = current > limit;
+  return (
+    <span className={`text-xs ${isOverLimit ? 'text-orange-500 font-medium' : 'text-muted-foreground'}`}>
+      {current}{isOverLimit && ` / ${limit} recommended`}
+    </span>
+  );
+};
+
 const SortablePrompt = ({ prompt, index, totalCount, onChange, onRemove, onMoveUp, onMoveDown }: SortablePromptProps) => {
   const {
     attributes,
@@ -124,7 +140,10 @@ const SortablePrompt = ({ prompt, index, totalCount, onChange, onRemove, onMoveU
       </div>
       <div className="flex-1 space-y-3">
         <div className="space-y-2">
-          <Label>Button Label</Label>
+          <div className="flex items-center justify-between">
+            <Label>Button Label</Label>
+            <CharacterCounter current={prompt.label.length} limit={CHAR_LIMITS.buttonLabel} />
+          </div>
           <Input
             value={prompt.label}
             onChange={(e) => onChange(prompt.id, 'label', e.target.value)}
@@ -132,7 +151,10 @@ const SortablePrompt = ({ prompt, index, totalCount, onChange, onRemove, onMoveU
           />
         </div>
         <div className="space-y-2">
-          <Label>Prompt Text</Label>
+          <div className="flex items-center justify-between">
+            <Label>Prompt Text</Label>
+            <CharacterCounter current={prompt.promptText.length} limit={CHAR_LIMITS.promptText} />
+          </div>
           <Textarea
             value={prompt.promptText}
             onChange={(e) => onChange(prompt.id, 'promptText', e.target.value)}
@@ -716,8 +738,8 @@ const ModuleEditor = () => {
                 rows={5}
                 className={validationErrors.systemPrompt ? 'border-destructive' : ''}
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formData.systemPrompt.length} characters</span>
+              <div className="flex justify-between text-xs">
+                <CharacterCounter current={formData.systemPrompt.length} limit={CHAR_LIMITS.systemPrompt} />
                 {validationErrors.systemPrompt && (
                   <span className="text-destructive">{validationErrors.systemPrompt}</span>
                 )}
