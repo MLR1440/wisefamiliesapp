@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import wiseFamiliesLogo from '@/assets/wise-families-logo.jpg';
 
 interface NavbarProps {
   isLoggedIn?: boolean;
@@ -30,9 +31,11 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero">
-            <span className="font-heading text-lg font-bold text-primary-foreground">W</span>
-          </div>
+          <img 
+            src={wiseFamiliesLogo} 
+            alt="WiseFamilies" 
+            className="h-10 w-10 rounded-full object-cover"
+          />
           <span className="font-heading text-xl font-semibold text-foreground">WiseFamilies</span>
         </Link>
 
