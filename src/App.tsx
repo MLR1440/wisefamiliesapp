@@ -17,6 +17,7 @@ import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
 import AdminPrompts from "./pages/admin/AdminPrompts";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -82,6 +83,11 @@ const App = () => (
             <Route path="/admin/settings" element={
               <ProtectedRoute requireAdmin>
                 <AdminSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute requireAdmin>
+                <AdminUsers />
               </ProtectedRoute>
             } />
             
