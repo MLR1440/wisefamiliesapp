@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -9,6 +9,7 @@ import VideoPlayer from '@/components/module/VideoPlayer';
 import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
 import { useProgress } from '@/hooks/useProgress';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 import { mockUser } from '@/data/mockData';
 import { VideoSkeleton, ChatSkeleton, Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,9 @@ const ModulePage = () => {
   const navigate = useNavigate();
   const { module, prompts, loading } = useModule(moduleId);
   const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
+  const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
+  const moduleStartTime = useRef<number>(Date.now());
+  const hasTrackedStart = useRef(false);
   
   // For now, use a temporary user ID (will be replaced with auth)
   const userId = 'temp-user-' + (typeof window !== 'undefined' ? localStorage.getItem('temp_user_id') || (() => {
@@ -42,6 +46,18 @@ const ModulePage = () => {
     fetchModules();
   }, []);
 
+  // Track module start
+  useEffect(() => {
+    if (moduleId && !hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      moduleStartTime.current = Date.now();
+      trackModuleStarted(moduleId);
+    }
+    return () => {
+      hasTrackedStart.current = false;
+    };
+  }, [moduleId, trackModuleStarted]);
+
   const moduleIndex = modules.findIndex((m) => m.id === moduleId);
   const nextModule = modules[moduleIndex + 1];
   const prevModule = modules[moduleIndex - 1];
@@ -51,12 +67,27 @@ const ModulePage = () => {
   };
 
   const handleComplete = async (checked: boolean) => {
-    if (checked) {
+    if (checked && moduleId) {
       await markCompleted();
+      const timeSpent = Math.round((Date.now() - moduleStartTime.current) / 1000);
+      trackModuleCompleted(moduleId, timeSpent);
+      
+      // Check if this is the last module
+      const isLastModule = moduleIndex === modules.length - 1;
+      if (isLastModule) {
+        trackCourseCompleted();
+      }
+      
       toast({
         title: "Module completed! 🎉",
         description: "Great progress! Keep up the good work.",
       });
+    }
+  };
+
+  const handleVideoPlay = () => {
+    if (moduleId) {
+      trackVideoPlayed(moduleId);
     }
   };
 
@@ -139,6 +170,7 @@ const ModulePage = () => {
               videoUrl={module.video_url}
               videoType={module.video_type}
               title={module.title}
+              onPlay={handleVideoPlay}
             />
 
             {/* Chat Section - key forces remount on module change */}

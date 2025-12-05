@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Play, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -6,9 +6,11 @@ interface VideoPlayerProps {
   videoUrl: string;
   videoType: string;
   title: string;
+  onPlay?: () => void;
 }
 
-const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
+const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) => {
+  const hasTrackedPlay = useRef(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,6 +34,11 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
   const handleLoad = () => {
     setIsLoading(false);
     setHasError(false);
+    // Track play on first load (for iframes, this is the best we can do)
+    if (!hasTrackedPlay.current && onPlay) {
+      hasTrackedPlay.current = true;
+      onPlay();
+    }
   };
 
   const handleError = () => {
@@ -128,7 +135,18 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
 
     if (videoType === 'direct') {
       return (
-        <video controls className="h-full w-full" onLoadedData={handleLoad} onError={handleError}>
+        <video 
+          controls 
+          className="h-full w-full" 
+          onLoadedData={handleLoad} 
+          onError={handleError}
+          onPlay={() => {
+            if (!hasTrackedPlay.current && onPlay) {
+              hasTrackedPlay.current = true;
+              onPlay();
+            }
+          }}
+        >
           <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -166,7 +184,18 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
 
     // Default to video element for direct URLs
     return (
-      <video controls className="h-full w-full" onLoadedData={handleLoad} onError={handleError}>
+      <video 
+        controls 
+        className="h-full w-full" 
+        onLoadedData={handleLoad} 
+        onError={handleError}
+        onPlay={() => {
+          if (!hasTrackedPlay.current && onPlay) {
+            hasTrackedPlay.current = true;
+            onPlay();
+          }
+        }}
+      >
         <source src={videoUrl} type="video/mp4" />
         Your browser does not support the video tag.
       </video>

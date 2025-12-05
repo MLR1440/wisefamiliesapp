@@ -1,10 +1,105 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
-import { mockAdminUser, mockStats, mockModules } from '@/data/mockData';
-import { Users, Activity, Award, BookOpen, Settings, FileText, ArrowRight, Monitor } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { mockAdminUser } from '@/data/mockData';
+import { sampleModules } from '@/data/sampleContent';
+import { Users, Activity, Award, BookOpen, Settings, FileText, Monitor, Database, Loader2, TrendingUp, MessageSquare } from 'lucide-react';
+import { useAnalyticsData } from '@/hooks/useAnalytics';
+import { useModules } from '@/hooks/useModules';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface AnalyticsStats {
+  totalStudents: number;
+  activeToday: number;
+  courseCompletions: number;
+  completionRate: number;
+  topPrompts: { label: string; count: number }[];
+}
 
 const AdminDashboard = () => {
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showSeedDialog, setShowSeedDialog] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const { fetchStats } = useAnalyticsData();
+  const { modules } = useModules();
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const data = await fetchStats();
+      setStats(data);
+      setLoading(false);
+    };
+    loadStats();
+  }, [fetchStats]);
+
+  const handleLoadSampleContent = async () => {
+    setSeeding(true);
+    try {
+      // Delete existing prompts first (due to foreign key)
+      await supabase.from('module_prompts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      // Delete existing modules
+      await supabase.from('modules').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      // Insert sample modules
+      for (const mod of sampleModules) {
+        const { data: moduleData, error: moduleError } = await supabase
+          .from('modules')
+          .insert({
+            title: mod.title,
+            description: mod.description,
+            order_number: mod.order_number,
+            video_url: mod.video_url,
+            video_type: mod.video_type,
+            system_prompt: mod.system_prompt,
+            status: mod.status,
+          })
+          .select()
+          .single();
+
+        if (moduleError) throw moduleError;
+
+        // Insert prompts for this module
+        if (moduleData && mod.prompts.length > 0) {
+          const promptsToInsert = mod.prompts.map((p, idx) => ({
+            module_id: moduleData.id,
+            label: p.label,
+            prompt_text: p.prompt_text,
+            order_number: idx + 1,
+          }));
+
+          const { error: promptError } = await supabase
+            .from('module_prompts')
+            .insert(promptsToInsert);
+
+          if (promptError) throw promptError;
+        }
+      }
+
+      toast.success('Sample content loaded successfully!');
+      setShowSeedDialog(false);
+      // Refresh the page to show new content
+      window.location.reload();
+    } catch (error) {
+      console.error('Error seeding content:', error);
+      toast.error('Failed to load sample content');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn isAdmin hasPurchased userName={mockAdminUser.firstName} />
@@ -33,15 +128,25 @@ const AdminDashboard = () => {
               Manage your course content and view analytics
             </p>
           </div>
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={() => setShowSeedDialog(true)}
+          >
+            <Database className="h-4 w-4" />
+            Load Sample Content
+          </Button>
         </div>
 
-        {/* Stats grid - 2 cols on mobile, 3 on desktop */}
-        <div className="mb-6 md:mb-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-3">
+        {/* Stats grid */}
+        <div className="mb-6 md:mb-8 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs md:text-sm text-muted-foreground">Total Students</p>
-                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">{mockStats.totalStudents}</p>
+                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">
+                  {loading ? '-' : stats?.totalStudents || 0}
+                </p>
               </div>
               <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Users className="h-5 w-5 md:h-6 md:w-6" />
@@ -53,7 +158,9 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs md:text-sm text-muted-foreground">Active Today</p>
-                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">{mockStats.activeToday}</p>
+                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">
+                  {loading ? '-' : stats?.activeToday || 0}
+                </p>
               </div>
               <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                 <Activity className="h-5 w-5 md:h-6 md:w-6" />
@@ -61,20 +168,36 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-4 md:p-6 col-span-2 lg:col-span-1">
+          <div className="rounded-xl border border-border bg-card p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Course Completions</p>
-                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">{mockStats.courseCompletions}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Completions</p>
+                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">
+                  {loading ? '-' : stats?.courseCompletions || 0}
+                </p>
               </div>
               <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <Award className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </div>
+
+          <div className="rounded-xl border border-border bg-card p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground">Completion Rate</p>
+                <p className="mt-1 text-2xl md:text-3xl font-bold text-foreground">
+                  {loading ? '-' : `${stats?.completionRate || 0}%`}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Quick actions - 2 cols on mobile, 4 on desktop */}
+        {/* Quick actions */}
         <div className="mb-6 md:mb-8">
           <h2 className="mb-3 md:mb-4 font-heading text-lg md:text-xl font-semibold text-foreground">
             Quick Actions
@@ -84,7 +207,7 @@ const AdminDashboard = () => {
               <Button variant="outline" className="h-auto w-full flex-col gap-1 md:gap-2 p-4 md:p-6">
                 <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 <span className="font-semibold text-sm md:text-base">Manage Modules</span>
-                <span className="text-xs text-muted-foreground">{mockModules.length} modules</span>
+                <span className="text-xs text-muted-foreground">{modules.length} modules</span>
               </Button>
             </Link>
 
@@ -114,33 +237,58 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Recent signups */}
-        <div>
-          <h2 className="mb-3 md:mb-4 font-heading text-lg md:text-xl font-semibold text-foreground">
-            Recent Signups
-          </h2>
-          <div className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="divide-y divide-border">
-              {mockStats.recentSignups.map((signup, index) => (
-                <div key={index} className="flex items-center justify-between p-3 md:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-primary/10 text-xs md:text-sm font-medium text-primary">
-                      {signup.name.charAt(0)}
+        {/* Popular Prompts */}
+        {stats && stats.topPrompts.length > 0 && (
+          <div>
+            <h2 className="mb-3 md:mb-4 font-heading text-lg md:text-xl font-semibold text-foreground">
+              Popular Prompts
+            </h2>
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="divide-y divide-border">
+                {stats.topPrompts.map((prompt, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 md:p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-secondary/10">
+                        <MessageSquare className="h-4 w-4 text-secondary" />
+                      </div>
+                      <p className="font-medium text-foreground text-sm md:text-base truncate max-w-[200px] md:max-w-none">
+                        {prompt.label}
+                      </p>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground text-sm md:text-base truncate">{signup.name}</p>
-                      <p className="text-xs md:text-sm text-muted-foreground truncate">{signup.email}</p>
-                    </div>
+                    <span className="text-sm text-muted-foreground flex-shrink-0 ml-2">
+                      {prompt.count} uses
+                    </span>
                   </div>
-                  <span className="text-xs md:text-sm text-muted-foreground flex-shrink-0 ml-2">
-                    {signup.date.toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
+
+      {/* Seed Content Dialog */}
+      <AlertDialog open={showSeedDialog} onOpenChange={setShowSeedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Load Sample Content</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will <strong>replace all existing modules and prompts</strong> with 5 sample modules 
+              designed for the WiseFamilies course. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={seeding}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLoadSampleContent}
+              disabled={seeding}
+              className="gap-2"
+            >
+              {seeding && <Loader2 className="h-4 w-4 animate-spin" />}
+              {seeding ? 'Loading...' : 'Load Sample Content'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
