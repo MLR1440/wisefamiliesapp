@@ -56,9 +56,7 @@ const Hero = () => {
           {/* Trust indicator */}
           <p className="mt-8 text-sm text-muted-foreground animate-fade-up" style={{
           animationDelay: '0.4s'
-        }}>
-            Join 200+ parents already raising AI-ready kids
-          </p>
+        }}>Join Fellow Families already raising AI-ready kids</p>
         </div>
       </div>
     </section>;
