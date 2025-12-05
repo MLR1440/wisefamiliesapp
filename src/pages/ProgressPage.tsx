@@ -1,23 +1,79 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import { mockUser, mockModules, mockProgress } from '@/data/mockData';
-import { CheckCircle2, Circle, Play } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { CheckCircle2, Circle, Play, Loader2 } from 'lucide-react';
+
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  order_number: number;
+}
+
+interface Progress {
+  module_id: string;
+  started_at: string | null;
+  completed_at: string | null;
+  first_prompt_clicked: boolean | null;
+}
 
 const ProgressPage = () => {
+  const { user, isAdmin, hasPurchased } = useAuth();
+  const [modules, setModules] = useState<Module[]>([]);
+  const [progress, setProgress] = useState<Progress[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const firstName = user?.user_metadata?.first_name || 'User';
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+
+      // Fetch modules and progress in parallel
+      const [modulesResult, progressResult] = await Promise.all([
+        supabase
+          .from('modules')
+          .select('id, title, description, order_number')
+          .eq('status', 'published')
+          .order('order_number', { ascending: true }),
+        supabase
+          .from('user_progress')
+          .select('module_id, started_at, completed_at, first_prompt_clicked')
+          .eq('user_id', user.id)
+      ]);
+
+      if (modulesResult.data) setModules(modulesResult.data);
+      if (progressResult.data) setProgress(progressResult.data);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [user]);
+
   const getModuleStatus = (moduleId: string) => {
-    const progress = mockProgress.find((p) => p.moduleId === moduleId);
-    if (progress?.completedAt) return 'completed';
-    if (progress?.startedAt) return 'in-progress';
+    const moduleProgress = progress.find((p) => p.module_id === moduleId);
+    if (moduleProgress?.completed_at) return 'completed';
+    if (moduleProgress?.started_at) return 'in-progress';
     return 'not-started';
   };
 
-  const completedCount = mockProgress.filter((p) => p.completedAt).length;
-  const inProgressCount = mockProgress.filter((p) => p.startedAt && !p.completedAt).length;
+  const completedCount = progress.filter((p) => p.completed_at).length;
+  const inProgressCount = progress.filter((p) => p.started_at && !p.completed_at).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
+      <Navbar isLoggedIn={!!user} isAdmin={isAdmin} hasPurchased={hasPurchased} userName={firstName} />
 
       <main className="container py-8 md:py-12">
         {/* Header */}
@@ -42,7 +98,7 @@ const ProgressPage = () => {
           </div>
           <div className="rounded-xl border border-border bg-card p-6 text-center">
             <div className="text-3xl font-bold text-muted-foreground">
-              {mockModules.length - completedCount - inProgressCount}
+              {modules.length - completedCount - inProgressCount}
             </div>
             <div className="text-sm text-muted-foreground">Not Started</div>
           </div>
@@ -54,9 +110,9 @@ const ProgressPage = () => {
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border md:left-1/2 md:-translate-x-1/2" />
 
           <div className="space-y-8">
-            {mockModules.map((module, index) => {
+            {modules.map((module, index) => {
               const status = getModuleStatus(module.id);
-              const progress = mockProgress.find((p) => p.moduleId === module.id);
+              const moduleProgress = progress.find((p) => p.module_id === module.id);
               const isEven = index % 2 === 0;
 
               return (
@@ -125,9 +181,9 @@ const ProgressPage = () => {
                       </div>
 
                       {/* Completion date */}
-                      {progress?.completedAt && (
+                      {moduleProgress?.completed_at && (
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Completed on {progress.completedAt.toLocaleDateString()}
+                          Completed on {new Date(moduleProgress.completed_at).toLocaleDateString()}
                         </p>
                       )}
                     </Link>
