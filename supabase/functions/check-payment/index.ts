@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-PAYMENT] ${step}${detailsStr}`);
 };
 
-const COURSE_PRODUCT_ID = "prod_TXwayUuvFdiLYj";
+const COURSE_PRODUCT_ID = "prod_TXwi6z2RYRGvt2";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
