@@ -6,15 +6,89 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation
+const MAX_MESSAGES = 50;
+const MAX_MESSAGE_LENGTH = 10000;
+const VALID_ROLES = ['user', 'assistant'];
+
+function validateUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+function validateMessages(messages: unknown): { valid: boolean; error?: string; sanitized?: Array<{ role: string; content: string }> } {
+  if (!Array.isArray(messages)) {
+    return { valid: false, error: "messages must be an array" };
+  }
+
+  if (messages.length === 0) {
+    return { valid: false, error: "messages cannot be empty" };
+  }
+
+  if (messages.length > MAX_MESSAGES) {
+    return { valid: false, error: `Too many messages. Maximum is ${MAX_MESSAGES}` };
+  }
+
+  const sanitized: Array<{ role: string; content: string }> = [];
+
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    
+    if (typeof msg !== 'object' || msg === null) {
+      return { valid: false, error: `Invalid message at index ${i}` };
+    }
+
+    const { role, content } = msg as { role?: unknown; content?: unknown };
+
+    if (typeof role !== 'string' || !VALID_ROLES.includes(role)) {
+      return { valid: false, error: `Invalid role at index ${i}. Must be 'user' or 'assistant'` };
+    }
+
+    if (typeof content !== 'string') {
+      return { valid: false, error: `Invalid content at index ${i}. Must be a string` };
+    }
+
+    if (content.length > MAX_MESSAGE_LENGTH) {
+      return { valid: false, error: `Message at index ${i} exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` };
+    }
+
+    // Sanitize content - trim whitespace
+    sanitized.push({ role, content: content.trim() });
+  }
+
+  return { valid: true, sanitized };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, module_id } = await req.json();
-    
-    console.log('Chat request received:', { module_id, messageCount: messages?.length });
+    const body = await req.json();
+    const { messages, module_id } = body;
+
+    // Validate messages
+    const validation = validateMessages(messages);
+    if (!validation.valid) {
+      console.error("Validation error:", validation.error);
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate module_id if provided
+    if (module_id !== undefined && module_id !== null) {
+      if (typeof module_id !== 'string' || !validateUUID(module_id)) {
+        return new Response(JSON.stringify({ error: "Invalid module_id format" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    console.log('Chat request received:', { module_id, messageCount: validation.sanitized?.length });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -30,11 +104,27 @@ serve(async (req) => {
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      const { data: moduleData } = await supabase
+      // Verify module exists and is published
+      const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
-        .select('system_prompt, title')
+        .select('system_prompt, title, status')
         .eq('id', module_id)
         .single();
+      
+      if (moduleError) {
+        console.error('Module lookup error:', moduleError);
+        return new Response(JSON.stringify({ error: "Module not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (moduleData.status !== 'published') {
+        return new Response(JSON.stringify({ error: "Module is not available" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       
       if (moduleData?.system_prompt) {
         systemPrompt = moduleData.system_prompt;
@@ -52,7 +142,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...validation.sanitized!,
         ],
         stream: true,
       }),
@@ -87,7 +177,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Chat error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An error occurred processing your request" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
