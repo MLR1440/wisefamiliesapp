@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Send, Sparkles, RefreshCw, Loader2, AlertTriangle, WifiOff } from 'lucide-react';
 import { useChat, ChatMessage } from '@/hooks/useChat';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { toast } from '@/hooks/use-toast';
 import { ChatSkeleton } from '@/components/ui/skeleton';
 
@@ -90,6 +91,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
   const inputRef = useRef<HTMLInputElement>(null);
   const hasTriggeredInteraction = useRef(false);
   const { isOnline } = useNetworkStatus();
+  const { trackPromptClicked, trackMessageSent } = useAnalytics();
   
   const {
     messages,
@@ -126,7 +128,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
     }
   }, [isOnline]);
 
-  const handlePromptClick = (promptText: string) => {
+  const handlePromptClick = (promptText: string, promptLabel: string) => {
     if (!isOnline) {
       toast({
         title: "You're offline",
@@ -136,6 +138,8 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
       return;
     }
     setLastFailedMessage(promptText);
+    trackPromptClicked(moduleId, promptLabel);
+    trackMessageSent(moduleId, promptText.length);
     sendMessage(promptText);
   };
 
@@ -153,6 +157,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
     }
     
     setLastFailedMessage(inputValue.trim());
+    trackMessageSent(moduleId, inputValue.trim().length);
     sendMessage(inputValue.trim());
     setInputValue('');
   };
@@ -229,7 +234,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
               {starterPrompts.map((prompt) => (
                 <button
                   key={prompt.id}
-                  onClick={() => handlePromptClick(prompt.prompt_text)}
+                  onClick={() => handlePromptClick(prompt.prompt_text, prompt.label)}
                   disabled={isLoading || !isOnline}
                   className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
                 >
