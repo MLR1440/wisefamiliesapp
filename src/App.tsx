@@ -15,6 +15,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
+import ChapterEditor from "./pages/admin/ChapterEditor";
 import AdminPrompts from "./pages/admin/AdminPrompts";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -73,6 +74,11 @@ const App = () => (
             <Route path="/admin/modules/:moduleId" element={
               <ProtectedRoute requireAdmin>
                 <ModuleEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/chapters/:chapterId" element={
+              <ProtectedRoute requireAdmin>
+                <ChapterEditor />
               </ProtectedRoute>
             } />
             <Route path="/admin/prompts" element={

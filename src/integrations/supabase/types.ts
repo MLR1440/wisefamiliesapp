@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      chapters: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          order_number: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          order_number?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          order_number?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -166,6 +196,7 @@ export type Database = {
       }
       modules: {
         Row: {
+          chapter_id: string | null
           created_at: string
           description: string
           id: string
@@ -179,6 +210,7 @@ export type Database = {
           video_url: string
         }
         Insert: {
+          chapter_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -192,6 +224,7 @@ export type Database = {
           video_url?: string
         }
         Update: {
+          chapter_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -205,6 +238,13 @@ export type Database = {
           video_url?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "modules_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "modules_next_module_id_fkey"
             columns: ["next_module_id"]
