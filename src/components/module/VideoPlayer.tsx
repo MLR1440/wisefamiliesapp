@@ -1,4 +1,6 @@
-import { Play } from 'lucide-react';
+import { useState } from 'react';
+import { Play, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -7,6 +9,9 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Extract YouTube video ID
   const getYouTubeEmbedUrl = (url: string) => {
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
@@ -18,6 +23,46 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
     const match = url.match(/vimeo\.com\/(\d+)/);
     return match ? `https://player.vimeo.com/video/${match[1]}` : null;
   };
+
+  const handleRetry = () => {
+    setHasError(false);
+    setIsLoading(true);
+  };
+
+  const handleLoad = () => {
+    setIsLoading(false);
+    setHasError(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+        <div className="aspect-video flex items-center justify-center bg-muted">
+          <div className="text-center px-6 py-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="font-heading font-semibold text-foreground mb-2">
+              Video unavailable
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+              The video couldn't be loaded. You can still use the chat below.
+            </p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Determine video type and render appropriate player
   const renderPlayer = () => {
@@ -32,17 +77,30 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
       );
     }
 
+    const commonProps = {
+      title,
+      className: 'h-full w-full',
+      onLoad: handleLoad,
+      onError: handleError,
+    };
+
     if (videoType === 'youtube') {
       const embedUrl = getYouTubeEmbedUrl(videoUrl);
       if (embedUrl) {
         return (
-          <iframe
-            src={embedUrl}
-            title={title}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                <Play className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
+            <iframe
+              src={embedUrl}
+              {...commonProps}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </>
         );
       }
     }
@@ -51,20 +109,26 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
       const embedUrl = getVimeoEmbedUrl(videoUrl);
       if (embedUrl) {
         return (
-          <iframe
-            src={embedUrl}
-            title={title}
-            className="h-full w-full"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-          />
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                <Play className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
+            <iframe
+              src={embedUrl}
+              {...commonProps}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </>
         );
       }
     }
 
     if (videoType === 'direct') {
       return (
-        <video controls className="h-full w-full">
+        <video controls className="h-full w-full" onLoadedData={handleLoad} onError={handleError}>
           <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -78,8 +142,7 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
         return (
           <iframe
             src={embedUrl}
-            title={title}
-            className="h-full w-full"
+            {...commonProps}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
@@ -93,8 +156,7 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
         return (
           <iframe
             src={embedUrl}
-            title={title}
-            className="h-full w-full"
+            {...commonProps}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
           />
@@ -104,7 +166,7 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
 
     // Default to video element for direct URLs
     return (
-      <video controls className="h-full w-full">
+      <video controls className="h-full w-full" onLoadedData={handleLoad} onError={handleError}>
         <source src={videoUrl} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
@@ -113,7 +175,7 @@ const VideoPlayer = ({ videoUrl, videoType, title }: VideoPlayerProps) => {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-      <div className="aspect-video">{renderPlayer()}</div>
+      <div className="aspect-video relative">{renderPlayer()}</div>
     </div>
   );
 };

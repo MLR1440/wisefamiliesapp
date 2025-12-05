@@ -11,6 +11,8 @@ import { useModule } from '@/hooks/useModules';
 import { useProgress } from '@/hooks/useProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { mockUser } from '@/data/mockData';
+import { VideoSkeleton, ChatSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 
 const ModulePage = () => {
   const { moduleId } = useParams();
@@ -51,15 +53,35 @@ const ModulePage = () => {
   const handleComplete = async (checked: boolean) => {
     if (checked) {
       await markCompleted();
+      toast({
+        title: "Module completed! 🎉",
+        description: "Great progress! Keep up the good work.",
+      });
     }
   };
 
+  // Loading state with skeletons
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
-        <main className="container py-8 md:py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <main className="container py-6 md:py-12">
+          <Skeleton className="mb-6 h-4 w-32" />
+          <div className="mb-8">
+            <Skeleton className="mb-2 h-4 w-24" />
+            <Skeleton className="mb-3 h-10 w-3/4 md:w-1/2" />
+            <Skeleton className="h-6 w-full max-w-2xl" />
+          </div>
+          <div className="grid gap-6 lg:gap-8 lg:grid-cols-5">
+            <div className="lg:col-span-3 space-y-6 md:space-y-8">
+              <VideoSkeleton />
+              <ChatSkeleton />
+            </div>
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
+              <Skeleton className="h-16 rounded-xl" />
+              <Skeleton className="h-48 rounded-xl" />
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -85,32 +107,33 @@ const ModulePage = () => {
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased userName={mockUser.firstName} />
 
-      <main className="container py-8 md:py-12">
+      <main className="container py-6 md:py-12">
         {/* Back navigation */}
         <Link
           to="/dashboard"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-4 md:mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
 
         {/* Module header */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           {modules.length > 0 && (
             <span className="mb-2 inline-block text-sm font-medium text-secondary">
               Module {moduleIndex + 1} of {modules.length}
             </span>
           )}
-          <h1 className="mb-3 font-heading text-3xl font-bold text-foreground md:text-4xl">
+          <h1 className="mb-2 md:mb-3 font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">
             {module.title}
           </h1>
-          <p className="max-w-2xl text-lg text-muted-foreground">{module.description}</p>
+          <p className="max-w-2xl text-base md:text-lg text-muted-foreground">{module.description}</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-5">
+        {/* Mobile: stack everything, Desktop: two columns */}
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-5">
           {/* Main content - Video & Chat */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-6 md:space-y-8">
             {/* Video Section */}
             <VideoPlayer
               videoUrl={module.video_url}
@@ -132,8 +155,8 @@ const ModulePage = () => {
             />
           </div>
 
-          {/* Sidebar - Navigation */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Sidebar - Navigation (mobile: appears below chat) */}
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             {/* Mark as complete */}
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-3">
@@ -151,9 +174,9 @@ const ModulePage = () => {
               </div>
             </div>
 
-            {/* Next module preview */}
+            {/* Next module preview - tappable on mobile */}
             {nextModule && (
-              <div className="rounded-xl border border-border bg-card p-6">
+              <div className="rounded-xl border border-border bg-card p-4 md:p-6">
                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Up Next
                 </span>
@@ -166,7 +189,7 @@ const ModulePage = () => {
                 <Link to={`/course/${nextModule.id}`}>
                   <Button
                     variant={hasStarted ? 'cta' : 'soft'}
-                    className="mt-4 w-full gap-2"
+                    className="mt-4 w-full gap-2 h-11 md:h-10"
                     disabled={!hasStarted}
                   >
                     Continue to Next Module
@@ -184,7 +207,7 @@ const ModulePage = () => {
             {/* Previous module */}
             {prevModule && (
               <Link to={`/course/${prevModule.id}`}>
-                <Button variant="ghost" className="w-full gap-2">
+                <Button variant="ghost" className="w-full gap-2 h-11 md:h-10">
                   <ArrowLeft className="h-4 w-4" />
                   Previous: {prevModule.title}
                 </Button>
