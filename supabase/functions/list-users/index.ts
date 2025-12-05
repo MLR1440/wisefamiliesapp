@@ -71,6 +71,41 @@ serve(async (req) => {
       rolesMap[r.user_id].push(r.role);
     });
 
+    // Get message counts per user from conversations -> messages
+    const { data: conversations } = await adminClient
+      .from("conversations")
+      .select("user_id");
+
+    const { data: allMessages } = await adminClient
+      .from("messages")
+      .select("conversation_id, role");
+
+    // Build conversation to user mapping
+    const conversationUserMap: Record<string, string> = {};
+    conversations?.forEach((c: { user_id: string; id?: string }) => {
+      // We need to get conversation IDs - let's query differently
+    });
+
+    // Get conversations with their IDs
+    const { data: convosWithIds } = await adminClient
+      .from("conversations")
+      .select("id, user_id");
+
+    convosWithIds?.forEach((c) => {
+      conversationUserMap[c.id] = c.user_id;
+    });
+
+    // Count user messages (role = 'user') per user
+    const messageCountMap: Record<string, number> = {};
+    allMessages?.forEach((m) => {
+      if (m.role === "user") {
+        const userId = conversationUserMap[m.conversation_id];
+        if (userId) {
+          messageCountMap[userId] = (messageCountMap[userId] || 0) + 1;
+        }
+      }
+    });
+
     // Format users for response
     const users = usersData.users.map((u) => ({
       id: u.id,
@@ -80,6 +115,7 @@ serve(async (req) => {
       createdAt: u.created_at,
       lastSignIn: u.last_sign_in_at,
       roles: rolesMap[u.id] || [],
+      messageCount: messageCountMap[u.id] || 0,
     }));
 
     return new Response(JSON.stringify({ users }), {

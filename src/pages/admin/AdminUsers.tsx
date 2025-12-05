@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Users, Shield, Loader2, Mail, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Loader2, Mail, Calendar, Clock, Search, MessageSquare, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Table,
@@ -15,6 +15,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface User {
   id: string;
@@ -24,12 +32,20 @@ interface User {
   createdAt: string;
   lastSignIn: string | null;
   roles: string[];
+  messageCount: number;
 }
+
+type SortField = 'name' | 'createdAt' | 'lastSignIn' | 'messageCount';
+type SortOrder = 'asc' | 'desc';
 
 const AdminUsers = () => {
   const { user, isAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
 
@@ -62,6 +78,69 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filteredAndSortedUsers = useMemo(() => {
+    let result = [...users];
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((u) =>
+        u.email.toLowerCase().includes(query) ||
+        u.firstName.toLowerCase().includes(query) ||
+        u.lastName.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by role
+    if (roleFilter !== 'all') {
+      if (roleFilter === 'admin') {
+        result = result.filter((u) => u.roles.includes('admin'));
+      } else if (roleFilter === 'user') {
+        result = result.filter((u) => !u.roles.includes('admin'));
+      }
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'name':
+          const nameA = `${a.firstName} ${a.lastName}`.toLowerCase() || a.email.toLowerCase();
+          const nameB = `${b.firstName} ${b.lastName}`.toLowerCase() || b.email.toLowerCase();
+          comparison = nameA.localeCompare(nameB);
+          break;
+        case 'createdAt':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case 'lastSignIn':
+          const timeA = a.lastSignIn ? new Date(a.lastSignIn).getTime() : 0;
+          const timeB = b.lastSignIn ? new Date(b.lastSignIn).getTime() : 0;
+          comparison = timeA - timeB;
+          break;
+        case 'messageCount':
+          comparison = a.messageCount - b.messageCount;
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [users, searchQuery, roleFilter, sortField, sortOrder]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="h-4 w-4" />;
+    return sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />;
   };
 
   const formatDate = (dateString: string | null) => {
@@ -103,10 +182,33 @@ const AdminUsers = () => {
                 User Management
               </h1>
               <p className="text-sm text-muted-foreground">
-                {users.length} registered user{users.length !== 1 ? 's' : ''}
+                {filteredAndSortedUsers.length} of {users.length} user{users.length !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              <SelectItem value="admin">Admins Only</SelectItem>
+              <SelectItem value="user">Users Only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Users table */}
@@ -121,19 +223,67 @@ const AdminUsers = () => {
               <p className="text-lg font-medium text-foreground">No users found</p>
               <p className="text-sm text-muted-foreground">Users will appear here once they sign up</p>
             </div>
+          ) : filteredAndSortedUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <Search className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-lg font-medium text-foreground">No matching users</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-3 h-8 gap-1"
+                        onClick={() => handleSort('name')}
+                      >
+                        User
+                        {getSortIcon('name')}
+                      </Button>
+                    </TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Last Active</TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-3 h-8 gap-1"
+                        onClick={() => handleSort('messageCount')}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Chat Usage
+                        {getSortIcon('messageCount')}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-3 h-8 gap-1"
+                        onClick={() => handleSort('createdAt')}
+                      >
+                        Joined
+                        {getSortIcon('createdAt')}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-3 h-8 gap-1"
+                        onClick={() => handleSort('lastSignIn')}
+                      >
+                        Last Active
+                        {getSortIcon('lastSignIn')}
+                      </Button>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((u) => (
+                  {filteredAndSortedUsers.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -169,6 +319,14 @@ const AdminUsers = () => {
                           ) : (
                             <Badge variant="outline">user</Badge>
                           )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                          <span className={u.messageCount > 0 ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+                            {u.messageCount} message{u.messageCount !== 1 ? 's' : ''}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
