@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, UserCog } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
@@ -208,18 +208,26 @@ const Dashboard = () => {
       
       <main className="container py-6 md:py-12 px-4 md:px-8">
         {/* Welcome section */}
-        <div className="mb-6 md:mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-              Welcome back, {userName}!
-            </h1>
-            {isAdmin && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Admin
-              </span>}
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
+                Welcome back, {userName}!
+              </h1>
+              {isAdmin && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  Admin
+                </span>}
+            </div>
+            <p className="text-base text-muted-foreground">
+              Continue your AI-Ready Parenting journey
+            </p>
           </div>
-          <p className="text-base text-muted-foreground">
-            Continue your AI-Ready Parenting journey
-          </p>
+          <Link to="/profile">
+            <Button variant="outline" size="sm" className="gap-2 h-10">
+              <UserCog className="h-4 w-4" />
+              <span>Customize Child Info</span>
+            </Button>
+          </Link>
         </div>
 
         {/* Progress card */}
@@ -268,18 +276,22 @@ const Dashboard = () => {
                     <div className="rounded-xl border border-border overflow-hidden">
                       <CollapsibleTrigger asChild>
                         <button className="flex items-center gap-3 w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors text-left">
-                          <ChevronDown className={`h-5 w-5 transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
-                          <div className="flex-1">
-                            <h3 className="font-heading font-semibold text-base md:text-lg text-foreground">
-                              {chapter.title}
-                            </h3>
-                            {chapter.description && <p className="text-sm text-muted-foreground mt-1">
+                          <ChevronDown className={`h-5 w-5 flex-shrink-0 transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <h3 className="font-heading font-semibold text-base md:text-lg text-foreground">
+                                {chapter.title}
+                              </h3>
+                              <span className="text-sm text-muted-foreground flex-shrink-0">
+                                {completedInChapter}/{chapterModules.length}
+                              </span>
+                            </div>
+                            {chapter.description && (
+                              <p className="text-base text-muted-foreground mt-2 leading-relaxed">
                                 {chapter.description}
-                              </p>}
+                              </p>
+                            )}
                           </div>
-                          <span className="text-sm text-muted-foreground">
-                            {completedInChapter}/{chapterModules.length}
-                          </span>
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>

@@ -13,6 +13,7 @@ import ModulePage from "./pages/ModulePage";
 import ProgressPage from "./pages/ProgressPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Onboarding from "./pages/Onboarding";
+import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
@@ -48,6 +49,11 @@ const App = () => (
             <Route path="/onboarding" element={
               <ProtectedRoute>
                 <Onboarding />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
