@@ -143,7 +143,8 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
     trackPromptClicked(moduleId, prompt.label);
     trackMessageSent(moduleId, prompt.prompt_text.length);
     onPromptClicked?.(prompt.id);
-    sendMessage(prompt.prompt_text);
+    // Display the label, but send the full prompt text to the AI
+    sendMessage(prompt.label, prompt.prompt_text);
   };
 
   // Filter out already clicked prompts

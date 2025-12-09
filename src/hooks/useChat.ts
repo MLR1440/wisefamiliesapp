@@ -99,34 +99,38 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
   };
 
   // Send message and stream response
-  const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isLoading) return;
+  // displayContent is what the user sees, actualContent is what gets sent to AI (defaults to displayContent)
+  const sendMessage = useCallback(async (displayContent: string, actualContent?: string) => {
+    if (!displayContent.trim() || isLoading) return;
+
+    const contentToDisplay = displayContent.trim();
+    const contentToSend = (actualContent || displayContent).trim();
 
     setIsLoading(true);
     setError(null);
     
-    // Add user message to UI immediately
+    // Add user message to UI immediately (shows displayContent)
     const userMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
       role: 'user',
-      content: content.trim(),
+      content: contentToDisplay,
     };
     setMessages(prev => [...prev, userMessage]);
 
     try {
       const convId = await ensureConversation();
       
-      // Save user message
-      const savedUserMsg = await saveMessage(convId, 'user', content.trim());
+      // Save user message (save displayContent to DB for history)
+      const savedUserMsg = await saveMessage(convId, 'user', contentToDisplay);
       setMessages(prev => 
         prev.map(m => m.id === userMessage.id ? { ...m, id: savedUserMsg.id } : m)
       );
 
-      // Prepare messages for API
-      const apiMessages = [...messages, userMessage].map(m => ({
+      // Prepare messages for API (use actualContent for the latest message)
+      const apiMessages = [...messages.map(m => ({
         role: m.role,
         content: m.content,
-      }));
+      })), { role: 'user' as const, content: contentToSend }];
 
       // Get current session for auth
       const { data: { session } } = await supabase.auth.getSession();
