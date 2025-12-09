@@ -21,6 +21,7 @@ const ModulePage = () => {
   const { user, isAdmin, hasAccess, checkingPayment } = useAuth();
   const { module, prompts, loading } = useModule(moduleId);
   const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
+  const [clickedPromptIds, setClickedPromptIds] = useState<Set<string>>(new Set());
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
   const moduleStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef(false);
@@ -29,6 +30,9 @@ const ModulePage = () => {
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
   
   const { isCompleted, hasStarted, markStarted, markCompleted } = useProgress(userId, moduleId || '');
+  
+  // Has at least one prompt been clicked?
+  const hasClickedPrompt = clickedPromptIds.size > 0 || hasStarted;
 
   // Fetch all modules for navigation
   useEffect(() => {
@@ -61,6 +65,10 @@ const ModulePage = () => {
 
   const handleFirstInteraction = () => {
     markStarted();
+  };
+
+  const handlePromptClicked = (promptId: string) => {
+    setClickedPromptIds(prev => new Set([...prev, promptId]));
   };
 
   const handleComplete = async (checked: boolean) => {
@@ -193,28 +201,13 @@ const ModulePage = () => {
                 prompt_text: p.prompt_text,
               }))}
               onFirstInteraction={handleFirstInteraction}
+              onPromptClicked={handlePromptClicked}
+              clickedPromptIds={clickedPromptIds}
             />
           </div>
 
           {/* Sidebar - Navigation (mobile: appears below chat) */}
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
-            {/* Mark as complete */}
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="complete"
-                  checked={isCompleted}
-                  onCheckedChange={handleComplete}
-                />
-                <label
-                  htmlFor="complete"
-                  className="text-sm font-medium text-foreground cursor-pointer"
-                >
-                  Mark as completed
-                </label>
-              </div>
-            </div>
-
             {/* Next module preview - tappable on mobile */}
             {nextModule && (
               <div className="rounded-xl border border-border bg-card p-4 md:p-6">
@@ -229,15 +222,15 @@ const ModulePage = () => {
                 </p>
                 <Link to={`/course/${nextModule.id}`}>
                   <Button
-                    variant={hasStarted ? 'cta' : 'soft'}
+                    variant={hasClickedPrompt ? 'cta' : 'soft'}
                     className="mt-4 w-full gap-2 h-11 md:h-10"
-                    disabled={!hasStarted}
+                    disabled={!hasClickedPrompt}
                   >
                     Continue to Next Module
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                {!hasStarted && (
+                {!hasClickedPrompt && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     Complete at least one prompt to continue
                   </p>
@@ -253,6 +246,31 @@ const ModulePage = () => {
                   Previous: {prevModule.title}
                 </Button>
               </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Mark as complete - at the bottom */}
+        <div className="mt-8 rounded-xl border border-border bg-card p-4 md:p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="complete"
+                checked={isCompleted}
+                onCheckedChange={handleComplete}
+                disabled={!hasClickedPrompt && !isCompleted}
+              />
+              <label
+                htmlFor="complete"
+                className={`text-sm font-medium cursor-pointer ${!hasClickedPrompt && !isCompleted ? 'text-muted-foreground' : 'text-foreground'}`}
+              >
+                Mark as completed
+              </label>
+            </div>
+            {!hasClickedPrompt && !isCompleted && (
+              <span className="text-xs text-muted-foreground">
+                Click at least one prompt to enable
+              </span>
             )}
           </div>
         </div>
