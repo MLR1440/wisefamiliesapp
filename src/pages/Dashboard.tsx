@@ -127,7 +127,7 @@ const Dashboard = () => {
     const status = getModuleStatus(module.id);
     return <Link key={module.id} to={status !== 'locked' ? `/course/${module.id}` : '#'} className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 ${status === 'locked' ? 'cursor-not-allowed border-border bg-muted/30' : status === 'current' ? 'border-primary/50 bg-primary/5 hover:border-primary hover:shadow-soft' : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'}`} onClick={e => status === 'locked' && e.preventDefault()}>
         {/* Status icon */}
-        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-primary text-primary-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
+        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-success text-success-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
           {status === 'completed' ? <CheckCircle2 className="h-6 w-6" /> : status === 'locked' ? <Lock className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </div>
 
