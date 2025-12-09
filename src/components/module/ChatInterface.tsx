@@ -8,7 +8,7 @@ import { useAnalytics } from '@/hooks/useAnalytics';
 import { toast } from '@/hooks/use-toast';
 import { ChatSkeleton } from '@/components/ui/skeleton';
 
-interface StarterPrompt {
+export interface StarterPrompt {
   id: string;
   label: string;
   prompt_text: string;
@@ -19,6 +19,8 @@ interface ChatInterfaceProps {
   userId: string;
   starterPrompts: StarterPrompt[];
   onFirstInteraction?: () => void;
+  onPromptClicked?: (promptId: string) => void;
+  clickedPromptIds?: Set<string>;
 }
 
 const MessageBubble = ({ message }: { message: ChatMessage }) => {
@@ -84,7 +86,7 @@ const ErrorMessage = ({ onRetry, onClear }: { onRetry: () => void; onClear: () =
   </div>
 );
 
-const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }: ChatInterfaceProps) => {
+const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, onPromptClicked, clickedPromptIds = new Set() }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState('');
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -128,7 +130,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
     }
   }, [isOnline]);
 
-  const handlePromptClick = (promptText: string, promptLabel: string) => {
+  const handlePromptClick = (prompt: StarterPrompt) => {
     if (!isOnline) {
       toast({
         title: "You're offline",
@@ -137,11 +139,15 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
       });
       return;
     }
-    setLastFailedMessage(promptText);
-    trackPromptClicked(moduleId, promptLabel);
-    trackMessageSent(moduleId, promptText.length);
-    sendMessage(promptText);
+    setLastFailedMessage(prompt.prompt_text);
+    trackPromptClicked(moduleId, prompt.label);
+    trackMessageSent(moduleId, prompt.prompt_text.length);
+    onPromptClicked?.(prompt.id);
+    sendMessage(prompt.prompt_text);
   };
+
+  // Filter out already clicked prompts
+  const remainingPrompts = starterPrompts.filter(p => !clickedPromptIds.has(p.id));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,7 +240,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
               {starterPrompts.map((prompt) => (
                 <button
                   key={prompt.id}
-                  onClick={() => handlePromptClick(prompt.prompt_text, prompt.label)}
+                  onClick={() => handlePromptClick(prompt)}
                   disabled={isLoading || !isOnline}
                   className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
                 >
@@ -261,6 +267,25 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction }:
           </div>
         )}
       </div>
+
+      {/* Remaining prompts below chat - only show when conversation has started and prompts remain */}
+      {messages.length > 0 && remainingPrompts.length > 0 && (
+        <div className="border-t border-border bg-muted/20 px-4 py-3 md:px-6 md:py-4">
+          <p className="text-xs text-muted-foreground mb-2">More prompts to explore:</p>
+          <div className="flex flex-wrap gap-2">
+            {remainingPrompts.map((prompt) => (
+              <button
+                key={prompt.id}
+                onClick={() => handlePromptClick(prompt)}
+                disabled={isLoading || !isOnline}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
+              >
+                <span className="text-xs font-medium text-foreground">{prompt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Input area - thumb accessible on mobile */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2 md:gap-3 border-t border-border bg-muted/30 p-3 md:p-4">
