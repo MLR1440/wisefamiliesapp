@@ -16,7 +16,7 @@ const loginSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { signIn, user, isLoading: authLoading, isAdmin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,13 +25,14 @@ const Login = () => {
   });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Redirect if already logged in
+  // Redirect if already logged in - admins go to admin dashboard
   useEffect(() => {
     if (user && !authLoading) {
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      const defaultRoute = isAdmin ? '/admin' : '/dashboard';
+      navigate(from || defaultRoute, { replace: true });
     }
-  }, [user, authLoading, navigate, location]);
+  }, [user, authLoading, isAdmin, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
