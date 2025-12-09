@@ -71,6 +71,10 @@ const ModulePage = () => {
     setClickedPromptIds(prev => new Set([...prev, promptId]));
   };
 
+  const handleResetPrompts = () => {
+    setClickedPromptIds(new Set());
+  };
+
   const handleComplete = async (checked: boolean) => {
     if (checked && moduleId) {
       await markCompleted();
@@ -203,6 +207,7 @@ const ModulePage = () => {
               onFirstInteraction={handleFirstInteraction}
               onPromptClicked={handlePromptClicked}
               clickedPromptIds={clickedPromptIds}
+              onResetPrompts={handleResetPrompts}
             />
           </div>
 

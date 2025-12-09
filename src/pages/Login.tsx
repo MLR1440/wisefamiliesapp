@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -25,13 +26,34 @@ const Login = () => {
   });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Redirect if already logged in - admins go to admin dashboard
+  // Redirect if already logged in - check onboarding status
   useEffect(() => {
-    if (user && !authLoading) {
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
-      const defaultRoute = isAdmin ? '/admin' : '/dashboard';
-      navigate(from || defaultRoute, { replace: true });
-    }
+    const checkAndRedirect = async () => {
+      if (user && !authLoading) {
+        const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
+        
+        // Admins always go to admin dashboard
+        if (isAdmin) {
+          navigate(from || '/admin', { replace: true });
+          return;
+        }
+
+        // Check if user needs onboarding
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!profile?.onboarding_completed) {
+          navigate('/onboarding', { replace: true });
+        } else {
+          navigate(from || '/dashboard', { replace: true });
+        }
+      }
+    };
+
+    checkAndRedirect();
   }, [user, authLoading, isAdmin, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {

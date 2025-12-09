@@ -30,10 +30,10 @@ const Signup = () => {
     password: '',
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in - to onboarding
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/onboarding');
     }
   }, [user, navigate]);
 
@@ -77,7 +77,7 @@ const Signup = () => {
         }
       } else {
         toast.success('Account created successfully!');
-        navigate('/dashboard');
+        navigate('/onboarding');
       }
     } catch (err) {
       toast.error('An unexpected error occurred');

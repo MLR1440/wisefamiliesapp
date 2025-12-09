@@ -170,6 +170,30 @@ serve(async (req) => {
       console.log('Guardrail appendix loaded');
     }
 
+    // Get user profile for personalization context
+    let userContext = '';
+    if (userId !== 'anonymous') {
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('child_age, child_gender, child_likes, child_dislikes, current_issues')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (userProfile) {
+        const contextParts: string[] = [];
+        if (userProfile.child_age) contextParts.push(`Child's age range: ${userProfile.child_age}`);
+        if (userProfile.child_gender) contextParts.push(`Child's gender: ${userProfile.child_gender}`);
+        if (userProfile.child_likes) contextParts.push(`Child's interests/likes: ${userProfile.child_likes}`);
+        if (userProfile.child_dislikes) contextParts.push(`Child's dislikes/struggles: ${userProfile.child_dislikes}`);
+        if (userProfile.current_issues) contextParts.push(`Current parenting challenges: ${userProfile.current_issues}`);
+        
+        if (contextParts.length > 0) {
+          userContext = `\n\n--- PERSONALIZED CONTEXT FOR THIS PARENT ---\nUse this information to tailor your advice:\n${contextParts.join('\n')}\n--- END PERSONALIZED CONTEXT ---`;
+          console.log('User profile context loaded');
+        }
+      }
+    }
+
     // Get module's system prompt if module_id provided
     let systemPrompt = "You are a helpful and empathetic parenting coach for the WiseFamilies platform. Help parents navigate challenges with technology and screen time for their children. Provide practical, actionable advice while being supportive and non-judgmental. Keep responses conversational and warm.";
     
@@ -202,10 +226,14 @@ serve(async (req) => {
       }
     }
 
-    // Combine system prompt with guardrail appendix
-    const fullSystemPrompt = guardrailAppendix 
-      ? `${systemPrompt}\n\n---\n\n${guardrailAppendix}`
-      : systemPrompt;
+    // Combine system prompt with user context and guardrail appendix
+    let fullSystemPrompt = systemPrompt;
+    if (userContext) {
+      fullSystemPrompt += userContext;
+    }
+    if (guardrailAppendix) {
+      fullSystemPrompt += `\n\n---\n\n${guardrailAppendix}`;
+    }
 
     console.log('System prompt length:', fullSystemPrompt.length);
 

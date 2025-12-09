@@ -21,6 +21,7 @@ interface ChatInterfaceProps {
   onFirstInteraction?: () => void;
   onPromptClicked?: (promptId: string) => void;
   clickedPromptIds?: Set<string>;
+  onResetPrompts?: () => void;
 }
 
 const MessageBubble = ({ message }: { message: ChatMessage }) => {
@@ -38,9 +39,9 @@ const MessageBubble = ({ message }: { message: ChatMessage }) => {
             : 'bg-muted text-foreground'
         }`}
       >
-        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
         {message.created_at && (
-          <p className={`text-xs mt-1 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+          <p className={`text-sm mt-1.5 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
             {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         )}
@@ -86,7 +87,7 @@ const ErrorMessage = ({ onRetry, onClear }: { onRetry: () => void; onClear: () =
   </div>
 );
 
-const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, onPromptClicked, clickedPromptIds = new Set() }: ChatInterfaceProps) => {
+const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, onPromptClicked, clickedPromptIds = new Set(), onResetPrompts }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState('');
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -185,6 +186,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
   const handleClearAndRestart = async () => {
     await clearConversation();
     setLastFailedMessage(null);
+    onResetPrompts?.(); // Reset clicked prompts to show all buttons again
     toast({
       title: "Conversation cleared",
       description: "You can start a fresh conversation.",
@@ -210,30 +212,30 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-accent" />
-            <h2 className="font-heading font-semibold text-foreground text-sm md:text-base">AI Coaching Assistant</h2>
+            <h2 className="font-heading font-semibold text-foreground text-base md:text-lg">AI Coaching Assistant</h2>
           </div>
           {hasHistory && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearAndRestart}
-              className="text-muted-foreground hover:text-foreground h-8 px-2 md:px-3"
+              className="text-muted-foreground hover:text-foreground h-9 px-3"
             >
-              <RefreshCw className="h-4 w-4 md:mr-1" />
-              <span className="hidden md:inline">Start Fresh</span>
+              <RefreshCw className="h-4 w-4 mr-1.5" />
+              <span>Start Fresh</span>
             </Button>
           )}
         </div>
-        <p className="mt-1 text-xs md:text-sm text-muted-foreground">
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Ask questions about this module or get personalized parenting guidance
         </p>
       </div>
 
       {/* Messages area */}
-      <div className="h-[350px] md:h-[400px] overflow-y-auto p-4 md:p-6">
+      <div className="h-[400px] md:h-[450px] overflow-y-auto p-4 md:p-6">
         {messages.length === 0 ? (
           <div className="space-y-4">
-            <p className="text-center text-muted-foreground text-sm">
+            <p className="text-center text-muted-foreground text-base">
               Start a conversation with one of these prompts:
             </p>
             {/* Mobile: single column, Desktop: two columns */}
@@ -245,12 +247,12 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
                   disabled={isLoading || !isOnline}
                   className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
                 >
-                  <span className="text-sm font-medium text-foreground">{prompt.label}</span>
+                  <span className="text-base font-medium text-foreground">{prompt.label}</span>
                 </button>
               ))}
             </div>
             {starterPrompts.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-base text-muted-foreground">
                 No starter prompts available. Type your question below.
               </p>
             )}
@@ -272,16 +274,16 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
       {/* Remaining prompts below chat - only show when conversation has started and prompts remain */}
       {messages.length > 0 && remainingPrompts.length > 0 && (
         <div className="border-t border-border bg-muted/20 px-4 py-3 md:px-6 md:py-4">
-          <p className="text-xs text-muted-foreground mb-2">More prompts to explore:</p>
+          <p className="text-sm text-muted-foreground mb-2.5">More prompts to explore:</p>
           <div className="flex flex-wrap gap-2">
             {remainingPrompts.map((prompt) => (
               <button
                 key={prompt.id}
                 onClick={() => handlePromptClick(prompt)}
                 disabled={isLoading || !isOnline}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
+                className="rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]"
               >
-                <span className="text-xs font-medium text-foreground">{prompt.label}</span>
+                <span className="text-sm font-medium text-foreground">{prompt.label}</span>
               </button>
             ))}
           </div>
@@ -289,23 +291,23 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
       )}
 
       {/* Input area - thumb accessible on mobile */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 md:gap-3 border-t border-border bg-muted/30 p-3 md:p-4">
+      <form onSubmit={handleSubmit} className="flex items-center gap-3 border-t border-border bg-muted/30 p-4">
         <Input
           ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={messages.length > 0 ? "Ask a follow-up question..." : "Type your question..."}
-          className="flex-1 h-10 md:h-10 text-base"
+          className="flex-1 h-12 text-base"
           disabled={isLoading || !isOnline}
         />
         <Button 
           type="submit" 
           size="icon" 
           disabled={!inputValue.trim() || isLoading || !isOnline}
-          className="h-10 w-10 md:h-10 md:w-10 flex-shrink-0"
+          className="h-12 w-12 flex-shrink-0"
         >
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
         </Button>
       </form>
     </div>
