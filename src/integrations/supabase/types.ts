@@ -254,6 +254,45 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          child_age: string | null
+          child_dislikes: string | null
+          child_gender: string | null
+          child_likes: string | null
+          created_at: string
+          current_issues: string | null
+          id: string
+          onboarding_completed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          child_age?: string | null
+          child_dislikes?: string | null
+          child_gender?: string | null
+          child_likes?: string | null
+          created_at?: string
+          current_issues?: string | null
+          id?: string
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          child_age?: string | null
+          child_dislikes?: string | null
+          child_gender?: string | null
+          child_likes?: string | null
+          created_at?: string
+          current_issues?: string | null
+          id?: string
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           completed_at: string | null

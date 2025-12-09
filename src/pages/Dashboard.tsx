@@ -127,21 +127,21 @@ const Dashboard = () => {
     const status = getModuleStatus(module.id);
     return <Link key={module.id} to={status !== 'locked' ? `/course/${module.id}` : '#'} className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 ${status === 'locked' ? 'cursor-not-allowed border-border bg-muted/30' : status === 'current' ? 'border-primary/50 bg-primary/5 hover:border-primary hover:shadow-soft' : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'}`} onClick={e => status === 'locked' && e.preventDefault()}>
         {/* Status icon */}
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-primary text-primary-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
-          {status === 'completed' ? <CheckCircle2 className="h-5 w-5" /> : status === 'locked' ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-primary text-primary-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
+          {status === 'completed' ? <CheckCircle2 className="h-6 w-6" /> : status === 'locked' ? <Lock className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            {status === 'current' && <span className="rounded-full bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary">
+            {status === 'current' && <span className="rounded-full bg-secondary/20 px-2.5 py-1 text-sm font-medium text-secondary">
                 {progress.find(p => p.module_id === module.id)?.started_at ? 'In Progress' : 'Start Here'}
               </span>}
           </div>
-          <h3 className={`font-heading font-semibold ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
+          <h3 className={`font-heading font-semibold text-base md:text-lg ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
             {module.title}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
             {module.description}
           </p>
         </div>
@@ -206,42 +206,42 @@ const Dashboard = () => {
   return <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} />
       
-      <main className="container py-8 md:py-12">
+      <main className="container py-6 md:py-12 px-4 md:px-8">
         {/* Welcome section */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <h1 className="font-heading text-3xl font-bold text-foreground">
+            <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
               Welcome back, {userName}!
             </h1>
             {isAdmin && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                 Admin
               </span>}
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Continue your AI-Ready Parenting journey
           </p>
         </div>
 
         {/* Progress card */}
-        <div className="mb-8 rounded-2xl border border-border bg-gradient-card p-6 shadow-soft">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 md:mb-8 rounded-2xl border border-border bg-gradient-card p-5 md:p-6 shadow-soft">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex-1">
-              <h2 className="mb-2 font-heading text-lg font-semibold text-foreground">
+              <h2 className="mb-2 font-heading text-lg md:text-xl font-semibold text-foreground">
                 Course Progress
               </h2>
-              <div className="mb-2 flex items-center gap-2">
+              <div className="mb-2 flex items-center gap-3">
                 <Progress value={progressPercentage} className="h-3 flex-1" />
-                <span className="text-sm font-medium text-muted-foreground">
+                <span className="text-base font-medium text-muted-foreground">
                   {Math.round(progressPercentage)}%
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 {completedModules} of {totalModules} modules completed
               </p>
             </div>
             
             {currentModule && <Link to={`/course/${currentModule.id}`}>
-                <Button variant="cta" size="lg" className="gap-2">
+                <Button variant="cta" size="lg" className="gap-2 w-full md:w-auto h-12 text-base">
                   Continue Learning
                   <ArrowRight className="h-5 w-5" />
                 </Button>
@@ -251,7 +251,7 @@ const Dashboard = () => {
 
         {/* Course content */}
         <div>
-          <h2 className="mb-4 font-heading text-xl font-semibold text-foreground">
+          <h2 className="mb-4 font-heading text-xl md:text-2xl font-semibold text-foreground">
             Course Content
           </h2>
           
@@ -270,15 +270,15 @@ const Dashboard = () => {
                         <button className="flex items-center gap-3 w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors text-left">
                           <ChevronDown className={`h-5 w-5 transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
                           <div className="flex-1">
-                            <h3 className="font-heading font-semibold text-foreground">
+                            <h3 className="font-heading font-semibold text-base md:text-lg text-foreground">
                               {chapter.title}
                             </h3>
-                            {chapter.description && <p className="text-sm text-muted-foreground mt-0.5 py-[5px] px-[2px] font-extrabold text-justify font-sans">
+                            {chapter.description && <p className="text-sm text-muted-foreground mt-1">
                                 {chapter.description}
                               </p>}
                           </div>
                           <span className="text-sm text-muted-foreground">
-                            {completedInChapter}/{chapterModules.length} completed
+                            {completedInChapter}/{chapterModules.length}
                           </span>
                         </button>
                       </CollapsibleTrigger>
