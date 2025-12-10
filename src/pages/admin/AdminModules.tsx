@@ -355,13 +355,7 @@ const AdminModules = () => {
     setSearchParams(searchParams);
   };
 
-  // Filter chapters and modules based on current filter
-  const filteredChapters = chapters.filter(c => {
-    if (currentFilter === 'published') return c.status === 'published';
-    if (currentFilter === 'draft') return c.status === 'draft';
-    return true;
-  });
-
+  // Get modules for a chapter with filter applied
   const getModulesForChapter = (chapterId: string) => {
     return modules
       .filter(m => m.chapter_id === chapterId)
@@ -372,6 +366,21 @@ const AdminModules = () => {
       })
       .sort((a, b) => a.order_number - b.order_number);
   };
+
+  // Filter chapters based on current filter
+  // For 'draft' filter: show chapters that are drafts OR have draft modules
+  // For 'published' filter: show chapters that are published AND have published modules
+  const filteredChapters = chapters.filter(c => {
+    if (currentFilter === 'published') {
+      return c.status === 'published' && getModulesForChapter(c.id).length > 0;
+    }
+    if (currentFilter === 'draft') {
+      // Show chapter if it's a draft OR if it has any draft modules
+      const hasDraftModules = modules.some(m => m.chapter_id === c.id && m.status === 'draft');
+      return c.status === 'draft' || hasDraftModules;
+    }
+    return true;
+  });
 
   // Modules without a chapter
   const unassignedModules = modules
