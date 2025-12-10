@@ -20,7 +20,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, GripVertical, Eye, ArrowLeft, Trash2, Video, MessageSquare, Loader2, ChevronDown, FolderPlus } from 'lucide-react';
+import { Plus, Edit, GripVertical, Eye, ArrowLeft, Trash2, Video, MessageSquare, Loader2, ChevronDown, FolderPlus, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DndContext,
@@ -41,6 +41,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useModules, DbModule } from '@/hooks/useModules';
 import { useChapters, DbChapter } from '@/hooks/useChapters';
+import { useCourseExport } from '@/hooks/useCourseExport';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SortableModuleItemProps {
@@ -280,6 +281,7 @@ const AdminModules = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { modules, loading: modulesLoading, deleteModule, reorderModules, fetchModules } = useModules();
   const { chapters, loading: chaptersLoading, deleteChapter, reorderChapters } = useChapters();
+  const { exportCourse, exporting } = useCourseExport();
   const [deleteModuleId, setDeleteModuleId] = useState<string | null>(null);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
   const currentFilter = (searchParams.get('filter') as FilterTab) || 'all';
@@ -353,6 +355,15 @@ const AdminModules = () => {
       searchParams.set('filter', value);
     }
     setSearchParams(searchParams);
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportCourse();
+      toast.success('Course exported successfully');
+    } catch (error) {
+      toast.error('Failed to export course');
+    }
   };
 
   // Get modules for a chapter with filter applied
@@ -430,7 +441,20 @@ const AdminModules = () => {
               Organize your course into chapters and modules
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={handleExport}
+              disabled={exporting}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Export
+            </Button>
             <Link to="/admin/chapters/new">
               <Button variant="outline" className="gap-2">
                 <FolderPlus className="h-4 w-4" />
