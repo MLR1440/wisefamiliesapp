@@ -127,7 +127,7 @@ const ProgressPage = () => {
                     <div
                       className={`flex h-12 w-12 items-center justify-center rounded-full border-4 border-background ${
                         status === 'completed'
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-success text-success-foreground'
                           : status === 'in-progress'
                           ? 'bg-secondary text-secondary-foreground'
                           : 'bg-muted text-muted-foreground'
