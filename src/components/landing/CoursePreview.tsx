@@ -97,7 +97,7 @@ const CoursePreview = () => {
                         <h3 className="font-heading text-lg font-semibold text-foreground">
                           {chapter.title}
                         </h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
                           {chapter.description}
                         </p>
                       </div>
