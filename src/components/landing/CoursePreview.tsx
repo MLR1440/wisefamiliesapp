@@ -23,6 +23,19 @@ interface ChapterWithModules extends Chapter {
 const CoursePreview = () => {
   const [chaptersWithModules, setChaptersWithModules] = useState<ChapterWithModules[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (chapterId: string) => {
+    setExpandedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(chapterId)) {
+        next.delete(chapterId);
+      } else {
+        next.add(chapterId);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,9 +110,15 @@ const CoursePreview = () => {
                         <h3 className="font-heading text-lg font-semibold text-foreground">
                           {chapter.title}
                         </h3>
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">
+                        <p className={`mt-1 text-sm text-muted-foreground ${expandedChapters.has(chapter.id) ? '' : 'line-clamp-1'}`}>
                           {chapter.description}
                         </p>
+                        <button 
+                          onClick={() => toggleExpanded(chapter.id)}
+                          className="mt-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                        >
+                          {expandedChapters.has(chapter.id) ? 'Show less' : 'Read more'}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -107,7 +126,7 @@ const CoursePreview = () => {
                   {/* Modules list */}
                   {chapter.modules.length > 0 && (
                     <div className="border-t border-border">
-                      {chapter.modules.map((module, moduleIndex) => (
+                      {chapter.modules.map((module) => (
                         <div
                           key={module.id}
                           className="flex items-center gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors"
