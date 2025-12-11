@@ -19,7 +19,7 @@ const CTA = () => {
           </p>
           <Link to="/signup">
             <Button variant="cta" size="xl" className="gap-2">
-              Get Instant Access — {formattedPrice}
+              Get Instant Access for {formattedPrice}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>

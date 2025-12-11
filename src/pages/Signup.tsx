@@ -207,7 +207,7 @@ const Signup = () => {
             </div>
 
             <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Get Instant Access — $69'}
+              {isLoading ? 'Creating account...' : 'Get Instant Access for $69'}
             </Button>
           </form>
 
@@ -232,7 +232,7 @@ const Signup = () => {
             <p className="italic text-primary-foreground/90">
               "This course changed how we talk about technology at home. My kids are now asking the right questions about AI!"
             </p>
-            <p className="mt-4 font-medium">— Sarah M., Mother of 2</p>
+            <p className="mt-4 font-medium">- Sarah M., Mother of 2</p>
           </div>
         </div>
       </div>
