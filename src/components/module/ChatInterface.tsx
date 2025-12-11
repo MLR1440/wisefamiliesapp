@@ -291,25 +291,30 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
       )}
 
       {/* Input area - thumb accessible on mobile */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-3 border-t border-border bg-muted/30 p-4">
-        <Input
-          ref={inputRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={messages.length > 0 ? "Ask a follow-up question..." : "Type your question..."}
-          className="flex-1 h-12 text-base"
-          disabled={isLoading || !isOnline}
-        />
-        <Button 
-          type="submit" 
-          size="icon" 
-          disabled={!inputValue.trim() || isLoading || !isOnline}
-          className="h-12 w-12 flex-shrink-0"
-        >
-          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-        </Button>
-      </form>
+      <div className="border-t border-border bg-muted/30">
+        <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 pb-2">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={messages.length > 0 ? "Ask a follow-up question..." : "Type your question..."}
+            className="flex-1 h-12 text-base"
+            disabled={isLoading || !isOnline}
+          />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={!inputValue.trim() || isLoading || !isOnline}
+            className="h-12 w-12 flex-shrink-0"
+          >
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+          </Button>
+        </form>
+        <p className="px-4 pb-3 text-xs text-muted-foreground text-center">
+          AI responses may contain errors. Always verify important decisions with your own judgment or a professional.
+        </p>
+      </div>
     </div>
   );
 };
