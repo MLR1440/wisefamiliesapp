@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, UserCog } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, UserCog, LayoutGrid, List } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
@@ -40,6 +40,7 @@ const Dashboard = () => {
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [openChapters, setOpenChapters] = useState<Set<string>>(new Set());
+  const [isCompactMode, setIsCompactMode] = useState(false);
   const userId = user?.id || '';
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
   useEffect(() => {
@@ -125,6 +126,42 @@ const Dashboard = () => {
   };
   const renderModuleItem = (module: Module, globalIndex: number) => {
     const status = getModuleStatus(module.id);
+    
+    if (isCompactMode) {
+      return (
+        <Link 
+          key={module.id} 
+          to={status !== 'locked' ? `/course/${module.id}` : '#'} 
+          className={`group flex items-center gap-3 rounded-lg border p-2.5 transition-all duration-200 ${
+            status === 'locked' 
+              ? 'cursor-not-allowed border-border bg-muted/30' 
+              : status === 'current' 
+                ? 'border-primary/50 bg-primary/5 hover:border-primary' 
+                : 'border-border bg-card hover:border-primary/30'
+          }`} 
+          onClick={e => status === 'locked' && e.preventDefault()}
+        >
+          <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded ${
+            status === 'completed' ? 'bg-success text-success-foreground' : 
+            status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 
+            'bg-muted text-muted-foreground'
+          }`}>
+            {status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> : 
+             status === 'locked' ? <Lock className="h-3.5 w-3.5" /> : 
+             <Play className="h-3.5 w-3.5" />}
+          </div>
+          <span className={`text-sm font-medium truncate ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
+            {module.title}
+          </span>
+          {status === 'current' && (
+            <span className="ml-auto rounded-full bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary flex-shrink-0">
+              {progress.find(p => p.module_id === module.id)?.started_at ? 'In Progress' : 'Start'}
+            </span>
+          )}
+        </Link>
+      );
+    }
+    
     return <Link key={module.id} to={status !== 'locked' ? `/course/${module.id}` : '#'} className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 ${status === 'locked' ? 'cursor-not-allowed border-border bg-muted/30' : status === 'current' ? 'border-primary/50 bg-primary/5 hover:border-primary hover:shadow-soft' : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'}`} onClick={e => status === 'locked' && e.preventDefault()}>
         {/* Status icon */}
         <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-success text-success-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
@@ -259,9 +296,35 @@ const Dashboard = () => {
 
         {/* Course content */}
         <div>
-          <h2 className="mb-4 font-heading text-xl md:text-2xl font-semibold text-foreground">
-            Course Content
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl md:text-2xl font-semibold text-foreground">
+              Course Content
+            </h2>
+            <div className="flex items-center gap-1 rounded-lg border border-border p-1 bg-muted/30">
+              <button
+                onClick={() => setIsCompactMode(false)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  !isCompactMode 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Expanded</span>
+              </button>
+              <button
+                onClick={() => setIsCompactMode(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  isCompactMode 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">Compact</span>
+              </button>
+            </div>
+          </div>
           
           {allModulesInOrder.length === 0 ? <div className="rounded-xl border border-dashed border-border py-12 text-center">
               <p className="text-muted-foreground">No content available yet.</p>
@@ -286,8 +349,8 @@ const Dashboard = () => {
                                 {completedInChapter}/{chapterModules.length}
                               </span>
                             </div>
-                            {chapter.description && (
-                              <p className="text-base text-muted-foreground mt-2 leading-relaxed">
+                            {chapter.description && !isCompactMode && (
+                              <p className="text-base text-secondary mt-2 leading-relaxed">
                                 {chapter.description}
                               </p>
                             )}
