@@ -269,7 +269,7 @@ const ProgressPage = () => {
             Your Progress
           </h1>
           <p className="text-muted-foreground">
-            Track your journey through the AI-Ready Parenting Framework
+            Track your journey through the A.I - Ready Family Framework
           </p>
         </div>
 

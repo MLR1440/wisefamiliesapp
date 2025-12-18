@@ -209,7 +209,7 @@ const Dashboard = () => {
               Welcome, {userName}!
             </h1>
             <p className="text-muted-foreground">
-              Get started with the AI-Ready Parenting framework
+              Get started with the A.I - Ready Family Framework
             </p>
           </div>
           
@@ -256,7 +256,7 @@ const Dashboard = () => {
                 </span>}
             </div>
             <p className="text-base text-muted-foreground">
-              Continue your AI-Ready Parenting journey
+              Continue your A.I - Ready Family journey
             </p>
           </div>
           <Link to="/profile">

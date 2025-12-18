@@ -21,7 +21,7 @@ export const mockAdminUser: User = {
 export const mockModules: Module[] = [
   {
     id: '1',
-    title: 'Welcome to AI-Ready Parenting',
+    title: 'Welcome to A.I - Ready Family Framework',
     description: 'An introduction to the framework and what you\'ll learn throughout this course. Set the foundation for raising digitally wise children.',
     orderNumber: 1,
     videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -132,7 +132,7 @@ export const mockProgress: Progress[] = [
 ];
 
 export const mockSettings: Settings = {
-  courseTitle: 'AI-Ready Parenting Framework',
+  courseTitle: 'A.I - Ready Family Framework',
   courseDescription: 'A comprehensive 14-day course helping parents navigate the AI age with confidence.',
   coursePrice: 69,
   llmProvider: 'anthropic',

@@ -127,7 +127,7 @@ const Signup = () => {
           {/* Heading */}
           <div className="mb-8">
             <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">Create your account</h1>
-            <p className="text-muted-foreground">Start your AI-Ready Parenting journey today</p>
+            <p className="text-muted-foreground">Start your A.I - Ready Family journey today</p>
           </div>
 
           {/* Form */}

@@ -19,7 +19,7 @@ const Hero = () => {
           {/* Badge */}
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-sm font-medium text-muted-foreground animate-fade-in">
             <Sparkles className="h-4 w-4 text-accent" />
-            The AI-Ready Parenting Framework
+            The A.I - Ready Family Framework
           </div>
 
           {/* Headline */}
