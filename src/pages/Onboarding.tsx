@@ -33,6 +33,13 @@ const Onboarding = () => {
         return;
       }
 
+      // Check if user has paid - if not, redirect to dashboard where paywall shows
+      // (Admins bypass this check)
+      if (!hasAccess && !isAdmin) {
+        navigate('/dashboard');
+        return;
+      }
+
       // Check if user has already completed onboarding
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -58,7 +65,7 @@ const Onboarding = () => {
     };
 
     checkOnboarding();
-  }, [user, navigate]);
+  }, [user, hasAccess, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

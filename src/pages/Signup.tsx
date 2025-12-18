@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -19,6 +20,7 @@ const signupSchema = z.object({
 const Signup = () => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle, user } = useAuth();
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -31,10 +33,10 @@ const Signup = () => {
     password: '',
   });
 
-  // Redirect if already logged in - to onboarding
+  // Redirect if already logged in - to dashboard (where paywall shows if not paid)
   useEffect(() => {
     if (user) {
-      navigate('/onboarding');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -78,7 +80,7 @@ const Signup = () => {
         }
       } else {
         toast.success('Account created successfully!');
-        navigate('/onboarding');
+        navigate('/dashboard');
       }
     } catch (err) {
       toast.error('An unexpected error occurred');
@@ -220,8 +222,8 @@ const Signup = () => {
               </Label>
             </div>
 
-            <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Get Instant Access for $69'}
+            <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading || priceLoading}>
+              {isLoading ? 'Creating account...' : `Get Instant Access for ${priceLoading ? '...' : formattedPrice}`}
             </Button>
 
             <div className="relative">

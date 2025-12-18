@@ -17,7 +17,7 @@ const loginSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signInWithGoogle, user, isLoading: authLoading, isAdmin } = useAuth();
+  const { signIn, signInWithGoogle, user, isLoading: authLoading, isAdmin, hasAccess, checkingPayment } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -27,10 +27,10 @@ const Login = () => {
   });
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Redirect if already logged in - check onboarding status
+  // Redirect if already logged in
   useEffect(() => {
     const checkAndRedirect = async () => {
-      if (user && !authLoading) {
+      if (user && !authLoading && !checkingPayment) {
         const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
         
         // Admins always go to admin dashboard
@@ -39,23 +39,28 @@ const Login = () => {
           return;
         }
 
-        // Check if user needs onboarding
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('onboarding_completed')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // If user has paid, check if they need onboarding
+        if (hasAccess) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('onboarding_completed')
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-        if (!profile?.onboarding_completed) {
-          navigate('/onboarding', { replace: true });
+          if (!profile?.onboarding_completed) {
+            navigate('/onboarding', { replace: true });
+          } else {
+            navigate(from || '/dashboard', { replace: true });
+          }
         } else {
-          navigate(from || '/dashboard', { replace: true });
+          // User hasn't paid - go to dashboard where paywall shows
+          navigate('/dashboard', { replace: true });
         }
       }
     };
 
     checkAndRedirect();
-  }, [user, authLoading, isAdmin, navigate, location]);
+  }, [user, authLoading, isAdmin, hasAccess, checkingPayment, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
