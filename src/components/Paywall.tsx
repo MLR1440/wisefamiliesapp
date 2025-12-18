@@ -4,17 +4,37 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Paywall = () => {
   const [loading, setLoading] = useState(false);
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handlePurchase = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-payment');
       
-      if (error) throw error;
+      if (error) {
+        const errorMessage = error.message || '';
+        // Check for auth-related errors
+        if (errorMessage.includes('Auth') || errorMessage.includes('authenticated') || errorMessage.includes('session') || errorMessage.includes('500')) {
+          toast.error('Your session has expired. Please log in again.', {
+            action: {
+              label: 'Log In',
+              onClick: async () => {
+                await signOut();
+                navigate('/login');
+              },
+            },
+          });
+          return;
+        }
+        throw error;
+      }
       
       if (data?.url) {
         window.open(data.url, '_blank');
