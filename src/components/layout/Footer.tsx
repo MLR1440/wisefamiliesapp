@@ -18,7 +18,7 @@ const Footer = () => {
             </Link>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
               Empowering parents to raise children who are wiser than the AI they use. 
-              The AI-Ready Parenting Framework for the modern family.
+              The A.I - Ready Family Framework for the modern family.
             </p>
           </div>
 

@@ -47,7 +47,7 @@ const Paywall = () => {
       </h2>
       
       <p className="mb-6 text-muted-foreground">
-        Get lifetime access to the AI-Ready Parenting framework and all future updates.
+        Get lifetime access to the A.I - Ready Family Framework and all future updates.
       </p>
 
       <div className="mb-6 space-y-3 text-left">

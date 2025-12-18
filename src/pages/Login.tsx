@@ -239,7 +239,7 @@ const Login = () => {
       {/* Right side - Decorative */}
       <div className="hidden bg-gradient-hero lg:flex lg:w-1/2 lg:items-center lg:justify-center lg:p-12">
         <div className="max-w-md text-center text-primary-foreground">
-          <h2 className="mb-4 font-heading text-3xl font-bold">AI-Ready Parenting</h2>
+          <h2 className="mb-4 font-heading text-3xl font-bold">A.I - Ready Family</h2>
           <p className="text-lg text-primary-foreground/80">
             Access your course materials, track your progress, and connect with our community of forward-thinking parents.
           </p>

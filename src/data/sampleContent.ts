@@ -12,7 +12,7 @@ export interface SampleModule {
 export const sampleModules: SampleModule[] = [
   {
     title: "Welcome to the Journey",
-    description: "An introduction to AI-ready parenting and what you'll learn.",
+    description: "An introduction to the A.I - Ready Family Framework and what you'll learn.",
     order_number: 1,
     video_url: "",
     video_type: "youtube",
