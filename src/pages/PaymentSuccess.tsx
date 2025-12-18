@@ -1,17 +1,55 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const { refreshPaymentStatus, checkingPayment, hasAccess } = useAuth();
+  const { refreshPaymentStatus, checkingPayment, hasAccess, user } = useAuth();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
   useEffect(() => {
     // Refresh payment status when landing on this page
     refreshPaymentStatus();
-  }, []);
+    
+    // Check onboarding status
+    const checkOnboarding = async () => {
+      if (!user) {
+        setCheckingOnboarding(false);
+        return;
+      }
+      
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        setOnboardingCompleted(data?.onboarding_completed ?? false);
+      } catch (err) {
+        console.error('Error checking onboarding:', err);
+      } finally {
+        setCheckingOnboarding(false);
+      }
+    };
+    
+    checkOnboarding();
+  }, [user]);
+
+  const handleContinue = () => {
+    // If onboarding not completed, go to onboarding first
+    if (!onboardingCompleted) {
+      navigate('/onboarding');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
+  const isLoading = checkingPayment || checkingOnboarding;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -26,14 +64,14 @@ const PaymentSuccess = () => {
           Thank you for your purchase! You now have lifetime access to the WiseFamilies course.
         </p>
 
-        {checkingPayment ? (
+        {isLoading ? (
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Verifying your purchase...</span>
           </div>
         ) : hasAccess ? (
-          <Button onClick={() => navigate('/dashboard')} size="lg" className="w-full">
-            Start Learning
+          <Button onClick={handleContinue} size="lg" className="w-full">
+            {onboardingCompleted ? 'Start Learning' : 'Continue Setup'}
           </Button>
         ) : (
           <div className="space-y-4">
