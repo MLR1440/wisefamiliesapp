@@ -34,8 +34,14 @@ serve(async (req) => {
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
+
+    logStep("Supabase env present", {
+      hasUrl: !!Deno.env.get("SUPABASE_URL"),
+      hasServiceRoleKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    });
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Auth getUser error: ${userError.message}`);
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
