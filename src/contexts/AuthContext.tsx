@@ -30,10 +30,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Computed: user has access if they're admin OR have purchased
   const hasAccess = isAdmin || hasPurchased;
 
+  // Clear all auth state
+  const clearAuthState = () => {
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
+    setHasPurchased(false);
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event);
+        
+        // Handle session errors or invalid sessions
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+          clearAuthState();
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -50,15 +66,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await checkAdminRole(session.user.id);
-        await checkPaymentStatus();
+    // THEN check for existing session and validate it
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      // If there's an error or no session, clear state
+      if (error || !session) {
+        console.log('No valid session found, clearing auth state');
+        clearAuthState();
+        setIsLoading(false);
+        return;
       }
+
+      // Validate the session by making a lightweight request
+      const { error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.log('Session validation failed, signing out:', userError.message);
+        await supabase.auth.signOut();
+        clearAuthState();
+        setIsLoading(false);
+        return;
+      }
+      
+      setSession(session);
+      setUser(session.user);
+      
+      await checkAdminRole(session.user.id);
+      await checkPaymentStatus();
       setIsLoading(false);
     });
 
@@ -88,6 +120,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setCheckingPayment(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-payment');
+      
+      // Check for auth-related errors and handle them
+      if (error) {
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('Auth') || errorMessage.includes('authenticated') || errorMessage.includes('session')) {
+          console.log('Auth error in check-payment, signing out');
+          await supabase.auth.signOut();
+          clearAuthState();
+          return;
+        }
+      }
       
       if (!error && data?.hasPurchased) {
         setHasPurchased(true);
