@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, BookOpen, Trophy, PartyPopper } from 'lucide-react';
 import VideoPlayer from '@/components/module/VideoPlayer';
 import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
@@ -15,15 +15,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { VideoSkeleton, ChatSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 
+interface ModuleWithChapter {
+  id: string;
+  title: string;
+  description: string;
+  order_number: number;
+  chapter_id: string | null;
+}
+
+interface Chapter {
+  id: string;
+  title: string;
+  order_number: number;
+}
+
 const ModulePage = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { user, isAdmin, hasAccess, checkingPayment } = useAuth();
   const { module, prompts, loading } = useModule(moduleId);
-  const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
+  const [modules, setModules] = useState<ModuleWithChapter[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [clickedPromptIds, setClickedPromptIds] = useState<Set<string>>(new Set());
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [showChapterComplete, setShowChapterComplete] = useState(false);
+  const [completedChapterTitle, setCompletedChapterTitle] = useState('');
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
   const moduleStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef(false);
@@ -38,22 +55,33 @@ const ModulePage = () => {
     setClickedPromptIds(new Set());
     setHasWatchedVideo(false);
     setShowFullDescription(false);
+    setShowChapterComplete(false);
+    setCompletedChapterTitle('');
   }, [moduleId]);
   
   // Has the user interacted with THIS module in any way?
   const hasInteracted = clickedPromptIds.size > 0 || hasStarted || hasWatchedVideo;
 
-  // Fetch all modules for navigation
+  // Fetch all modules and chapters for navigation
   useEffect(() => {
-    const fetchModules = async () => {
-      const { data } = await supabase
-        .from('modules')
-        .select('id, title, description, order_number')
-        .eq('status', 'published')
-        .order('order_number');
-      if (data) setModules(data);
+    const fetchModulesAndChapters = async () => {
+      const [modulesRes, chaptersRes] = await Promise.all([
+        supabase
+          .from('modules')
+          .select('id, title, description, order_number, chapter_id')
+          .eq('status', 'published')
+          .order('order_number'),
+        supabase
+          .from('chapters')
+          .select('id, title, order_number')
+          .eq('status', 'published')
+          .order('order_number')
+      ]);
+      
+      if (modulesRes.data) setModules(modulesRes.data);
+      if (chaptersRes.data) setChapters(chaptersRes.data);
     };
-    fetchModules();
+    fetchModulesAndChapters();
   }, []);
 
   // Track module start
@@ -69,8 +97,24 @@ const ModulePage = () => {
   }, [moduleId, trackModuleStarted]);
 
   const moduleIndex = modules.findIndex((m) => m.id === moduleId);
+  const currentModule = modules[moduleIndex];
   const nextModule = modules[moduleIndex + 1];
   const prevModule = modules[moduleIndex - 1];
+  
+  // Get current chapter info
+  const currentChapter = currentModule?.chapter_id 
+    ? chapters.find(c => c.id === currentModule.chapter_id) 
+    : null;
+  
+  // Get modules in current chapter
+  const modulesInChapter = currentChapter 
+    ? modules.filter(m => m.chapter_id === currentChapter.id)
+    : [];
+  const moduleIndexInChapter = modulesInChapter.findIndex(m => m.id === moduleId);
+  
+  // Check if next module is in a different chapter (chapter transition)
+  const isLastModuleInChapter = nextModule && currentModule?.chapter_id !== nextModule.chapter_id;
+  const isLastModuleInCourse = moduleIndex === modules.length - 1;
 
   const handleFirstInteraction = () => {
     markStarted();
@@ -90,10 +134,29 @@ const ModulePage = () => {
       const timeSpent = Math.round((Date.now() - moduleStartTime.current) / 1000);
       trackModuleCompleted(moduleId, timeSpent);
       
-      // Check if this is the last module
-      const isLastModule = moduleIndex === modules.length - 1;
-      if (isLastModule) {
+      // Check if this is the last module in course
+      if (isLastModuleInCourse) {
         trackCourseCompleted();
+        // Navigate to completion page
+        setTimeout(() => {
+          navigate('/course-complete');
+        }, 1500);
+        toast({
+          title: "🎉 Course Completed!",
+          description: "Congratulations! You've finished the entire course!",
+        });
+        return;
+      }
+      
+      // Check if this is the last module in a chapter
+      if (isLastModuleInChapter && currentChapter) {
+        setCompletedChapterTitle(currentChapter.title);
+        setShowChapterComplete(true);
+        toast({
+          title: `Chapter Complete! 🎉`,
+          description: `You've finished "${currentChapter.title}"!`,
+        });
+        return;
       }
       
       toast({
@@ -179,6 +242,41 @@ const ModulePage = () => {
           Back to Dashboard
         </Link>
 
+        {/* Chapter Complete Celebration */}
+        {showChapterComplete && (
+          <div className="mb-6 rounded-xl border border-success/50 bg-success/5 p-4 md:p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+                <Trophy className="h-6 w-6 text-success" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-heading font-semibold text-success">
+                  Chapter Complete! 🎉
+                </h3>
+                <p className="text-sm text-success/80">
+                  You've finished "{completedChapterTitle}" — great work!
+                </p>
+              </div>
+              <PartyPopper className="h-8 w-8 text-success animate-bounce hidden sm:block" />
+            </div>
+          </div>
+        )}
+
+        {/* Chapter indicator */}
+        {currentChapter && (
+          <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              {currentChapter.title}
+            </span>
+            {modulesInChapter.length > 0 && (
+              <span className="text-xs text-primary/70">
+                • Lesson {moduleIndexInChapter + 1} of {modulesInChapter.length}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Module header */}
         <div className="mb-6 md:mb-8">
           {modules.length > 0 && (
@@ -223,12 +321,53 @@ const ModulePage = () => {
 
           {/* Sidebar - Navigation (mobile: appears below chat) */}
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
+            {/* Course complete indicator for last module */}
+            {isLastModuleInCourse && (
+              <div className="rounded-xl border border-secondary/50 bg-gradient-cta p-4 md:p-6 text-center">
+                <Trophy className="h-8 w-8 text-secondary-foreground mx-auto mb-2" />
+                <h3 className="font-heading font-semibold text-secondary-foreground">
+                  Final Module!
+                </h3>
+                <p className="text-sm text-secondary-foreground/80 mt-1">
+                  Complete this to finish the entire course
+                </p>
+                {isCompleted && hasInteracted && (
+                  <Link to="/course-complete">
+                    <Button variant="soft" className="mt-4 w-full gap-2">
+                      View Completion Page
+                      <Trophy className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
+
             {/* Next module preview - tappable on mobile */}
             {nextModule && (
-              <div className="rounded-xl border border-border bg-card p-4 md:p-6">
+              <div className={`rounded-xl border bg-card p-4 md:p-6 ${
+                isLastModuleInChapter ? 'border-success/30 ring-1 ring-success/20' : 'border-border'
+              }`}>
+                {/* New chapter indicator */}
+                {isLastModuleInChapter && (
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-success/20">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <span className="text-xs font-medium text-success">
+                      Next: New Chapter
+                    </span>
+                  </div>
+                )}
                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Up Next
                 </span>
+                {/* Show the chapter of the next module */}
+                {nextModule.chapter_id && (
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs text-primary">
+                      {chapters.find(c => c.id === nextModule.chapter_id)?.title}
+                    </span>
+                  </div>
+                )}
                 <h3 className="mt-2 font-heading font-semibold text-foreground">
                   {nextModule.title}
                 </h3>
@@ -249,7 +388,7 @@ const ModulePage = () => {
                       variant="cta"
                       className="mt-4 w-full gap-2 h-11 md:h-10"
                     >
-                      Continue to Next Module
+                      {isLastModuleInChapter ? 'Start Next Chapter' : 'Continue to Next Module'}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -259,7 +398,7 @@ const ModulePage = () => {
                     className="mt-4 w-full gap-2 h-11 md:h-10 cursor-not-allowed"
                     disabled
                   >
-                    Continue to Next Module
+                    {isLastModuleInChapter ? 'Start Next Chapter' : 'Continue to Next Module'}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 )}

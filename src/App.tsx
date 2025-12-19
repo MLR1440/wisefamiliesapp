@@ -14,6 +14,7 @@ import ProgressPage from "./pages/ProgressPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
+import CourseComplete from "./pages/CourseComplete";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
@@ -69,6 +70,11 @@ const App = () => (
             <Route path="/progress" element={
               <ProtectedRoute>
                 <ProgressPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/course-complete" element={
+              <ProtectedRoute>
+                <CourseComplete />
               </ProtectedRoute>
             } />
             
