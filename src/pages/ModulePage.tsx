@@ -236,16 +236,26 @@ const ModulePage = () => {
                     {showFullDescription ? 'Show less' : 'Read more'}
                   </button>
                 )}
-                <Link to={`/course/${nextModule.id}`}>
+                {hasInteracted ? (
+                  <Link to={`/course/${nextModule.id}`}>
+                    <Button
+                      variant="cta"
+                      className="mt-4 w-full gap-2 h-11 md:h-10"
+                    >
+                      Continue to Next Module
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                ) : (
                   <Button
-                    variant={hasInteracted ? 'cta' : 'soft'}
-                    className="mt-4 w-full gap-2 h-11 md:h-10"
-                    disabled={!hasInteracted}
+                    variant="soft"
+                    className="mt-4 w-full gap-2 h-11 md:h-10 cursor-not-allowed"
+                    disabled
                   >
                     Continue to Next Module
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                </Link>
+                )}
                 {!hasInteracted && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     Watch the video or interact with the chat to continue
