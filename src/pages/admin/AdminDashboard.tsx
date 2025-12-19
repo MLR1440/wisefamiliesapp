@@ -2,23 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { sampleModules } from '@/data/sampleContent';
-import { Users, Activity, Award, BookOpen, Settings, FileText, Monitor, Database, Loader2, TrendingUp, MessageSquare } from 'lucide-react';
+import { Users, Activity, Award, BookOpen, Settings, FileText, Monitor, TrendingUp, MessageSquare } from 'lucide-react';
 import { useAnalyticsData } from '@/hooks/useAnalytics';
 import { useModules } from '@/hooks/useModules';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface AnalyticsStats {
   totalStudents: number;
@@ -32,8 +19,6 @@ const AdminDashboard = () => {
   const { user, isAdmin } = useAuth();
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSeedDialog, setShowSeedDialog] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const { fetchStats } = useAnalyticsData();
   const { modules } = useModules();
   
@@ -48,60 +33,6 @@ const AdminDashboard = () => {
     loadStats();
   }, [fetchStats]);
 
-  const handleLoadSampleContent = async () => {
-    setSeeding(true);
-    try {
-      // Delete existing prompts first (due to foreign key)
-      await supabase.from('module_prompts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      // Delete existing modules
-      await supabase.from('modules').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-      // Insert sample modules
-      for (const mod of sampleModules) {
-        const { data: moduleData, error: moduleError } = await supabase
-          .from('modules')
-          .insert({
-            title: mod.title,
-            description: mod.description,
-            order_number: mod.order_number,
-            video_url: mod.video_url,
-            video_type: mod.video_type,
-            system_prompt: mod.system_prompt,
-            status: mod.status,
-          })
-          .select()
-          .single();
-
-        if (moduleError) throw moduleError;
-
-        // Insert prompts for this module
-        if (moduleData && mod.prompts.length > 0) {
-          const promptsToInsert = mod.prompts.map((p, idx) => ({
-            module_id: moduleData.id,
-            label: p.label,
-            prompt_text: p.prompt_text,
-            order_number: idx + 1,
-          }));
-
-          const { error: promptError } = await supabase
-            .from('module_prompts')
-            .insert(promptsToInsert);
-
-          if (promptError) throw promptError;
-        }
-      }
-
-      toast.success('Sample content loaded successfully!');
-      setShowSeedDialog(false);
-      // Refresh the page to show new content
-      window.location.reload();
-    } catch (error) {
-      console.error('Error seeding content:', error);
-      toast.error('Failed to load sample content');
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,14 +62,6 @@ const AdminDashboard = () => {
               Manage your course content and view analytics
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={() => setShowSeedDialog(true)}
-          >
-            <Database className="h-4 w-4" />
-            Load Sample Content
-          </Button>
         </div>
 
         {/* Stats grid */}
@@ -277,29 +200,6 @@ const AdminDashboard = () => {
         )}
       </main>
 
-      {/* Seed Content Dialog */}
-      <AlertDialog open={showSeedDialog} onOpenChange={setShowSeedDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Load Sample Content</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will <strong>replace all existing modules and prompts</strong> with 5 sample modules 
-              designed for the WiseFamilies course. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={seeding}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLoadSampleContent}
-              disabled={seeding}
-              className="gap-2"
-            >
-              {seeding && <Loader2 className="h-4 w-4 animate-spin" />}
-              {seeding ? 'Loading...' : 'Load Sample Content'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
