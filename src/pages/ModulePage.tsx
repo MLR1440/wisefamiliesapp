@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import VideoPlayer from '@/components/module/VideoPlayer';
 import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
@@ -33,7 +33,14 @@ const ModulePage = () => {
   
   const { isCompleted, hasStarted, markStarted, markCompleted } = useProgress(userId, moduleId || '');
   
-  // Has the user interacted with the module in any way?
+  // Reset interaction state when module changes
+  useEffect(() => {
+    setClickedPromptIds(new Set());
+    setHasWatchedVideo(false);
+    setShowFullDescription(false);
+  }, [moduleId]);
+  
+  // Has the user interacted with THIS module in any way?
   const hasInteracted = clickedPromptIds.size > 0 || hasStarted || hasWatchedVideo;
 
   // Fetch all modules for navigation
@@ -278,23 +285,35 @@ const ModulePage = () => {
 
         {/* Mark as complete - at the bottom */}
         <div className={`mt-8 rounded-xl border bg-card p-4 md:p-6 transition-all duration-300 ${
-          hasInteracted && !isCompleted 
-            ? 'border-secondary/50 ring-2 ring-secondary/20 shadow-sm' 
-            : 'border-border'
+          isCompleted 
+            ? 'border-green-500/50 bg-green-500/5' 
+            : hasInteracted 
+              ? 'border-secondary/50 ring-2 ring-secondary/20 shadow-sm' 
+              : 'border-border'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Checkbox
-                id="complete"
-                checked={isCompleted}
-                onCheckedChange={handleComplete}
-                disabled={!hasInteracted && !isCompleted}
-              />
+              {isCompleted ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              ) : (
+                <Checkbox
+                  id="complete"
+                  checked={isCompleted}
+                  onCheckedChange={handleComplete}
+                  disabled={!hasInteracted && !isCompleted}
+                />
+              )}
               <label
                 htmlFor="complete"
-                className={`text-sm font-medium cursor-pointer ${!hasInteracted && !isCompleted ? 'text-muted-foreground' : 'text-foreground'}`}
+                className={`text-sm font-medium cursor-pointer ${
+                  isCompleted 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : !hasInteracted 
+                      ? 'text-muted-foreground' 
+                      : 'text-foreground'
+                }`}
               >
-                Mark as completed
+                {isCompleted ? 'Module completed!' : 'Mark as completed'}
               </label>
             </div>
             {!hasInteracted && !isCompleted && (
