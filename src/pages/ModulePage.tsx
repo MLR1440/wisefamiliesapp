@@ -22,6 +22,8 @@ const ModulePage = () => {
   const { module, prompts, loading } = useModule(moduleId);
   const [modules, setModules] = useState<{ id: string; title: string; description: string; order_number: number }[]>([]);
   const [clickedPromptIds, setClickedPromptIds] = useState<Set<string>>(new Set());
+  const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
   const moduleStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef(false);
@@ -31,8 +33,8 @@ const ModulePage = () => {
   
   const { isCompleted, hasStarted, markStarted, markCompleted } = useProgress(userId, moduleId || '');
   
-  // Has at least one prompt been clicked?
-  const hasClickedPrompt = clickedPromptIds.size > 0 || hasStarted;
+  // Has the user interacted with the module in any way?
+  const hasInteracted = clickedPromptIds.size > 0 || hasStarted || hasWatchedVideo;
 
   // Fetch all modules for navigation
   useEffect(() => {
@@ -95,6 +97,7 @@ const ModulePage = () => {
   };
 
   const handleVideoPlay = () => {
+    setHasWatchedVideo(true);
     if (moduleId) {
       trackVideoPlayed(moduleId);
     }
@@ -222,22 +225,30 @@ const ModulePage = () => {
                 <h3 className="mt-2 font-heading font-semibold text-foreground">
                   {nextModule.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                <p className={`mt-2 text-sm text-muted-foreground ${showFullDescription ? '' : 'line-clamp-2'}`}>
                   {nextModule.description}
                 </p>
+                {nextModule.description && nextModule.description.length > 100 && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className="mt-1 text-xs text-secondary hover:text-secondary/80 font-medium transition-colors"
+                  >
+                    {showFullDescription ? 'Show less' : 'Read more'}
+                  </button>
+                )}
                 <Link to={`/course/${nextModule.id}`}>
                   <Button
-                    variant={hasClickedPrompt ? 'cta' : 'soft'}
+                    variant={hasInteracted ? 'cta' : 'soft'}
                     className="mt-4 w-full gap-2 h-11 md:h-10"
-                    disabled={!hasClickedPrompt}
+                    disabled={!hasInteracted}
                   >
                     Continue to Next Module
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
-                {!hasClickedPrompt && (
+                {!hasInteracted && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
-                    Complete at least one prompt to continue
+                    Watch the video or interact with the chat to continue
                   </p>
                 )}
               </div>
@@ -256,25 +267,29 @@ const ModulePage = () => {
         </div>
 
         {/* Mark as complete - at the bottom */}
-        <div className="mt-8 rounded-xl border border-border bg-card p-4 md:p-6">
+        <div className={`mt-8 rounded-xl border bg-card p-4 md:p-6 transition-all duration-300 ${
+          hasInteracted && !isCompleted 
+            ? 'border-secondary/50 ring-2 ring-secondary/20 shadow-sm' 
+            : 'border-border'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Checkbox
                 id="complete"
                 checked={isCompleted}
                 onCheckedChange={handleComplete}
-                disabled={!hasClickedPrompt && !isCompleted}
+                disabled={!hasInteracted && !isCompleted}
               />
               <label
                 htmlFor="complete"
-                className={`text-sm font-medium cursor-pointer ${!hasClickedPrompt && !isCompleted ? 'text-muted-foreground' : 'text-foreground'}`}
+                className={`text-sm font-medium cursor-pointer ${!hasInteracted && !isCompleted ? 'text-muted-foreground' : 'text-foreground'}`}
               >
                 Mark as completed
               </label>
             </div>
-            {!hasClickedPrompt && !isCompleted && (
+            {!hasInteracted && !isCompleted && (
               <span className="text-xs text-muted-foreground">
-                Click at least one prompt to enable
+                Interact with the module to enable
               </span>
             )}
           </div>
