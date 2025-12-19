@@ -248,7 +248,7 @@ const ModulePage = () => {
               <Link to={`/course/${prevModule.id}`}>
                 <Button variant="ghost" className="w-full gap-2 h-11 md:h-10">
                   <ArrowLeft className="h-4 w-4" />
-                  Previous: {prevModule.title}
+                  Go to Previous Module
                 </Button>
               </Link>
             )}
