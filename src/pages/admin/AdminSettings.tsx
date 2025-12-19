@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { mockSettings } from '@/data/mockData';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
-import { ArrowLeft, Save, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, Upload, Shield } from 'lucide-react';
+import { ArrowLeft, Save, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, Upload, Shield, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -30,11 +30,22 @@ const AdminSettings = () => {
   const { settings, loading: settingsLoading, getSetting, updateSetting } = useCourseSettings();
   const [guardrailAppendix, setGuardrailAppendix] = useState('');
   const [isSavingGuardrail, setIsSavingGuardrail] = useState(false);
+  
+  // Congratulations settings
+  const [congratsVideoUrl, setCongratsVideoUrl] = useState('');
+  const [congratsVideoType, setCongratsVideoType] = useState('youtube');
+  const [congratsTitle, setCongratsTitle] = useState('');
+  const [congratsMessage, setCongratsMessage] = useState('');
+  const [isSavingCongrats, setIsSavingCongrats] = useState(false);
 
-  // Load guardrail appendix when settings load
+  // Load guardrail appendix and congrats settings when settings load
   useEffect(() => {
     if (!settingsLoading && settings.length > 0) {
       setGuardrailAppendix(getSetting('guardrail_appendix'));
+      setCongratsVideoUrl(getSetting('congratulations_video_url'));
+      setCongratsVideoType(getSetting('congratulations_video_type') || 'youtube');
+      setCongratsTitle(getSetting('congratulations_title'));
+      setCongratsMessage(getSetting('congratulations_message'));
     }
   }, [settingsLoading, settings, getSetting]);
   
@@ -116,6 +127,24 @@ const AdminSettings = () => {
       console.error(error);
     } finally {
       setIsSavingGuardrail(false);
+    }
+  };
+
+  const handleSaveCongrats = async () => {
+    setIsSavingCongrats(true);
+    try {
+      await Promise.all([
+        updateSetting('congratulations_video_url', congratsVideoUrl),
+        updateSetting('congratulations_video_type', congratsVideoType),
+        updateSetting('congratulations_title', congratsTitle),
+        updateSetting('congratulations_message', congratsMessage),
+      ]);
+      toast.success('Completion page settings saved!');
+    } catch (error) {
+      toast.error('Failed to save completion settings');
+      console.error(error);
+    } finally {
+      setIsSavingCongrats(false);
     }
   };
 
@@ -456,6 +485,81 @@ const AdminSettings = () => {
               Stripe integration will be configured when you connect Supabase. Payments will automatically 
               grant course access upon successful checkout.
             </p>
+          </div>
+
+          {/* Course Completion */}
+          <div className="rounded-xl border border-secondary/20 bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-secondary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Course Completion Page
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Customize the congratulations page students see when they complete the entire course.
+            </p>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="congratsVideoUrl">Congratulations Video URL</Label>
+                <Input
+                  id="congratsVideoUrl"
+                  type="url"
+                  value={congratsVideoUrl}
+                  onChange={(e) => setCongratsVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Add a personal video message to congratulate students on completing the course
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="congratsVideoType">Video Type</Label>
+                <Select
+                  value={congratsVideoType}
+                  onValueChange={setCongratsVideoType}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="vimeo">Vimeo</SelectItem>
+                    <SelectItem value="direct">Direct URL (MP4)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="congratsTitle">Custom Title (optional)</Label>
+                <Input
+                  id="congratsTitle"
+                  value={congratsTitle}
+                  onChange={(e) => setCongratsTitle(e.target.value)}
+                  placeholder="Leave empty for default: Congratulations, [Name]! 🎉"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="congratsMessage">Custom Message (optional)</Label>
+                <Textarea
+                  id="congratsMessage"
+                  value={congratsMessage}
+                  onChange={(e) => setCongratsMessage(e.target.value)}
+                  placeholder="Leave empty for default congratulations message..."
+                  rows={4}
+                />
+              </div>
+
+              <Button onClick={handleSaveCongrats} disabled={isSavingCongrats} className="gap-2">
+                {isSavingCongrats ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Completion Settings
+              </Button>
+            </div>
           </div>
 
           {/* Branding */}
