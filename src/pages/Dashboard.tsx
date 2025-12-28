@@ -4,11 +4,12 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, UserCog, LayoutGrid, List } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 interface Module {
   id: string;
   title: string;
@@ -16,33 +17,32 @@ interface Module {
   order_number: number;
   chapter_id: string | null;
 }
+
 interface Chapter {
   id: string;
   title: string;
   description: string;
   order_number: number;
 }
+
 interface UserProgress {
   module_id: string;
   started_at: string | null;
   completed_at: string | null;
   first_prompt_clicked: boolean;
 }
+
 const Dashboard = () => {
-  const {
-    user,
-    hasAccess,
-    checkingPayment,
-    isAdmin
-  } = useAuth();
+  const { user, hasAccess, checkingPayment, isAdmin } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [openChapters, setOpenChapters] = useState<Set<string>>(new Set());
-  const [isCompactMode, setIsCompactMode] = useState(false);
+
   const userId = user?.id || '';
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
+
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
@@ -50,54 +50,40 @@ const Dashboard = () => {
         return;
       }
 
-      // Fetch published chapters
-      const {
-        data: chaptersData
-      } = await supabase.from('chapters').select('id, title, description, order_number').eq('status', 'published').order('order_number');
+      const [chaptersRes, modulesRes, progressRes] = await Promise.all([
+        supabase.from('chapters').select('id, title, description, order_number').eq('status', 'published').order('order_number'),
+        supabase.from('modules').select('id, title, description, order_number, chapter_id').eq('status', 'published').order('order_number'),
+        supabase.from('user_progress').select('module_id, started_at, completed_at, first_prompt_clicked').eq('user_id', userId)
+      ]);
 
-      // Fetch published modules
-      const {
-        data: modulesData
-      } = await supabase.from('modules').select('id, title, description, order_number, chapter_id').eq('status', 'published').order('order_number');
+      setChapters(chaptersRes.data || []);
+      setModules(modulesRes.data || []);
+      setProgress(progressRes.data || []);
 
-      // Fetch user progress
-      const {
-        data: progressData
-      } = await supabase.from('user_progress').select('module_id, started_at, completed_at, first_prompt_clicked').eq('user_id', userId);
-      setChapters(chaptersData || []);
-      setModules(modulesData || []);
-      setProgress(progressData || []);
-
-      // Open all chapters by default
-      if (chaptersData) {
-        setOpenChapters(new Set(chaptersData.map(c => c.id)));
+      if (chaptersRes.data) {
+        setOpenChapters(new Set(chaptersRes.data.map(c => c.id)));
       }
       setLoading(false);
     };
     fetchData();
   }, [userId]);
+
   const completedModules = progress.filter(p => p.completed_at).length;
   const totalModules = modules.length;
-  const progressPercentage = totalModules > 0 ? completedModules / totalModules * 100 : 0;
+  const progressPercentage = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
 
-  // Get modules for a specific chapter
   const getModulesForChapter = (chapterId: string) => {
     return modules.filter(m => m.chapter_id === chapterId).sort((a, b) => a.order_number - b.order_number);
   };
 
-  // Get unassigned modules
   const unassignedModules = modules.filter(m => !m.chapter_id);
-
-  // Build a flat list of all modules in order (for determining current/locked status)
   const allModulesInOrder = [...chapters.flatMap(chapter => getModulesForChapter(chapter.id)), ...unassignedModules];
 
-  // Find the current module (first incomplete one)
   const getModuleStatus = (moduleId: string) => {
     const moduleProgress = progress.find(p => p.module_id === moduleId);
     if (moduleProgress?.completed_at) return 'completed';
     if (moduleProgress?.started_at || moduleProgress?.first_prompt_clicked) return 'current';
 
-    // Check if previous module in the global order is completed (or if this is the first module)
     const moduleIndex = allModulesInOrder.findIndex(m => m.id === moduleId);
     if (moduleIndex === 0) return 'current';
     const previousModule = allModulesInOrder[moduleIndex - 1];
@@ -108,11 +94,8 @@ const Dashboard = () => {
     return 'locked';
   };
 
-  // Find the current module to continue
-  const currentModule = allModulesInOrder.find(module => {
-    const status = getModuleStatus(module.id);
-    return status === 'current';
-  }) || allModulesInOrder[0];
+  const currentModule = allModulesInOrder.find(module => getModuleStatus(module.id) === 'current') || allModulesInOrder[0];
+
   const toggleChapter = (chapterId: string) => {
     setOpenChapters(prev => {
       const next = new Set(prev);
@@ -124,89 +107,64 @@ const Dashboard = () => {
       return next;
     });
   };
-  const renderModuleItem = (module: Module, globalIndex: number) => {
+
+  const renderModuleItem = (module: Module) => {
     const status = getModuleStatus(module.id);
     
-    if (isCompactMode) {
-      return (
-        <Link 
-          key={module.id} 
-          to={status !== 'locked' ? `/course/${module.id}` : '#'} 
-          className={`group flex items-center gap-3 rounded-lg border p-2.5 transition-all duration-200 ${
-            status === 'locked' 
-              ? 'cursor-not-allowed border-border bg-muted/30' 
-              : status === 'current' 
-                ? 'border-primary/50 bg-primary/5 hover:border-primary' 
-                : 'border-border bg-card hover:border-primary/30'
-          }`} 
-          onClick={e => status === 'locked' && e.preventDefault()}
-        >
-          <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded ${
-            status === 'completed' ? 'bg-success text-success-foreground' : 
-            status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 
-            'bg-muted text-muted-foreground'
-          }`}>
-            {status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> : 
-             status === 'locked' ? <Lock className="h-3.5 w-3.5" /> : 
-             <Play className="h-3.5 w-3.5" />}
-          </div>
-          <span className={`text-sm font-medium truncate ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
+    return (
+      <Link 
+        key={module.id} 
+        to={status !== 'locked' ? `/course/${module.id}` : '#'} 
+        className={`group flex items-center gap-3 rounded-lg p-3 transition-colors ${
+          status === 'locked' 
+            ? 'cursor-not-allowed opacity-50' 
+            : status === 'current' 
+              ? 'bg-primary/5 hover:bg-primary/10' 
+              : 'hover:bg-muted/50'
+        }`} 
+        onClick={e => status === 'locked' && e.preventDefault()}
+      >
+        <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
+          status === 'completed' ? 'bg-success text-success-foreground' : 
+          status === 'current' ? 'bg-primary text-primary-foreground' : 
+          'bg-muted text-muted-foreground'
+        }`}>
+          {status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> : 
+           status === 'locked' ? <Lock className="h-3.5 w-3.5" /> : 
+           <Play className="h-3.5 w-3.5" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className={`text-sm font-medium ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
             {module.title}
           </span>
-          {status === 'current' && (
-            <span className="ml-auto rounded-full bg-secondary/20 px-2 py-0.5 text-xs font-medium text-secondary flex-shrink-0">
-              {progress.find(p => p.module_id === module.id)?.started_at ? 'In Progress' : 'Start'}
-            </span>
-          )}
-        </Link>
-      );
-    }
-    
-    return <Link key={module.id} to={status !== 'locked' ? `/course/${module.id}` : '#'} className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-300 ${status === 'locked' ? 'cursor-not-allowed border-border bg-muted/30' : status === 'current' ? 'border-primary/50 bg-primary/5 hover:border-primary hover:shadow-soft' : 'border-border bg-card hover:border-primary/30 hover:shadow-soft'}`} onClick={e => status === 'locked' && e.preventDefault()}>
-        {/* Status icon */}
-        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg ${status === 'completed' ? 'bg-success text-success-foreground' : status === 'current' ? 'bg-gradient-cta text-secondary-foreground' : 'bg-muted text-muted-foreground'}`}>
-          {status === 'completed' ? <CheckCircle2 className="h-6 w-6" /> : status === 'locked' ? <Lock className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            {status === 'current' && <span className="rounded-full bg-secondary/20 px-2.5 py-1 text-sm font-medium text-secondary">
-                {progress.find(p => p.module_id === module.id)?.started_at ? 'In Progress' : 'Start Here'}
-              </span>}
-          </div>
-          <h3 className={`font-heading font-semibold text-base md:text-lg ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
-            {module.title}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-            {module.description}
-          </p>
-        </div>
-
-        {/* Arrow */}
-        {status !== 'locked' && <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1" />}
-      </Link>;
+        {status === 'current' && !progress.find(p => p.module_id === module.id)?.started_at && (
+          <span className="text-xs text-primary font-medium">Start</span>
+        )}
+        {status !== 'locked' && <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
+      </Link>
+    );
   };
+
   if (loading || checkingPayment) {
-    return <div className="min-h-screen bg-background">
+    return (
+      <div className="min-h-screen bg-background">
         <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} />
-        <main className="container py-8 md:py-12 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            {checkingPayment && <p className="text-sm text-muted-foreground">Verifying access...</p>}
-          </div>
+        <main className="container max-w-4xl py-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </main>
-      </div>;
+      </div>
+    );
   }
 
-  // Show paywall if user doesn't have access (not admin and hasn't purchased)
   if (!hasAccess) {
-    return <div className="min-h-screen bg-background">
+    return (
+      <div className="min-h-screen bg-background">
         <Navbar isLoggedIn hasPurchased={false} userName={userName} />
-        <main className="container py-8 md:py-12">
+        <main className="container max-w-4xl py-12">
           <div className="mb-8">
-            <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
-              Welcome, {userName}!
+            <h1 className="mb-2 font-heading text-2xl font-semibold text-foreground">
+              Welcome, {userName}
             </h1>
             <p className="text-muted-foreground">
               Get started with the A.I - Ready Family Framework
@@ -214,175 +172,143 @@ const Dashboard = () => {
           </div>
           
           <div className="grid gap-8 lg:grid-cols-2">
-            <div>
-              <Paywall />
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="font-heading text-lg font-semibold text-foreground">
-                Course Preview
-              </h3>
-              {modules.slice(0, 3).map((module, index) => <div key={module.id} className="flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Lock className="h-4 w-4" />
+            <Paywall />
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Course Preview</p>
+              {modules.slice(0, 3).map((module, index) => (
+                <div key={module.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <Lock className="h-3.5 w-3.5" />
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Module {index + 1}</p>
-                    <h4 className="font-medium text-foreground">{module.title}</h4>
-                  </div>
-                </div>)}
-              {modules.length > 3 && <p className="text-sm text-muted-foreground text-center">
+                  <span className="text-sm text-muted-foreground">{module.title}</span>
+                </div>
+              ))}
+              {modules.length > 3 && (
+                <p className="text-xs text-muted-foreground text-center">
                   + {modules.length - 3} more modules
-                </p>}
+                </p>
+              )}
             </div>
           </div>
         </main>
         <Footer />
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} />
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
       
-      <main className="container py-6 md:py-12 px-4 md:px-8">
-        {/* Welcome section */}
-        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-                Welcome back, {userName}!
-              </h1>
-              {isAdmin && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  Admin
-                </span>}
-            </div>
-            <p className="text-base text-muted-foreground">
-              Continue your A.I - Ready Family journey
-            </p>
-          </div>
-          <Link to="/profile">
-            <Button variant="outline" size="sm" className="gap-2 h-10">
-              <UserCog className="h-4 w-4" />
-              <span>Customize Child Info</span>
-            </Button>
-          </Link>
+      <main className="container max-w-4xl py-8 md:py-12">
+        {/* Simple welcome */}
+        <div className="mb-8">
+          <h1 className="mb-1 font-heading text-2xl font-semibold text-foreground">
+            Welcome back, {userName}
+          </h1>
+          <p className="text-muted-foreground">
+            Continue your learning journey
+          </p>
         </div>
 
-        {/* Progress card */}
-        <div className="mb-6 md:mb-8 rounded-2xl border border-border bg-gradient-card p-5 md:p-6 shadow-soft">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        {/* Clean progress section */}
+        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
-              <h2 className="mb-2 font-heading text-lg md:text-xl font-semibold text-foreground">
-                Course Progress
-              </h2>
-              <div className="mb-2 flex items-center gap-3">
-                <Progress value={progressPercentage} className="h-3 flex-1" />
-                <span className="text-base font-medium text-muted-foreground">
-                  {Math.round(progressPercentage)}%
+              <div className="flex items-center gap-3 mb-2">
+                <Progress value={progressPercentage} className="h-2 flex-1 max-w-xs" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  {completedModules}/{totalModules}
                 </span>
               </div>
-              <p className="text-base text-muted-foreground">
-                {completedModules} of {totalModules} modules completed
+              <p className="text-sm text-muted-foreground">
+                {completedModules === totalModules 
+                  ? 'Course completed!' 
+                  : `${totalModules - completedModules} modules remaining`
+                }
               </p>
             </div>
             
-            {currentModule && <Link to={`/course/${currentModule.id}`}>
-                <Button variant="cta" size="lg" className="gap-2 w-full md:w-auto h-12 text-base">
-                  Continue Learning
-                  <ArrowRight className="h-5 w-5" />
+            {currentModule && (
+              <Link to={`/course/${currentModule.id}`}>
+                <Button className="gap-2">
+                  Continue
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>}
+              </Link>
+            )}
           </div>
         </div>
 
         {/* Course content */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl md:text-2xl font-semibold text-foreground">
-              Course Content
-            </h2>
-            <div className="flex items-center gap-1 rounded-lg border border-border p-1 bg-muted/30">
-              <button
-                onClick={() => setIsCompactMode(false)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  !isCompactMode 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                <span className="hidden sm:inline">Expanded</span>
-              </button>
-              <button
-                onClick={() => setIsCompactMode(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  isCompactMode 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">Compact</span>
-              </button>
-            </div>
-          </div>
+          <h2 className="mb-4 text-lg font-medium text-foreground">
+            Course Content
+          </h2>
           
-          {allModulesInOrder.length === 0 ? <div className="rounded-xl border border-dashed border-border py-12 text-center">
+          {allModulesInOrder.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border py-12 text-center">
               <p className="text-muted-foreground">No content available yet.</p>
-              <p className="text-sm text-muted-foreground mt-1">Check back soon!</p>
-            </div> : <div className="space-y-4">
-              {/* Chapters with modules */}
+            </div>
+          ) : (
+            <div className="space-y-3">
               {chapters.map(chapter => {
-            const chapterModules = getModulesForChapter(chapter.id);
-            if (chapterModules.length === 0) return null;
-            const completedInChapter = chapterModules.filter(m => progress.find(p => p.module_id === m.id)?.completed_at).length;
-            return <Collapsible key={chapter.id} open={openChapters.has(chapter.id)} onOpenChange={() => toggleChapter(chapter.id)}>
+                const chapterModules = getModulesForChapter(chapter.id);
+                if (chapterModules.length === 0) return null;
+                const completedInChapter = chapterModules.filter(m => progress.find(p => p.module_id === m.id)?.completed_at).length;
+                
+                return (
+                  <Collapsible 
+                    key={chapter.id} 
+                    open={openChapters.has(chapter.id)} 
+                    onOpenChange={() => toggleChapter(chapter.id)}
+                  >
                     <div className="rounded-xl border border-border overflow-hidden">
                       <CollapsibleTrigger asChild>
-                        <button className="flex items-center gap-3 w-full p-4 bg-muted/30 hover:bg-muted/50 transition-colors text-left">
-                          <ChevronDown className={`h-5 w-5 flex-shrink-0 transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
+                        <button className="flex items-center gap-3 w-full p-4 hover:bg-muted/30 transition-colors text-left">
+                          <ChevronDown className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <h3 className="font-heading font-semibold text-base md:text-lg text-foreground">
-                                {chapter.title}
-                              </h3>
-                              <span className="text-sm text-muted-foreground flex-shrink-0">
-                                {completedInChapter}/{chapterModules.length}
-                              </span>
-                            </div>
-                            {chapter.description && !isCompactMode && (
-                              <p className="text-base text-secondary mt-2 leading-relaxed">
-                                {chapter.description}
-                              </p>
-                            )}
+                            <h3 className="font-medium text-foreground">
+                              {chapter.title}
+                            </h3>
                           </div>
+                          <span className="text-xs text-muted-foreground">
+                            {completedInChapter}/{chapterModules.length}
+                          </span>
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="p-4 pt-2 space-y-3">
-                          {chapterModules.map((module, index) => renderModuleItem(module, index))}
+                        <div className="px-4 pb-4 space-y-1">
+                          {chapterModules.map(module => renderModuleItem(module))}
                         </div>
                       </CollapsibleContent>
                     </div>
-                  </Collapsible>;
-          })}
+                  </Collapsible>
+                );
+              })}
 
-              {/* Unassigned modules */}
-              {unassignedModules.length > 0 && chapters.length > 0 && <div className="space-y-3 mt-6">
-                  <h3 className="font-heading text-sm font-medium text-muted-foreground">
+              {unassignedModules.length > 0 && chapters.length > 0 && (
+                <div className="space-y-1 pt-4">
+                  <p className="text-xs font-medium text-muted-foreground px-1 mb-2">
                     Additional Modules
-                  </h3>
-                  {unassignedModules.map((module, index) => renderModuleItem(module, index))}
-                </div>}
+                  </p>
+                  {unassignedModules.map(module => renderModuleItem(module))}
+                </div>
+              )}
 
-              {/* If no chapters, show modules directly */}
-              {chapters.length === 0 && <div className="space-y-3">
-                  {modules.map((module, index) => renderModuleItem(module, index))}
-                </div>}
-            </div>}
+              {chapters.length === 0 && (
+                <div className="space-y-1">
+                  {modules.map(module => renderModuleItem(module))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;

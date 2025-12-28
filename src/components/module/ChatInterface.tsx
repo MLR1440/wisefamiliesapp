@@ -198,7 +198,7 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Offline banner */}
       {!isOnline && (
         <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center gap-2">
@@ -207,28 +207,25 @@ const ChatInterface = ({ moduleId, userId, starterPrompts, onFirstInteraction, o
         </div>
       )}
 
-      {/* Header */}
-      <div className="border-b border-border bg-muted/50 px-4 py-3 md:px-6 md:py-4">
+      {/* Minimal header */}
+      <div className="border-b border-border/50 px-4 py-3 md:px-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent" />
-            <h2 className="font-heading font-semibold text-foreground text-base md:text-lg">AI Coaching Assistant</h2>
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="font-medium text-foreground text-sm">AI Assistant</h2>
           </div>
           {hasHistory && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleClearAndRestart}
-              className="text-muted-foreground hover:text-foreground h-9 px-3"
+              className="text-muted-foreground hover:text-foreground h-8 px-2 text-xs"
             >
-              <RefreshCw className="h-4 w-4 mr-1.5" />
-              <span>Start Fresh</span>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Clear
             </Button>
           )}
         </div>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Ask questions about this module or get personalized parenting guidance
-        </p>
       </div>
 
       {/* Messages area */}

@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, BookOpen, Trophy, PartyPopper } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import VideoPlayer from '@/components/module/VideoPlayer';
 import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
@@ -38,9 +37,6 @@ const ModulePage = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [clickedPromptIds, setClickedPromptIds] = useState<Set<string>>(new Set());
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const [showChapterComplete, setShowChapterComplete] = useState(false);
-  const [completedChapterTitle, setCompletedChapterTitle] = useState('');
   const { trackModuleStarted, trackModuleCompleted, trackVideoPlayed, trackCourseCompleted } = useAnalytics();
   const moduleStartTime = useRef<number>(Date.now());
   const hasTrackedStart = useRef(false);
@@ -54,9 +50,6 @@ const ModulePage = () => {
   useEffect(() => {
     setClickedPromptIds(new Set());
     setHasWatchedVideo(false);
-    setShowFullDescription(false);
-    setShowChapterComplete(false);
-    setCompletedChapterTitle('');
   }, [moduleId]);
   
   // Has the user interacted with THIS module in any way?
@@ -106,12 +99,6 @@ const ModulePage = () => {
     ? chapters.find(c => c.id === currentModule.chapter_id) 
     : null;
   
-  // Get modules in current chapter
-  const modulesInChapter = currentChapter 
-    ? modules.filter(m => m.chapter_id === currentChapter.id)
-    : [];
-  const moduleIndexInChapter = modulesInChapter.findIndex(m => m.id === moduleId);
-  
   // Check if next module is in a different chapter (chapter transition)
   const isLastModuleInChapter = nextModule && currentModule?.chapter_id !== nextModule.chapter_id;
   const isLastModuleInCourse = moduleIndex === modules.length - 1;
@@ -137,31 +124,28 @@ const ModulePage = () => {
       // Check if this is the last module in course
       if (isLastModuleInCourse) {
         trackCourseCompleted();
-        // Navigate to completion page
         setTimeout(() => {
           navigate('/course-complete');
         }, 1500);
         toast({
-          title: "🎉 Course Completed!",
-          description: "Congratulations! You've finished the entire course!",
+          title: "Course Completed!",
+          description: "Congratulations! You've finished the entire course.",
         });
         return;
       }
       
       // Check if this is the last module in a chapter
       if (isLastModuleInChapter && currentChapter) {
-        setCompletedChapterTitle(currentChapter.title);
-        setShowChapterComplete(true);
         toast({
-          title: `Chapter Complete! 🎉`,
-          description: `You've finished "${currentChapter.title}"!`,
+          title: `Chapter Complete`,
+          description: `You've finished "${currentChapter.title}"`,
         });
         return;
       }
       
       toast({
-        title: "Module completed! 🎉",
-        description: "Great progress! Keep up the good work.",
+        title: "Module completed",
+        description: "Great progress. Keep going!",
       });
     }
   };
@@ -185,21 +169,19 @@ const ModulePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
-        <main className="container py-6 md:py-12">
-          <Skeleton className="mb-6 h-4 w-32" />
-          <div className="mb-8">
-            <Skeleton className="mb-2 h-4 w-24" />
-            <Skeleton className="mb-3 h-10 w-3/4 md:w-1/2" />
-            <Skeleton className="h-6 w-full max-w-2xl" />
+        <main className="container max-w-6xl py-8 md:py-12">
+          <Skeleton className="mb-8 h-4 w-24" />
+          <div className="mb-10">
+            <Skeleton className="mb-3 h-8 w-2/3" />
+            <Skeleton className="h-5 w-full max-w-xl" />
           </div>
-          <div className="grid gap-6 lg:gap-8 lg:grid-cols-5">
-            <div className="lg:col-span-3 space-y-6 md:space-y-8">
+          <div className="grid gap-8 lg:grid-cols-5">
+            <div className="lg:col-span-3 space-y-8">
               <VideoSkeleton />
               <ChatSkeleton />
             </div>
-            <div className="lg:col-span-2 space-y-4 md:space-y-6">
-              <Skeleton className="h-16 rounded-xl" />
-              <Skeleton className="h-48 rounded-xl" />
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-40 rounded-xl" />
             </div>
           </div>
         </main>
@@ -216,7 +198,7 @@ const ModulePage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
-        <main className="container py-8 md:py-12">
+        <main className="container max-w-6xl py-12">
           <div className="flex flex-col items-center justify-center py-16">
             <p className="text-muted-foreground mb-4">Module not found</p>
             <Link to="/dashboard">
@@ -232,69 +214,33 @@ const ModulePage = () => {
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
 
-      <main className="container py-6 md:py-12">
-        {/* Back navigation */}
+      <main className="container max-w-6xl py-8 md:py-12">
+        {/* Minimal back navigation */}
         <Link
           to="/dashboard"
-          className="mb-4 md:mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          Dashboard
         </Link>
 
-        {/* Chapter Complete Celebration */}
-        {showChapterComplete && (
-          <div className="mb-6 rounded-xl border border-success/50 bg-success/5 p-4 md:p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
-                <Trophy className="h-6 w-6 text-success" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-heading font-semibold text-success">
-                  Chapter Complete! 🎉
-                </h3>
-                <p className="text-sm text-success/80">
-                  You've finished "{completedChapterTitle}" — great work!
-                </p>
-              </div>
-              <PartyPopper className="h-8 w-8 text-success animate-bounce hidden sm:block" />
-            </div>
-          </div>
-        )}
-
-        {/* Chapter indicator */}
-        {currentChapter && (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5">
-            <BookOpen className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
+        {/* Simple module header */}
+        <div className="mb-10">
+          {currentChapter && (
+            <p className="mb-2 text-sm text-muted-foreground">
               {currentChapter.title}
-            </span>
-            {modulesInChapter.length > 0 && (
-              <span className="text-xs text-primary/70">
-                • Lesson {moduleIndexInChapter + 1} of {modulesInChapter.length}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Module header */}
-        <div className="mb-6 md:mb-8">
-          {modules.length > 0 && (
-            <span className="mb-2 inline-block text-sm font-medium text-secondary">
-              Module {moduleIndex + 1} of {modules.length}
-            </span>
+            </p>
           )}
-          <h1 className="mb-2 md:mb-3 font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">
+          <h1 className="mb-3 font-heading text-2xl md:text-3xl font-semibold text-foreground">
             {module.title}
           </h1>
-          <p className="max-w-2xl text-base md:text-lg text-muted-foreground">{module.description}</p>
+          <p className="max-w-2xl text-muted-foreground">{module.description}</p>
         </div>
 
-        {/* Mobile: stack everything, Desktop: two columns */}
-        <div className="grid gap-6 lg:gap-8 lg:grid-cols-5">
+        {/* Two column layout */}
+        <div className="grid gap-8 lg:grid-cols-5">
           {/* Main content - Video & Chat */}
-          <div className="lg:col-span-3 space-y-6 md:space-y-8">
-            {/* Video Section */}
+          <div className="lg:col-span-3 space-y-8">
             <VideoPlayer
               videoUrl={module.video_url}
               videoType={module.video_type}
@@ -302,7 +248,6 @@ const ModulePage = () => {
               onPlay={handleVideoPlay}
             />
 
-            {/* Chat Section - key forces remount on module change */}
             <ChatInterface
               key={module.id}
               moduleId={module.id}
@@ -319,152 +264,100 @@ const ModulePage = () => {
             />
           </div>
 
-          {/* Sidebar - Navigation (mobile: appears below chat) */}
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
-            {/* Course complete indicator for last module */}
-            {isLastModuleInCourse && (
-              <div className="rounded-xl border border-secondary/50 bg-gradient-cta p-4 md:p-6 text-center">
-                <Trophy className="h-8 w-8 text-secondary-foreground mx-auto mb-2" />
-                <h3 className="font-heading font-semibold text-secondary-foreground">
-                  Final Module!
-                </h3>
-                <p className="text-sm text-secondary-foreground/80 mt-1">
-                  Complete this to finish the entire course
-                </p>
-                {isCompleted && hasInteracted && (
-                  <Link to="/course-complete">
-                    <Button variant="soft" className="mt-4 w-full gap-2">
-                      View Completion Page
-                      <Trophy className="h-4 w-4" />
-                    </Button>
-                  </Link>
+          {/* Sidebar */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Mark as complete - simple inline */}
+            <div className={`rounded-xl border p-5 transition-colors ${
+              isCompleted 
+                ? 'border-success/30 bg-success/5' 
+                : 'border-border bg-card'
+            }`}>
+              <div className="flex items-center gap-3">
+                {isCompleted ? (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                ) : (
+                  <Checkbox
+                    id="complete"
+                    checked={isCompleted}
+                    onCheckedChange={handleComplete}
+                    disabled={!hasInteracted && !isCompleted}
+                  />
                 )}
+                <label
+                  htmlFor="complete"
+                  className={`text-sm font-medium cursor-pointer ${
+                    isCompleted 
+                      ? 'text-success' 
+                      : !hasInteracted 
+                        ? 'text-muted-foreground' 
+                        : 'text-foreground'
+                  }`}
+                >
+                  {isCompleted ? 'Completed' : 'Mark as complete'}
+                </label>
               </div>
-            )}
+              {!hasInteracted && !isCompleted && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Watch the video or chat to enable
+                </p>
+              )}
+            </div>
 
-            {/* Next module preview - tappable on mobile */}
+            {/* Next module - simple card */}
             {nextModule && (
-              <div className={`rounded-xl border bg-card p-4 md:p-6 ${
-                isLastModuleInChapter ? 'border-success/30 ring-1 ring-success/20' : 'border-border'
-              }`}>
-                {/* New chapter indicator */}
-                {isLastModuleInChapter && (
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-success/20">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
-                    <span className="text-xs font-medium text-success">
-                      Next: New Chapter
-                    </span>
-                  </div>
-                )}
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div className="rounded-xl border border-border bg-card p-5">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">
                   Up Next
-                </span>
-                {/* Show the chapter of the next module */}
-                {nextModule.chapter_id && (
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <BookOpen className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs text-primary">
-                      {chapters.find(c => c.id === nextModule.chapter_id)?.title}
-                    </span>
-                  </div>
-                )}
-                <h3 className="mt-2 font-heading font-semibold text-foreground">
+                </p>
+                <h3 className="font-medium text-foreground mb-1">
                   {nextModule.title}
                 </h3>
-                <p className={`mt-2 text-sm text-muted-foreground ${showFullDescription ? '' : 'line-clamp-2'}`}>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                   {nextModule.description}
                 </p>
-                {nextModule.description && nextModule.description.length > 100 && (
-                  <button
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="mt-1 text-xs text-secondary hover:text-secondary/80 font-medium transition-colors"
-                  >
-                    {showFullDescription ? 'Show less' : 'Read more'}
-                  </button>
-                )}
                 {hasInteracted ? (
                   <Link to={`/course/${nextModule.id}`}>
-                    <Button
-                      variant="cta"
-                      className="mt-4 w-full gap-2 h-11 md:h-10"
-                    >
-                      {isLastModuleInChapter ? 'Start Next Chapter' : 'Continue to Next Module'}
+                    <Button variant="default" className="w-full gap-2">
+                      Continue
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                 ) : (
-                  <Button
-                    variant="soft"
-                    className="mt-4 w-full gap-2 h-11 md:h-10 cursor-not-allowed"
-                    disabled
-                  >
-                    {isLastModuleInChapter ? 'Start Next Chapter' : 'Continue to Next Module'}
-                    <ArrowRight className="h-4 w-4" />
+                  <Button variant="outline" className="w-full" disabled>
+                    Continue
                   </Button>
-                )}
-                {!hasInteracted && (
-                  <p className="mt-2 text-center text-xs text-muted-foreground">
-                    Watch the video or interact with the chat to continue
-                  </p>
                 )}
               </div>
             )}
 
-            {/* Previous module */}
+            {/* Final module indicator */}
+            {isLastModuleInCourse && (
+              <div className="rounded-xl border border-border bg-card p-5 text-center">
+                <p className="text-sm text-muted-foreground mb-2">
+                  This is the final module
+                </p>
+                {isCompleted && (
+                  <Link to="/course-complete">
+                    <Button variant="default" size="sm">
+                      View Completion
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {/* Previous module link */}
             {prevModule && (
               <Link to={`/course/${prevModule.id}`}>
-                <Button variant="ghost" className="w-full gap-2 h-11 md:h-10">
+                <Button variant="ghost" className="w-full gap-2 text-muted-foreground">
                   <ArrowLeft className="h-4 w-4" />
-                  Go to Previous Module
+                  Previous
                 </Button>
               </Link>
             )}
           </div>
         </div>
-
-        {/* Mark as complete - at the bottom */}
-        <div className={`mt-8 rounded-xl border bg-card p-4 md:p-6 transition-all duration-300 ${
-          isCompleted 
-            ? 'border-green-500/50 bg-green-500/5' 
-            : hasInteracted 
-              ? 'border-secondary/50 ring-2 ring-secondary/20 shadow-sm' 
-              : 'border-border'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isCompleted ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : (
-                <Checkbox
-                  id="complete"
-                  checked={isCompleted}
-                  onCheckedChange={handleComplete}
-                  disabled={!hasInteracted && !isCompleted}
-                />
-              )}
-              <label
-                htmlFor="complete"
-                className={`text-sm font-medium cursor-pointer ${
-                  isCompleted 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : !hasInteracted 
-                      ? 'text-muted-foreground' 
-                      : 'text-foreground'
-                }`}
-              >
-                {isCompleted ? 'Module completed!' : 'Mark as completed'}
-              </label>
-            </div>
-            {!hasInteracted && !isCompleted && (
-              <span className="text-xs text-muted-foreground">
-                Interact with the module to enable
-              </span>
-            )}
-          </div>
-        </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

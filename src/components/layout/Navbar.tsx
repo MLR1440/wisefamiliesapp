@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react';
+import { Menu, X, LogOut, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import wiseFamiliesLogo from '@/assets/wise-families-logo.jpg';
@@ -27,16 +27,16 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="container flex h-14 items-center justify-between">
         {/* Logo */}
         <Link to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2">
           <img 
             src={wiseFamiliesLogo} 
             alt="WiseFamilies" 
-            className="h-10 w-10 rounded-full object-cover"
+            className="h-8 w-8 rounded-full object-cover"
           />
-          <span className="font-heading text-xl font-semibold text-foreground">WiseFamilies</span>
+          <span className="font-heading text-lg font-semibold text-foreground">WiseFamilies</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -44,12 +44,12 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
           {isLoggedIn && hasPurchased && (
             <>
               <Link to="/dashboard">
-                <Button variant={isActive('/dashboard') ? 'soft' : 'ghost'} size="sm">
+                <Button variant="ghost" size="sm" className={isActive('/dashboard') ? 'text-foreground' : 'text-muted-foreground'}>
                   Dashboard
                 </Button>
               </Link>
               <Link to="/progress">
-                <Button variant={isActive('/progress') ? 'soft' : 'ghost'} size="sm">
+                <Button variant="ghost" size="sm" className={isActive('/progress') ? 'text-foreground' : 'text-muted-foreground'}>
                   Progress
                 </Button>
               </Link>
@@ -58,29 +58,25 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
         </div>
 
         {/* Right side */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           {isLoggedIn ? (
             <>
               {isAdmin && (
                 <Link to="/admin">
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
                     <Shield className="h-4 w-4" />
                     Admin
                   </Button>
                 </Link>
               )}
-              <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{userName}</span>
-              </div>
+              <span className="text-sm text-muted-foreground px-2">{userName}</span>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="gap-2 text-muted-foreground"
+                className="gap-1.5 text-muted-foreground"
                 onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4" />
-                Logout
               </Button>
             </>
           ) : (
@@ -91,7 +87,7 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                 </Button>
               </Link>
               <Link to="/signup">
-                <Button variant="cta" size="sm">
+                <Button size="sm">
                   Get Started
                 </Button>
               </Link>
@@ -101,7 +97,7 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
 
         {/* Mobile menu button */}
         <button
-          className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -111,16 +107,16 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
       {/* Mobile menu */}
       {isMobileMenuOpen && (
         <div className="border-t border-border bg-background p-4 md:hidden">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1">
             {isLoggedIn && hasPurchased && (
               <>
                 <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant={isActive('/dashboard') ? 'soft' : 'ghost'} className="w-full justify-start">
+                  <Button variant="ghost" className="w-full justify-start">
                     Dashboard
                   </Button>
                 </Link>
                 <Link to="/progress" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant={isActive('/progress') ? 'soft' : 'ghost'} className="w-full justify-start">
+                  <Button variant="ghost" className="w-full justify-start">
                     Progress
                   </Button>
                 </Link>
@@ -137,10 +133,7 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
             <div className="my-2 border-t border-border" />
             {isLoggedIn ? (
               <>
-                <div className="flex items-center gap-2 px-4 py-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{userName}</span>
-                </div>
+                <p className="px-4 py-2 text-sm text-muted-foreground">{userName}</p>
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start gap-2 text-muted-foreground"
@@ -158,7 +151,7 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                   </Button>
                 </Link>
                 <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="cta" className="w-full">
+                  <Button className="w-full">
                     Get Started
                   </Button>
                 </Link>
