@@ -43,6 +43,26 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // First check if we already have a purchase record in our database
+    const { data: existingPurchase } = await supabaseClient
+      .from('user_purchases')
+      .select('id, purchased_at')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingPurchase) {
+      logStep("Found existing purchase record", { purchaseId: existingPurchase.id });
+      return new Response(JSON.stringify({ 
+        hasPurchased: true, 
+        purchaseDate: existingPurchase.purchased_at 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // No local record, check Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Check if user has a Stripe customer record
@@ -57,7 +77,6 @@ serve(async (req) => {
     }
 
     // Check for successful payments for our course product
-    // Search by customer if exists, otherwise search all recent sessions and filter by email
     let sessions;
     if (customerId) {
       sessions = await stripe.checkout.sessions.list({
@@ -79,6 +98,7 @@ serve(async (req) => {
 
     let hasPurchased = false;
     let purchaseDate = null;
+    let successfulSessionId = null;
 
     for (const session of sessions.data) {
       if (session.payment_status === "paid" && session.mode === "payment") {
@@ -88,11 +108,31 @@ serve(async (req) => {
           if (item.price?.product === COURSE_PRODUCT_ID) {
             hasPurchased = true;
             purchaseDate = new Date(session.created * 1000).toISOString();
+            successfulSessionId = session.id;
             logStep("Found successful purchase", { sessionId: session.id, purchaseDate });
             break;
           }
         }
         if (hasPurchased) break;
+      }
+    }
+
+    // If we found a purchase in Stripe, record it in our database for RLS enforcement
+    if (hasPurchased && successfulSessionId) {
+      const { error: insertError } = await supabaseClient
+        .from('user_purchases')
+        .insert({
+          user_id: user.id,
+          stripe_session_id: successfulSessionId,
+          product_id: COURSE_PRODUCT_ID,
+          purchased_at: purchaseDate
+        });
+
+      if (insertError) {
+        // Log but don't fail - the purchase is still valid
+        logStep("Warning: Could not record purchase", { error: insertError.message });
+      } else {
+        logStep("Purchase recorded in database");
       }
     }
 

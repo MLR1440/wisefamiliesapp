@@ -334,6 +334,33 @@ export type Database = {
           },
         ]
       }
+      user_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          purchased_at: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          purchased_at?: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          purchased_at?: string
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -367,6 +394,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_course_access: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
