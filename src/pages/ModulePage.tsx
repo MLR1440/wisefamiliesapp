@@ -199,30 +199,42 @@ const ModulePage = () => {
         </main>
       </div>;
   }
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
 
-      <main className="container max-w-6xl py-8 md:py-12">
-        {/* Minimal back navigation */}
-        <Link to="/dashboard" className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" />
-          Dashboard
-        </Link>
+      <main className="container max-w-5xl py-6 md:py-10">
+        {/* Header with back navigation and module info */}
+        <header className="mb-8">
+          <Link 
+            to="/dashboard" 
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary group"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Dashboard
+          </Link>
 
-        {/* Simple module header */}
-        <div className="mb-10">
-          {currentChapter && <p className="mb-2 text-sm text-muted-foreground">
-              {currentChapter.title}
-            </p>}
-          <h1 className="mb-3 font-heading text-2xl md:text-3xl font-semibold text-foreground">
-            {module.title}
-          </h1>
-          <p className="max-w-2xl text-muted-foreground">{module.description}</p>
-        </div>
+          <div className="space-y-3">
+            {currentChapter && (
+              <div className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="text-sm font-medium text-primary">
+                  {currentChapter.title}
+                </span>
+              </div>
+            )}
+            <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+              {module.title}
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
+              {module.description}
+            </p>
+          </div>
+        </header>
 
-        {/* Full width video and chat on desktop */}
+        {/* Full width video and chat */}
         <div className="space-y-8">
-          <div className="border-2 border-solid rounded shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border shadow-sm">
             <VideoPlayer 
               videoUrl={module.video_url} 
               videoType={module.video_type} 
@@ -247,94 +259,116 @@ const ModulePage = () => {
           />
         </div>
 
-        {/* Bottom section - Complete & Navigation */}
-        <div className="mt-10 border-t border-border pt-8">
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* Previous module link */}
-            <div className="flex items-center">
-              {prevModule && (
-                <Link to={`/course/${prevModule.id}`} className="w-full md:w-auto">
-                  <Button variant="ghost" className="w-full md:w-auto gap-2 text-muted-foreground">
+        {/* Bottom navigation section */}
+        <footer className="mt-12 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            {/* Previous module */}
+            <div className="order-2 md:order-1 md:flex-1">
+              {prevModule ? (
+                <Link to={`/course/${prevModule.id}`}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full md:w-auto gap-2 text-muted-foreground hover:text-foreground"
+                  >
                     <ArrowLeft className="h-4 w-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous:</span>
+                    <span className="truncate max-w-[150px]">{prevModule.title}</span>
                   </Button>
                 </Link>
+              ) : (
+                <div />
               )}
             </div>
 
             {/* Mark as complete - center */}
-            <div className="flex justify-center">
-              <div className={`rounded-xl border px-6 py-4 transition-colors ${isCompleted ? 'border-success/30 bg-success/5' : 'border-border bg-card'}`}>
-                <div className="flex items-center gap-3">
-                  {isCompleted ? (
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                  ) : (
-                    <Checkbox 
-                      id="complete" 
-                      checked={isCompleted} 
-                      onCheckedChange={handleComplete} 
-                      disabled={!hasInteracted && !isCompleted} 
-                    />
-                  )}
-                  <label 
-                    htmlFor="complete" 
-                    className={`text-sm font-medium cursor-pointer ${isCompleted ? 'text-success' : !hasInteracted ? 'text-muted-foreground' : 'text-foreground'}`}
-                  >
-                    {isCompleted ? 'Completed' : 'Mark as complete'}
-                  </label>
-                </div>
+            <div className="order-1 md:order-2 flex justify-center">
+              <div 
+                className={`
+                  flex items-center gap-4 rounded-full px-6 py-3 transition-all duration-300
+                  ${isCompleted 
+                    ? 'bg-success/10 border-2 border-success/30' 
+                    : hasInteracted 
+                      ? 'bg-primary/5 border-2 border-primary/20 hover:border-primary/40' 
+                      : 'bg-muted/50 border-2 border-border'
+                  }
+                `}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                ) : (
+                  <Checkbox 
+                    id="complete" 
+                    checked={isCompleted} 
+                    onCheckedChange={handleComplete} 
+                    disabled={!hasInteracted && !isCompleted}
+                    className="data-[state=checked]:bg-success data-[state=checked]:border-success"
+                  />
+                )}
+                <label 
+                  htmlFor="complete" 
+                  className={`
+                    text-sm font-semibold cursor-pointer select-none
+                    ${isCompleted 
+                      ? 'text-success' 
+                      : hasInteracted 
+                        ? 'text-foreground' 
+                        : 'text-muted-foreground'
+                    }
+                  `}
+                >
+                  {isCompleted ? 'Module Complete!' : 'Mark as Complete'}
+                </label>
                 {!hasInteracted && !isCompleted && (
-                  <p className="mt-2 text-xs text-muted-foreground text-center">
-                    Watch the video or chat to enable
-                  </p>
+                  <span className="text-xs text-muted-foreground hidden sm:inline">
+                    (watch or chat first)
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Next module - right */}
-            <div className="flex justify-end">
+            {/* Next module */}
+            <div className="order-3 md:flex-1 flex justify-end">
               {nextModule ? (
-                <div className="w-full md:w-auto md:max-w-xs">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2 md:text-right">
+                <div className="w-full md:w-auto flex flex-col items-end gap-2">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Up Next
-                  </p>
-                  <h3 className="font-medium text-foreground mb-1 md:text-right">
-                    {nextModule.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3 md:text-right">
-                    {nextModule.description}
-                  </p>
+                  </span>
                   {hasInteracted ? (
-                    <Link to={`/course/${nextModule.id}`}>
-                      <Button variant="default" className="w-full md:w-auto gap-2">
-                        Continue
-                        <ArrowRight className="h-4 w-4" />
+                    <Link to={`/course/${nextModule.id}`} className="w-full md:w-auto">
+                      <Button variant="default" className="w-full md:w-auto gap-2 group">
+                        <span className="truncate max-w-[150px]">{nextModule.title}</span>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Button>
                     </Link>
                   ) : (
-                    <Button variant="outline" className="w-full md:w-auto" disabled>
-                      Continue
+                    <Button variant="outline" className="w-full md:w-auto gap-2" disabled>
+                      <span className="truncate max-w-[150px]">{nextModule.title}</span>
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
               ) : isLastModuleInCourse ? (
-                <div className="text-center md:text-right">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    This is the final module
-                  </p>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-xs font-medium uppercase tracking-wider text-success">
+                    Final Module
+                  </span>
                   {isCompleted && (
                     <Link to="/course-complete">
-                      <Button variant="default" size="sm">
+                      <Button variant="default" className="gap-2">
                         View Completion
+                        <CheckCircle2 className="h-4 w-4" />
                       </Button>
                     </Link>
                   )}
                 </div>
-              ) : null}
+              ) : (
+                <div />
+              )}
             </div>
           </div>
-        </div>
+        </footer>
       </main>
-    </div>;
+    </div>
+  );
 };
 export default ModulePage;
