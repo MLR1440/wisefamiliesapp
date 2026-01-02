@@ -224,7 +224,7 @@ const ModulePage = () => {
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Main content - Video & Chat */}
           <div className="lg:col-span-3 space-y-8">
-            <VideoPlayer videoUrl={module.video_url} videoType={module.video_type} title={module.title} onPlay={handleVideoPlay} className="px-0 py-0 border-solid rounded shadow-sm mx-0 border-4" />
+            <VideoPlayer videoUrl={module.video_url} videoType={module.video_type} title={module.title} onPlay={handleVideoPlay} className="px-0 py-0 border-solid rounded shadow-sm mx-0 border-2" />
 
             <ChatInterface key={module.id} moduleId={module.id} userId={userId} starterPrompts={prompts.map(p => ({
             id: p.id,
