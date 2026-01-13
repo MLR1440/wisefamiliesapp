@@ -11,9 +11,10 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trash2, AlertTriangle, Mail } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Trash2, AlertTriangle, Mail, Brain, X } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useMemories, formatMemoryKey } from '@/hooks/useMemories';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -25,7 +26,10 @@ const Profile = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clearMemoriesDialogOpen, setClearMemoriesDialogOpen] = useState(false);
+  const [clearingMemories, setClearingMemories] = useState(false);
   
+  const { memories, isLoading: memoriesLoading, deleteMemory, clearAllMemories, refetch: refetchMemories } = useMemories(user?.id);
   const [childAge, setChildAge] = useState('');
   const [childGender, setChildGender] = useState('');
   const [childLikes, setChildLikes] = useState('');
@@ -185,6 +189,42 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteMemory = async (memoryId: string) => {
+    const success = await deleteMemory(memoryId);
+    if (success) {
+      toast({
+        title: "Memory deleted",
+        description: "The AI will no longer remember this detail.",
+      });
+    } else {
+      toast({
+        title: "Error deleting memory",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearAllMemories = async () => {
+    setClearingMemories(true);
+    const success = await clearAllMemories();
+    setClearingMemories(false);
+    setClearMemoriesDialogOpen(false);
+    
+    if (success) {
+      toast({
+        title: "All memories cleared",
+        description: "The AI will start fresh without any remembered details.",
+      });
+    } else {
+      toast({
+        title: "Error clearing memories",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -217,9 +257,10 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="child-profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="child-profile">Child's Profile</TabsTrigger>
-            <TabsTrigger value="account">Account Settings</TabsTrigger>
+            <TabsTrigger value="ai-memories">AI Memories</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
           <TabsContent value="child-profile">
@@ -341,6 +382,104 @@ const Profile = () => {
                 </Link>
               </div>
             </form>
+          </TabsContent>
+
+          <TabsContent value="ai-memories">
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Brain className="h-5 w-5 text-primary" />
+                  <div>
+                    <h3 className="text-lg font-medium">Remembered Details</h3>
+                    <p className="text-sm text-muted-foreground">
+                      These are specific details the AI has learned from your conversations
+                    </p>
+                  </div>
+                </div>
+
+                {memoriesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : memories.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Brain className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">No memories yet</p>
+                    <p className="text-sm mt-1">
+                      As you chat with the AI and share specific details, they'll appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {memories.map((memory) => (
+                      <div
+                        key={memory.id}
+                        className="flex items-start justify-between gap-3 p-3 rounded-lg bg-muted/50 border border-border"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">
+                            {formatMemoryKey(memory.memory_key)}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {memory.memory_value}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeleteMemory(memory.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {memories.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-border">
+                    <Dialog open={clearMemoriesDialogOpen} onOpenChange={setClearMemoriesDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <Trash2 className="h-4 w-4" />
+                          Clear All Memories
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Clear All Memories?</DialogTitle>
+                          <DialogDescription>
+                            This will remove all remembered details from your conversations. 
+                            The AI will start fresh without any personalized context from previous chats.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                          <Button variant="ghost" onClick={() => setClearMemoriesDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            onClick={handleClearAllMemories}
+                            disabled={clearingMemories}
+                          >
+                            {clearingMemories ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Clear All'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">How this works:</strong> When you share specific details 
+                  in conversations (like your child's exact age or name), the AI remembers them to provide 
+                  more personalized advice in future conversations.
+                </p>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="account">
