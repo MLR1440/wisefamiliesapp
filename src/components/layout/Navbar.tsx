@@ -69,7 +69,12 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                   </Button>
                 </Link>
               )}
-              <span className="text-sm text-muted-foreground px-2">{userName}</span>
+              <Link 
+                to="/profile" 
+                className="text-sm text-muted-foreground px-2 hover:text-foreground transition-colors"
+              >
+                {userName}
+              </Link>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -133,7 +138,9 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
             <div className="my-2 border-t border-border" />
             {isLoggedIn ? (
               <>
-                <p className="px-4 py-2 text-sm text-muted-foreground">{userName}</p>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                  <p className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">{userName}</p>
+                </Link>
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start gap-2 text-muted-foreground"
