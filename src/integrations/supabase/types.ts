@@ -301,6 +301,7 @@ export type Database = {
           created_at: string
           current_issues: string | null
           id: string
+          memory_enabled: boolean
           onboarding_completed: boolean
           updated_at: string
           user_id: string
@@ -313,6 +314,7 @@ export type Database = {
           created_at?: string
           current_issues?: string | null
           id?: string
+          memory_enabled?: boolean
           onboarding_completed?: boolean
           updated_at?: string
           user_id: string
@@ -325,6 +327,7 @@ export type Database = {
           created_at?: string
           current_issues?: string | null
           id?: string
+          memory_enabled?: boolean
           onboarding_completed?: boolean
           updated_at?: string
           user_id?: string
