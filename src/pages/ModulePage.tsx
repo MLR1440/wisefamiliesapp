@@ -258,8 +258,39 @@ const ModulePage = () => {
               </CollapsibleTrigger>
               <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                 <div className="mt-2 rounded-xl border border-border bg-card p-5 md:p-6">
-                  <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
-                    {module.transcript}
+                  <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:my-1">
+                    {module.transcript.split('\n').map((line, index) => {
+                      // Check for bullet points (-, *, •)
+                      const bulletMatch = line.match(/^(\s*)([-*•])\s+(.*)$/);
+                      if (bulletMatch) {
+                        const [, indent, , content] = bulletMatch;
+                        const indentLevel = Math.floor(indent.length / 2);
+                        return (
+                          <div key={index} className="flex gap-2" style={{ marginLeft: `${indentLevel * 1.5}rem` }}>
+                            <span className="text-primary">•</span>
+                            <span>{content}</span>
+                          </div>
+                        );
+                      }
+                      // Check for numbered lists (1., 2., etc.)
+                      const numberedMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+                      if (numberedMatch) {
+                        const [, indent, number, content] = numberedMatch;
+                        const indentLevel = Math.floor(indent.length / 2);
+                        return (
+                          <div key={index} className="flex gap-2" style={{ marginLeft: `${indentLevel * 1.5}rem` }}>
+                            <span className="text-primary font-medium">{number}.</span>
+                            <span>{content}</span>
+                          </div>
+                        );
+                      }
+                      // Empty lines become spacing
+                      if (!line.trim()) {
+                        return <div key={index} className="h-3" />;
+                      }
+                      // Regular text
+                      return <p key={index} className="my-0">{line}</p>;
+                    })}
                   </div>
                 </div>
               </CollapsibleContent>
