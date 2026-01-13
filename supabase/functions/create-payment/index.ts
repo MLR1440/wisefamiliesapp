@@ -59,13 +59,23 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
+    // Get price ID from database settings
+    const { data: setting } = await supabaseClient
+      .from('course_settings')
+      .select('value')
+      .eq('key', 'stripe_price_id')
+      .single();
+
+    const priceId = setting?.value || "price_1SaqpSQLJHCz1zk9H6YyndT4";
+    logStep("Using price ID", { priceId });
+
     // Create a one-time payment session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1SaqpSQLJHCz1zk9H6YyndT4",
+          price: priceId,
           quantity: 1,
         },
       ],

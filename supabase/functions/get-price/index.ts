@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,12 +13,23 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Get price ID from database settings
+    const { data: setting } = await supabaseClient
+      .from('course_settings')
+      .select('value')
+      .eq('key', 'stripe_price_id')
+      .single();
+
+    const priceId = setting?.value || "price_1SaqpSQLJHCz1zk9H6YyndT4";
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
-
-    // Course price ID - this should match what's in create-payment
-    const priceId = "price_1SaqpSQLJHCz1zk9H6YyndT4";
     
     const price = await stripe.prices.retrieve(priceId);
     

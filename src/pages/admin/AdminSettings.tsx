@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import {
   Select,
   SelectContent,
@@ -14,20 +13,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockSettings } from '@/data/mockData';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
-import { ArrowLeft, Save, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2, Upload, Shield, Trophy } from 'lucide-react';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
   const { user, isAdmin } = useAuth();
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { settings, loading: settingsLoading, getSetting, updateSetting } = useCourseSettings();
+  const { price: priceData, loading: priceLoading } = useCoursePrice();
+  
+  // Guardrail settings
   const [guardrailAppendix, setGuardrailAppendix] = useState('');
   const [isSavingGuardrail, setIsSavingGuardrail] = useState(false);
   
@@ -38,84 +38,42 @@ const AdminSettings = () => {
   const [congratsMessage, setCongratsMessage] = useState('');
   const [isSavingCongrats, setIsSavingCongrats] = useState(false);
 
-  // Load guardrail appendix and congrats settings when settings load
+  // Course settings
+  const [courseTitle, setCourseTitle] = useState('');
+  const [courseDescription, setCourseDescription] = useState('');
+  const [stripePriceId, setStripePriceId] = useState('');
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+
+  // Branding settings
+  const [primaryColor, setPrimaryColor] = useState('#0d9488');
+  const [secondaryColor, setSecondaryColor] = useState('#f97316');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isSavingBranding, setIsSavingBranding] = useState(false);
+
+  // Load all settings from database
   useEffect(() => {
     if (!settingsLoading && settings.length > 0) {
+      // Guardrails
       setGuardrailAppendix(getSetting('guardrail_appendix'));
+      
+      // Congratulations page
       setCongratsVideoUrl(getSetting('congratulations_video_url'));
       setCongratsVideoType(getSetting('congratulations_video_type') || 'youtube');
       setCongratsTitle(getSetting('congratulations_title'));
       setCongratsMessage(getSetting('congratulations_message'));
+      
+      // Course settings
+      setCourseTitle(getSetting('course_title') || 'A.I - Ready Family Framework');
+      setCourseDescription(getSetting('course_description') || '');
+      setStripePriceId(getSetting('stripe_price_id') || '');
+      
+      // Branding
+      setPrimaryColor(getSetting('branding_primary_color') || '#0d9488');
+      setSecondaryColor(getSetting('branding_secondary_color') || '#f97316');
+      setLogoUrl(getSetting('branding_logo_url') || '');
     }
   }, [settingsLoading, settings, getSetting]);
-  
-  const [llmSettings, setLlmSettings] = useState({
-    provider: mockSettings.llmProvider,
-    apiKey: '',
-    model: mockSettings.llmModel,
-    temperature: mockSettings.llmTemperature,
-    maxTokens: mockSettings.llmMaxTokens,
-  });
-
-  const [defaultPrompt, setDefaultPrompt] = useState(mockSettings.defaultSystemPrompt);
-
-  const [courseSettings, setCourseSettings] = useState({
-    title: mockSettings.courseTitle,
-    description: mockSettings.courseDescription,
-    price: mockSettings.coursePrice,
-  });
-
-  const [brandingSettings, setBrandingSettings] = useState({
-    primaryColor: '#0d9488',
-    secondaryColor: '#f97316',
-    logo: null as string | null,
-  });
-
-  const modelOptions = {
-    anthropic: ['claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
-    openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
-    openrouter: ['anthropic/claude-sonnet-4-20250514', 'openai/gpt-4o', 'meta-llama/llama-3.1-70b-instruct'],
-  };
-
-  const handleTestConnection = async () => {
-    if (!llmSettings.apiKey) {
-      toast.error('Please enter an API key first');
-      return;
-    }
-    
-    setIsTestingConnection(true);
-    setConnectionStatus('idle');
-    
-    // Simulate API test
-    setTimeout(() => {
-      setIsTestingConnection(false);
-      // For demo, randomly succeed/fail
-      const success = Math.random() > 0.3;
-      if (success) {
-        setConnectionStatus('success');
-        toast.success('Connection successful!');
-      } else {
-        setConnectionStatus('error');
-        toast.error('Connection failed. Please check your API key.');
-      }
-    }, 2000);
-  };
-
-  const handleSaveLLM = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('LLM settings saved!');
-    }, 1000);
-  };
-
-  const handleSavePrompt = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success('Default prompt saved!');
-    }, 1000);
-  };
 
   const handleSaveGuardrail = async () => {
     setIsSavingGuardrail(true);
@@ -149,30 +107,80 @@ const AdminSettings = () => {
   };
 
   const handleSaveCourse = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setIsSavingCourse(true);
+    try {
+      await Promise.all([
+        updateSetting('course_title', courseTitle),
+        updateSetting('course_description', courseDescription),
+        updateSetting('stripe_price_id', stripePriceId),
+      ]);
       toast.success('Course settings saved!');
-    }, 1000);
+    } catch (error) {
+      toast.error('Failed to save course settings');
+      console.error(error);
+    } finally {
+      setIsSavingCourse(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB');
+      return;
+    }
+    
+    setIsUploadingLogo(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('branding')
+        .upload(fileName, file, { upsert: true });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('branding')
+        .getPublicUrl(fileName);
+      
+      setLogoUrl(publicUrl);
+      toast.success('Logo uploaded!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload logo');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   const handleSaveBranding = async () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setIsSavingBranding(true);
+    try {
+      await Promise.all([
+        updateSetting('branding_primary_color', primaryColor),
+        updateSetting('branding_secondary_color', secondaryColor),
+        updateSetting('branding_logo_url', logoUrl),
+      ]);
       toast.success('Branding settings saved!');
-    }, 1000);
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setBrandingSettings({ ...brandingSettings, logo: event.target?.result as string });
-        toast.success('Logo uploaded!');
-      };
-      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error('Failed to save branding settings');
+      console.error(error);
+    } finally {
+      setIsSavingBranding(false);
     }
   };
 
@@ -196,177 +204,11 @@ const AdminSettings = () => {
             Settings
           </h1>
           <p className="text-muted-foreground">
-            Configure your LLM provider, default prompts, and site settings
+            Configure your course, payment, and branding settings
           </p>
         </div>
 
         <div className="space-y-8">
-          {/* LLM Configuration */}
-          <div className="rounded-xl border border-border bg-card p-6">
-            <h2 className="mb-4 font-heading text-xl font-semibold text-foreground">
-              LLM Configuration
-            </h2>
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="provider">Provider</Label>
-                <Select
-                  value={llmSettings.provider}
-                  onValueChange={(value) =>
-                    setLlmSettings({
-                      ...llmSettings,
-                      provider: value as 'openai' | 'anthropic' | 'openrouter',
-                      model: modelOptions[value as keyof typeof modelOptions][0],
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
-                    <SelectItem value="openrouter">OpenRouter</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      id="apiKey"
-                      type={showApiKey ? 'text' : 'password'}
-                      value={llmSettings.apiKey}
-                      onChange={(e) =>
-                        setLlmSettings({ ...llmSettings, apiKey: e.target.value })
-                      }
-                      placeholder={llmSettings.provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleTestConnection}
-                    disabled={isTestingConnection || !llmSettings.apiKey}
-                    className="gap-2"
-                  >
-                    {isTestingConnection ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : connectionStatus === 'success' ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : connectionStatus === 'error' ? (
-                      <AlertCircle className="h-4 w-4 text-destructive" />
-                    ) : null}
-                    Test
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Your API key is stored securely and never exposed to users
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
-                <Select
-                  value={llmSettings.model}
-                  onValueChange={(value) =>
-                    setLlmSettings({ ...llmSettings, model: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modelOptions[llmSettings.provider].map((model) => (
-                      <SelectItem key={model} value={model}>
-                        {model}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Temperature</Label>
-                  <span className="text-sm text-muted-foreground">
-                    {llmSettings.temperature.toFixed(1)}
-                  </span>
-                </div>
-                <Slider
-                  value={[llmSettings.temperature]}
-                  onValueChange={(value) =>
-                    setLlmSettings({ ...llmSettings, temperature: value[0] })
-                  }
-                  min={0}
-                  max={1}
-                  step={0.1}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Lower values make responses more focused, higher values more creative
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="maxTokens">Max Tokens</Label>
-                <Input
-                  id="maxTokens"
-                  type="number"
-                  min={256}
-                  max={4096}
-                  value={llmSettings.maxTokens}
-                  onChange={(e) =>
-                    setLlmSettings({ ...llmSettings, maxTokens: parseInt(e.target.value) || 1024 })
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  Maximum length of AI responses (256-4096)
-                </p>
-              </div>
-
-              <Button onClick={handleSaveLLM} disabled={isLoading} className="gap-2">
-                <Save className="h-4 w-4" />
-                Save LLM Settings
-              </Button>
-            </div>
-          </div>
-
-          {/* Default System Prompt */}
-          <div className="rounded-xl border border-border bg-card p-6">
-            <h2 className="mb-4 font-heading text-xl font-semibold text-foreground">
-              Default System Prompt
-            </h2>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="defaultPrompt">Default prompt for new modules</Label>
-                <Textarea
-                  id="defaultPrompt"
-                  value={defaultPrompt}
-                  onChange={(e) => setDefaultPrompt(e.target.value)}
-                  placeholder="You are a helpful parenting coach..."
-                  rows={6}
-                />
-                <p className="text-xs text-muted-foreground">
-                  This prompt will be used as the starting point when creating new modules
-                </p>
-              </div>
-
-              <Button onClick={handleSavePrompt} disabled={isLoading} className="gap-2">
-                <Save className="h-4 w-4" />
-                Save Default Prompt
-              </Button>
-            </div>
-          </div>
-
           {/* AI Guardrails */}
           <div className="rounded-xl border border-primary/20 bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
@@ -423,10 +265,9 @@ const AdminSettings = () => {
                 <Label htmlFor="courseTitle">Course Title</Label>
                 <Input
                   id="courseTitle"
-                  value={courseSettings.title}
-                  onChange={(e) =>
-                    setCourseSettings({ ...courseSettings, title: e.target.value })
-                  }
+                  value={courseTitle}
+                  onChange={(e) => setCourseTitle(e.target.value)}
+                  placeholder="Enter course title"
                 />
               </div>
 
@@ -434,57 +275,93 @@ const AdminSettings = () => {
                 <Label htmlFor="courseDescription">Course Description</Label>
                 <Textarea
                   id="courseDescription"
-                  value={courseSettings.description}
-                  onChange={(e) =>
-                    setCourseSettings({ ...courseSettings, description: e.target.value })
-                  }
+                  value={courseDescription}
+                  onChange={(e) => setCourseDescription(e.target.value)}
+                  placeholder="Enter course description..."
                   rows={3}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="coursePrice">Course Price ($)</Label>
-                <Input
-                  id="coursePrice"
-                  type="number"
-                  min={0}
-                  value={courseSettings.price}
-                  onChange={(e) =>
-                    setCourseSettings({
-                      ...courseSettings,
-                      price: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-
-              <Button onClick={handleSaveCourse} disabled={isLoading} className="gap-2">
-                <Save className="h-4 w-4" />
+              <Button onClick={handleSaveCourse} disabled={isSavingCourse} className="gap-2">
+                {isSavingCourse ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 Save Course Settings
               </Button>
             </div>
           </div>
 
-          {/* Stripe Status */}
+          {/* Payment Integration */}
           <div className="rounded-xl border border-border bg-card p-6">
-            <h2 className="mb-4 font-heading text-xl font-semibold text-foreground">
-              Payment Integration
-            </h2>
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+            <div className="mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Payment Integration
+              </h2>
+            </div>
+            
+            <div className="space-y-5">
+              <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Stripe Connected</p>
+                  <p className="text-sm text-muted-foreground">
+                    Payments are active and ready to process
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-foreground">Stripe Ready</p>
-                <p className="text-sm text-muted-foreground">
-                  Connect Supabase to enable payments
+
+              <div className="rounded-lg border border-border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">Current Price</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {priceLoading ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        `$${priceData.amount} ${priceData.currency.toUpperCase()}`
+                      )}
+                    </p>
+                  </div>
+                  <a 
+                    href="https://dashboard.stripe.com/products" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                  >
+                    Manage in Stripe
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stripePriceId">Stripe Price ID</Label>
+                <Input
+                  id="stripePriceId"
+                  value={stripePriceId}
+                  onChange={(e) => setStripePriceId(e.target.value)}
+                  placeholder="price_..."
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The Stripe Price ID to use for course purchases. Find this in your Stripe Dashboard under Products.
                 </p>
               </div>
+
+              <Button onClick={handleSaveCourse} disabled={isSavingCourse} className="gap-2">
+                {isSavingCourse ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Payment Settings
+              </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Stripe integration will be configured when you connect Supabase. Payments will automatically 
-              grant course access upon successful checkout.
-            </p>
           </div>
 
           {/* Course Completion */}
@@ -571,9 +448,9 @@ const AdminSettings = () => {
               <div className="space-y-2">
                 <Label>Logo</Label>
                 <div className="flex items-center gap-4">
-                  {brandingSettings.logo ? (
+                  {logoUrl ? (
                     <img 
-                      src={brandingSettings.logo} 
+                      src={logoUrl} 
                       alt="Logo preview" 
                       className="h-16 w-16 rounded-lg object-contain bg-muted"
                     />
@@ -583,14 +460,29 @@ const AdminSettings = () => {
                     </div>
                   )}
                   <div>
-                    <Input
+                    <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
                       onChange={handleLogoUpload}
-                      className="max-w-xs"
+                      className="hidden"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingLogo}
+                      className="gap-2"
+                    >
+                      {isUploadingLogo ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {logoUrl ? 'Change Logo' : 'Upload Logo'}
+                    </Button>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Recommended: 512x512px PNG or SVG
+                      Recommended: 512x512px PNG or SVG (max 2MB)
                     </p>
                   </div>
                 </div>
@@ -603,17 +495,13 @@ const AdminSettings = () => {
                     <Input
                       id="primaryColor"
                       type="color"
-                      value={brandingSettings.primaryColor}
-                      onChange={(e) =>
-                        setBrandingSettings({ ...brandingSettings, primaryColor: e.target.value })
-                      }
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
                       className="h-10 w-16 cursor-pointer p-1"
                     />
                     <Input
-                      value={brandingSettings.primaryColor}
-                      onChange={(e) =>
-                        setBrandingSettings({ ...brandingSettings, primaryColor: e.target.value })
-                      }
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
                       className="flex-1"
                     />
                   </div>
@@ -624,25 +512,25 @@ const AdminSettings = () => {
                     <Input
                       id="secondaryColor"
                       type="color"
-                      value={brandingSettings.secondaryColor}
-                      onChange={(e) =>
-                        setBrandingSettings({ ...brandingSettings, secondaryColor: e.target.value })
-                      }
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
                       className="h-10 w-16 cursor-pointer p-1"
                     />
                     <Input
-                      value={brandingSettings.secondaryColor}
-                      onChange={(e) =>
-                        setBrandingSettings({ ...brandingSettings, secondaryColor: e.target.value })
-                      }
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
                       className="flex-1"
                     />
                   </div>
                 </div>
               </div>
 
-              <Button onClick={handleSaveBranding} disabled={isLoading} className="gap-2">
-                <Save className="h-4 w-4" />
+              <Button onClick={handleSaveBranding} disabled={isSavingBranding} className="gap-2">
+                {isSavingBranding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 Save Branding
               </Button>
             </div>
