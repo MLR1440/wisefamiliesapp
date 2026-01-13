@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
@@ -71,7 +71,9 @@ const Dashboard = () => {
   }, [userId]);
 
   const completedModules = progress.filter(p => p.completed_at).length;
+  const inProgressModules = progress.filter(p => p.started_at && !p.completed_at).length;
   const totalModules = modules.length;
+  const remainingModules = totalModules - completedModules - inProgressModules;
   const progressPercentage = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
 
   const getModulesForChapter = (chapterId: string) => {
@@ -215,6 +217,31 @@ const Dashboard = () => {
 
         {/* Clean progress section */}
         <div className="mb-6 rounded-xl border border-border bg-card p-6">
+          {/* Stats row */}
+          <div className="flex gap-6 mb-4 pb-4 border-b border-border">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <div>
+                <p className="text-2xl font-semibold text-success">{completedModules}</p>
+                <p className="text-xs text-muted-foreground">Completed</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <div>
+                <p className="text-2xl font-semibold text-primary">{inProgressModules}</p>
+                <p className="text-xs text-muted-foreground">In Progress</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-semibold text-muted-foreground">{remainingModules}</p>
+                <p className="text-xs text-muted-foreground">Remaining</p>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
