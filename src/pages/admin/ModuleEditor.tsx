@@ -215,6 +215,7 @@ const ModuleEditor = () => {
     status: 'draft',
     nextModuleId: 'auto',
     chapterId: initialChapterId,
+    transcript: '',
   });
 
   const [prompts, setPrompts] = useState<PromptField[]>([
@@ -240,6 +241,7 @@ const ModuleEditor = () => {
         status: existingModule.status,
         nextModuleId: existingModule.next_module_id || 'auto',
         chapterId: existingModule.chapter_id || '',
+        transcript: existingModule.transcript || '',
       });
       setLastSaved(new Date(existingModule.updated_at));
     }
@@ -385,6 +387,7 @@ const ModuleEditor = () => {
         status: formData.status,
         next_module_id: formData.nextModuleId === 'auto' ? null : formData.nextModuleId,
         chapter_id: formData.chapterId || null,
+        transcript: formData.transcript,
       };
 
       let savedModuleId: string;
@@ -702,6 +705,28 @@ const ModuleEditor = () => {
                   {getVideoPreview()}
                 </>
               )}
+
+              {/* Read Along Content */}
+              <div className="space-y-2 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="transcript">Read Along Content (Optional)</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Add text for users to read alongside the video
+                    </p>
+                  </div>
+                  <CharacterCounter current={formData.transcript.length} limit={5000} />
+                </div>
+                <Textarea
+                  id="transcript"
+                  value={formData.transcript}
+                  onChange={(e) =>
+                    setFormData({ ...formData, transcript: e.target.value })
+                  }
+                  placeholder="Enter read-along text, transcript, or notes for this module..."
+                  rows={6}
+                />
+              </div>
             </div>
           </div>
 

@@ -3,7 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, BookOpen, ChevronDown } from 'lucide-react';
 import VideoPlayer from '@/components/module/VideoPlayer';
 import ChatInterface from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
@@ -243,7 +244,29 @@ const ModulePage = () => {
             />
           </div>
 
-          <ChatInterface 
+          {/* Read Along Section */}
+          {module.transcript && module.transcript.trim() && (
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <button className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-colors hover:bg-muted/50 group">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <span className="font-medium text-foreground">Read Along</span>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div className="mt-2 rounded-xl border border-border bg-card p-5 md:p-6">
+                  <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
+                    {module.transcript}
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          <ChatInterface
             key={module.id} 
             moduleId={module.id} 
             userId={userId} 
