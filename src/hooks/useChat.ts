@@ -104,6 +104,19 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Check if memory is enabled for this user
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('memory_enabled')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      // If memory is disabled (explicitly false), don't extract memories
+      if (profile?.memory_enabled === false) {
+        console.log('Memory extraction skipped - user has disabled AI memory');
+        return;
+      }
+
       // Call extract-memories function
       const extractResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-memories`, {
         method: 'POST',

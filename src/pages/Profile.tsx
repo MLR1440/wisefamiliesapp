@@ -11,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trash2, AlertTriangle, Mail, Brain, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Trash2, AlertTriangle, Mail, Brain, X, Settings } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useMemories, formatMemoryKey } from '@/hooks/useMemories';
@@ -28,6 +29,8 @@ const Profile = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clearMemoriesDialogOpen, setClearMemoriesDialogOpen] = useState(false);
   const [clearingMemories, setClearingMemories] = useState(false);
+  const [memoryEnabled, setMemoryEnabled] = useState(true);
+  const [savingMemorySetting, setSavingMemorySetting] = useState(false);
   
   const { memories, isLoading: memoriesLoading, deleteMemory, clearAllMemories, refetch: refetchMemories } = useMemories(user?.id);
   const [childAge, setChildAge] = useState('');
@@ -58,6 +61,7 @@ const Profile = () => {
         setChildLikes(profile.child_likes || '');
         setChildDislikes(profile.child_dislikes || '');
         setCurrentIssues(profile.current_issues || '');
+        setMemoryEnabled(profile.memory_enabled ?? true);
       }
 
       setLoading(false);
@@ -491,6 +495,67 @@ const Profile = () => {
                   <Label className="text-base font-medium">Email Address</Label>
                 </div>
                 <p className="text-muted-foreground">{userEmail}</p>
+              </div>
+
+              {/* AI Memory Settings */}
+              <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Settings className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="text-lg font-medium">AI Personalisation</h3>
+                </div>
+                
+                <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50 border border-border">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Brain className="h-4 w-4 text-primary" />
+                      <p className="font-medium text-foreground">AI Memory</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Allow the AI to remember specific details from your conversations for more personalised advice
+                    </p>
+                  </div>
+                  <Switch
+                    checked={memoryEnabled}
+                    disabled={savingMemorySetting}
+                    onCheckedChange={async (checked) => {
+                      if (!user) return;
+                      setSavingMemorySetting(true);
+                      setMemoryEnabled(checked);
+                      
+                      try {
+                        const { error } = await supabase
+                          .from('user_profiles')
+                          .update({ memory_enabled: checked })
+                          .eq('user_id', user.id);
+                        
+                        if (error) throw error;
+                        
+                        toast({
+                          title: checked ? "AI Memory enabled" : "AI Memory disabled",
+                          description: checked 
+                            ? "The AI will now remember details from your conversations."
+                            : "The AI will no longer store new conversation details.",
+                        });
+                      } catch (error) {
+                        console.error('Error updating memory setting:', error);
+                        setMemoryEnabled(!checked); // Revert on error
+                        toast({
+                          title: "Error updating setting",
+                          description: "Please try again.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setSavingMemorySetting(false);
+                      }
+                    }}
+                  />
+                </div>
+                
+                <p className="text-xs text-muted-foreground mt-3">
+                  {memoryEnabled 
+                    ? "When enabled, details like your child's exact age, name, or specific interests will be remembered across modules."
+                    : "When disabled, the AI will still use your child's profile above, but won't remember additional details from conversations."}
+                </p>
               </div>
 
               {/* Danger Zone */}
