@@ -157,6 +157,36 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Verify user has course access (must have purchased or be admin)
+    if (userId === 'anonymous') {
+      console.warn('Unauthorized chat attempt: no user authenticated');
+      return new Response(
+        JSON.stringify({ error: "Authentication required to access chat" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: hasAccess, error: accessError } = await supabase
+      .rpc('user_has_course_access', { _user_id: userId });
+
+    if (accessError) {
+      console.error('Access check error:', accessError);
+      return new Response(
+        JSON.stringify({ error: "Failed to verify course access" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!hasAccess) {
+      console.warn(`Access denied for user ${userId}: no course access`);
+      return new Response(
+        JSON.stringify({ error: "Course access required. Please purchase the course to use the AI assistant." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Access verified for user ${userId}`);
+
     // Get guardrail appendix from course_settings
     let guardrailAppendix = '';
     const { data: guardrailSetting } = await supabase
