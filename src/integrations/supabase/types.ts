@@ -205,6 +205,7 @@ export type Database = {
           status: string
           system_prompt: string
           title: string
+          transcript: string
           updated_at: string
           video_type: string
           video_url: string
@@ -219,6 +220,7 @@ export type Database = {
           status?: string
           system_prompt?: string
           title: string
+          transcript?: string
           updated_at?: string
           video_type?: string
           video_url?: string
@@ -233,6 +235,7 @@ export type Database = {
           status?: string
           system_prompt?: string
           title?: string
+          transcript?: string
           updated_at?: string
           video_type?: string
           video_url?: string
