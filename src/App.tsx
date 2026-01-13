@@ -19,7 +19,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
 import ChapterEditor from "./pages/admin/ChapterEditor";
-import AdminPrompts from "./pages/admin/AdminPrompts";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import NotFound from "./pages/NotFound";
@@ -97,11 +96,6 @@ const App = () => (
             <Route path="/admin/chapters/:chapterId" element={
               <ProtectedRoute requireAdmin>
                 <ChapterEditor />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/prompts" element={
-              <ProtectedRoute requireAdmin>
-                <AdminPrompts />
               </ProtectedRoute>
             } />
             <Route path="/admin/settings" element={

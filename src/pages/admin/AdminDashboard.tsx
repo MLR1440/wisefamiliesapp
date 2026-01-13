@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, Activity, Award, BookOpen, Settings, FileText, Monitor, TrendingUp, MessageSquare } from 'lucide-react';
+import { Users, Activity, Award, BookOpen, Settings, Monitor, TrendingUp, MessageSquare } from 'lucide-react';
 import { useAnalyticsData } from '@/hooks/useAnalytics';
 import { useModules } from '@/hooks/useModules';
 
@@ -145,19 +145,11 @@ const AdminDashboard = () => {
               </Button>
             </Link>
 
-            <Link to="/admin/prompts">
-              <Button variant="outline" className="h-auto w-full flex-col gap-1 md:gap-2 p-4 md:p-6">
-                <FileText className="h-6 w-6 md:h-8 md:w-8 text-secondary" />
-                <span className="font-semibold text-sm md:text-base">Prompt Library</span>
-                <span className="text-xs text-muted-foreground">Manage templates</span>
-              </Button>
-            </Link>
-
             <Link to="/admin/settings">
               <Button variant="outline" className="h-auto w-full flex-col gap-1 md:gap-2 p-4 md:p-6">
                 <Settings className="h-6 w-6 md:h-8 md:w-8 text-accent" />
                 <span className="font-semibold text-sm md:text-base">Settings</span>
-                <span className="text-xs text-muted-foreground">LLM & Site config</span>
+                <span className="text-xs text-muted-foreground">Course config</span>
               </Button>
             </Link>
 
