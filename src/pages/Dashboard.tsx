@@ -4,11 +4,12 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface Module {
   id: string;
@@ -34,6 +35,7 @@ interface UserProgress {
 
 const Dashboard = () => {
   const { user, hasAccess, checkingPayment, isAdmin } = useAuth();
+  const { profile, loading: profileLoading } = useUserProfile();
   const [modules, setModules] = useState<Module[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
@@ -212,7 +214,7 @@ const Dashboard = () => {
         </div>
 
         {/* Clean progress section */}
-        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+        <div className="mb-6 rounded-xl border border-border bg-card p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -238,6 +240,81 @@ const Dashboard = () => {
               </Link>
             )}
           </div>
+        </div>
+
+        {/* Child Profile Section */}
+        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+          {profileLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : profile?.onboarding_completed ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <h3 className="font-medium text-foreground">Your Child's Profile</h3>
+                </div>
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                </Link>
+              </div>
+              
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-3">
+                  {profile.child_age && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Age Range</p>
+                      <p className="text-sm text-foreground">{profile.child_age}</p>
+                    </div>
+                  )}
+                  {profile.child_gender && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-0.5">Gender</p>
+                      <p className="text-sm text-foreground">{profile.child_gender}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-3">
+                  {profile.child_likes && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <Heart className="h-3 w-3 text-success" />
+                        <p className="text-xs text-muted-foreground">Interests</p>
+                      </div>
+                      <p className="text-sm text-foreground line-clamp-2">{profile.child_likes}</p>
+                    </div>
+                  )}
+                  {profile.current_issues && (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <AlertCircle className="h-3 w-3 text-warning" />
+                        <p className="text-xs text-muted-foreground">Current Challenges</p>
+                      </div>
+                      <p className="text-sm text-foreground line-clamp-2">{profile.current_issues}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <User className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-4">
+                Complete your child's profile to get personalized AI coaching
+              </p>
+              <Link to="/profile">
+                <Button variant="outline" size="sm" className="gap-2">
+                  Set Up Profile
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Course content */}
