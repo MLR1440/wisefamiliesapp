@@ -4,6 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -708,23 +709,16 @@ const ModuleEditor = () => {
 
               {/* Read Along Content */}
               <div className="space-y-2 pt-4 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="transcript">Read Along Content (Optional)</Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Add text for users to read alongside the video
-                    </p>
-                  </div>
-                  <CharacterCounter current={formData.transcript.length} limit={5000} />
+                <div>
+                  <Label htmlFor="transcript">Read Along Content (Optional)</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Add text for users to read alongside the video. Paste from Google Docs to preserve formatting.
+                  </p>
                 </div>
-                <Textarea
-                  id="transcript"
-                  value={formData.transcript}
-                  onChange={(e) =>
-                    setFormData({ ...formData, transcript: e.target.value })
-                  }
+                <RichTextEditor
+                  content={formData.transcript}
+                  onChange={(html) => setFormData({ ...formData, transcript: html })}
                   placeholder="Enter read-along text, transcript, or notes for this module..."
-                  rows={6}
                 />
               </div>
             </div>
