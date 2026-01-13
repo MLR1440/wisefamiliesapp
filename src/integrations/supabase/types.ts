@@ -254,6 +254,44 @@ export type Database = {
           },
         ]
       }
+      user_memories: {
+        Row: {
+          created_at: string | null
+          id: string
+          memory_key: string
+          memory_value: string
+          source_module_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          memory_key: string
+          memory_value: string
+          source_module_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          memory_key?: string
+          memory_value?: string
+          source_module_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memories_source_module_id_fkey"
+            columns: ["source_module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           child_age: string | null

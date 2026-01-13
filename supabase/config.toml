@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.delete-account]
 verify_jwt = false
+
+[functions.extract-memories]
+verify_jwt = true
+
+[functions.save-memory]
+verify_jwt = false

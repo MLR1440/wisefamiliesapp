@@ -98,6 +98,45 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
     return data;
   };
 
+  // Extract and save memories from conversation (runs in background)
+  const extractAndSaveMemories = async (userMessage: string, assistantResponse: string, modId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Call extract-memories function
+      const extractResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-memories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ userMessage, assistantResponse }),
+      });
+
+      if (!extractResponse.ok) return;
+
+      const { memories } = await extractResponse.json();
+      
+      if (memories && memories.length > 0) {
+        // Save extracted memories
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-memory`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ memories, moduleId: modId }),
+        });
+        
+        console.log(`Saved ${memories.length} memories from conversation`);
+      }
+    } catch (err) {
+      // Silent fail - memory extraction is non-critical
+      console.warn('Memory extraction failed:', err);
+    }
+  };
+
   // Send message and stream response
   // displayContent is what the user sees, actualContent is what gets sent to AI (defaults to displayContent)
   const sendMessage = useCallback(async (displayContent: string, actualContent?: string) => {
@@ -205,6 +244,9 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
         setMessages(prev =>
           prev.map(m => m.id === assistantMessageId ? { ...m, id: savedAssistantMsg.id } : m)
         );
+
+        // Extract and save memories in the background (fire and forget)
+        extractAndSaveMemories(contentToSend, assistantContent, moduleId);
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {

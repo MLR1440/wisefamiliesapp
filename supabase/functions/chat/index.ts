@@ -222,6 +222,21 @@ serve(async (req) => {
           console.log('User profile context loaded');
         }
       }
+
+      // Fetch user memories for enhanced personalization
+      const { data: userMemories } = await supabase
+        .from('user_memories')
+        .select('memory_key, memory_value')
+        .eq('user_id', userId);
+      
+      if (userMemories && userMemories.length > 0) {
+        const memoryContext = userMemories.map(m => 
+          `- ${m.memory_key.replace(/_/g, ' ')}: ${m.memory_value}`
+        ).join('\n');
+        
+        userContext += `\n\n--- REMEMBERED DETAILS FROM PREVIOUS CONVERSATIONS ---\nThese are specific facts the parent shared in earlier conversations. Reference these naturally when relevant:\n${memoryContext}\n--- END REMEMBERED DETAILS ---`;
+        console.log(`Loaded ${userMemories.length} user memories`);
+      }
     }
 
     // Get module's system prompt if module_id provided

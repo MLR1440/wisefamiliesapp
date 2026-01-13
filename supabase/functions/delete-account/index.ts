@@ -93,13 +93,19 @@ Deno.serve(async (req) => {
       .delete()
       .eq('user_id', userId);
 
-    // 6. Delete user_roles
+    // 6. Delete user_memories
+    await supabaseAdmin
+      .from('user_memories')
+      .delete()
+      .eq('user_id', userId);
+
+    // 7. Delete user_roles
     await supabaseAdmin
       .from('user_roles')
       .delete()
       .eq('user_id', userId);
 
-    // 7. Delete user_profiles
+    // 8. Delete user_profiles
     await supabaseAdmin
       .from('user_profiles')
       .delete()
