@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, Link, useNavigate, useSearchParams, useBlocker } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -228,11 +228,21 @@ const ModuleEditor = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  
+  // Track original data for dirty state detection
+  const [originalData, setOriginalData] = useState<string>('');
+  
+  // Compute dirty state by comparing current form to original
+  const isDirty = useMemo(() => {
+    if (!originalData) return false;
+    const currentSnapshot = JSON.stringify({ formData, prompts });
+    return currentSnapshot !== originalData;
+  }, [formData, prompts, originalData]);
 
   // Load existing module data
   useEffect(() => {
     if (existingModule) {
-      setFormData({
+      const loadedFormData = {
         title: existingModule.title,
         orderNumber: existingModule.order_number,
         description: existingModule.description,
@@ -243,18 +253,50 @@ const ModuleEditor = () => {
         nextModuleId: existingModule.next_module_id || 'auto',
         chapterId: existingModule.chapter_id || '',
         transcript: existingModule.transcript || '',
-      });
+      };
+      setFormData(loadedFormData);
       setLastSaved(new Date(existingModule.updated_at));
-    }
-    
-    if (existingPrompts.length > 0) {
-      setPrompts(existingPrompts.map(p => ({
-        id: p.id,
-        label: p.label,
-        promptText: p.prompt_text,
-      })));
+      
+      const loadedPrompts = existingPrompts.length > 0 
+        ? existingPrompts.map(p => ({
+            id: p.id,
+            label: p.label,
+            promptText: p.prompt_text,
+          }))
+        : [{ id: '1', label: '', promptText: '' }];
+      
+      setPrompts(loadedPrompts);
+      
+      // Set original snapshot after data loads
+      setTimeout(() => {
+        setOriginalData(JSON.stringify({ formData: loadedFormData, prompts: loadedPrompts }));
+      }, 0);
+    } else if (isNew) {
+      // For new modules, set original data after initial render
+      setTimeout(() => {
+        setOriginalData(JSON.stringify({ formData, prompts }));
+      }, 100);
     }
   }, [existingModule, existingPrompts]);
+  
+  // Warn on browser navigation (close tab, refresh)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+  
+  // Block in-app navigation when dirty
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty && currentLocation.pathname !== nextLocation.pathname
+  );
 
   // Set default order number for new modules
   useEffect(() => {
@@ -416,6 +458,11 @@ const ModuleEditor = () => {
       }
 
       setLastSaved(new Date());
+      
+      // Reset dirty state after successful save
+      const newSnapshot = JSON.stringify({ formData, prompts });
+      setOriginalData(newSnapshot);
+      
       toast.success(isNew ? 'Module created!' : 'Module saved!');
       
       if (isNew) {
@@ -556,9 +603,16 @@ const ModuleEditor = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">
-            {isNew ? 'Create New Module' : formData.title || 'Edit Module'}
-          </h1>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="font-heading text-3xl font-bold text-foreground">
+              {isNew ? 'Create New Module' : formData.title || 'Edit Module'}
+            </h1>
+            {isDirty && (
+              <span className="text-xs text-orange-500 font-medium px-2 py-0.5 rounded-full bg-orange-500/10">
+                Unsaved changes
+              </span>
+            )}
+          </div>
           {lastSaved && (
             <p className="text-sm text-muted-foreground">
               Last saved: {lastSaved.toLocaleString()}
@@ -903,6 +957,27 @@ const ModuleEditor = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete Module
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unsaved Changes Dialog */}
+      <AlertDialog open={blocker.state === 'blocked'}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave? 
+              Your changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.reset?.()}>
+              Stay
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => blocker.proceed?.()}>
+              Leave Without Saving
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
