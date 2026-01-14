@@ -402,9 +402,9 @@ const AdminModules = () => {
       return true;
     });
 
-  const draftCount = chapters.filter(c => c.status === 'draft').length + modules.filter(m => m.status === 'draft').length;
-  const publishedCount = chapters.filter(c => c.status === 'published').length + modules.filter(m => m.status === 'published').length;
-  const totalCount = chapters.length + modules.length;
+  const draftCount = modules.filter(m => m.status === 'draft').length;
+  const publishedCount = modules.filter(m => m.status === 'published').length;
+  const totalCount = modules.length;
 
   const loading = modulesLoading || chaptersLoading;
 
