@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link, useNavigate, useSearchParams, useBlocker } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -226,6 +226,8 @@ const ModuleEditor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [videoError, setVideoError] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
@@ -292,11 +294,28 @@ const ModuleEditor = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
   
-  // Block in-app navigation when dirty
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
-  );
+  // Handle navigation with unsaved changes check
+  const handleNavigateAway = (path: string) => {
+    if (isDirty) {
+      setPendingNavigation(path);
+      setShowUnsavedDialog(true);
+    } else {
+      navigate(path);
+    }
+  };
+
+  const confirmNavigation = () => {
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+
+  const cancelNavigation = () => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
 
   // Set default order number for new modules
   useEffect(() => {
@@ -558,13 +577,23 @@ const ModuleEditor = () => {
       <main className="container max-w-4xl py-8 md:py-12">
         {/* Top bar */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Link
-            to="/admin/modules"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Modules
-          </Link>
+          {isDirty ? (
+            <button
+              onClick={() => handleNavigateAway('/admin/modules')}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Modules
+            </button>
+          ) : (
+            <Link
+              to="/admin/modules"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Modules
+            </Link>
+          )}
           <div className="flex items-center gap-2">
             <Select
               value={formData.status}
@@ -926,15 +955,17 @@ const ModuleEditor = () => {
               </Button>
             )}
             <div className="ml-auto flex items-center gap-3">
-              <Link to="/admin/modules">
-                <Button type="button" variant="outline">
+              {isDirty ? (
+                <Button type="button" variant="outline" onClick={() => handleNavigateAway('/admin/modules')}>
                   Cancel
                 </Button>
-              </Link>
-              <Button type="submit" variant="cta" disabled={isSaving}>
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? 'Saving...' : isNew ? 'Create Module' : 'Save Changes'}
-              </Button>
+              ) : (
+                <Link to="/admin/modules">
+                  <Button type="button" variant="outline">
+                    Cancel
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </form>
@@ -963,7 +994,7 @@ const ModuleEditor = () => {
       </AlertDialog>
 
       {/* Unsaved Changes Dialog */}
-      <AlertDialog open={blocker?.state === 'blocked'}>
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
@@ -973,10 +1004,10 @@ const ModuleEditor = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker?.reset?.()}>
+            <AlertDialogCancel onClick={cancelNavigation}>
               Stay
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => blocker?.proceed?.()}>
+            <AlertDialogAction onClick={confirmNavigation}>
               Leave Without Saving
             </AlertDialogAction>
           </AlertDialogFooter>
