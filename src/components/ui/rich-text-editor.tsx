@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { useEffect } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
@@ -41,6 +42,13 @@ const RichTextEditor = ({ content, onChange, placeholder = 'Enter content...', c
       },
     },
   });
+
+  // Sync editor content when prop changes (e.g., after data loads)
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   if (!editor) {
     return null;
