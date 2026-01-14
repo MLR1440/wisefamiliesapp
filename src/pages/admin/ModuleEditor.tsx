@@ -963,7 +963,7 @@ const ModuleEditor = () => {
       </AlertDialog>
 
       {/* Unsaved Changes Dialog */}
-      <AlertDialog open={blocker.state === 'blocked'}>
+      <AlertDialog open={blocker?.state === 'blocked'}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
@@ -973,10 +973,10 @@ const ModuleEditor = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => blocker.reset?.()}>
+            <AlertDialogCancel onClick={() => blocker?.reset?.()}>
               Stay
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => blocker.proceed?.()}>
+            <AlertDialogAction onClick={() => blocker?.proceed?.()}>
               Leave Without Saving
             </AlertDialogAction>
           </AlertDialogFooter>
