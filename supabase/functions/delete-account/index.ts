@@ -50,12 +50,6 @@ Deno.serve(async (req) => {
 
     // Delete user data in order (respecting foreign keys)
     // 1. Delete messages (references conversations)
-    await supabaseAdmin
-      .from('messages')
-      .delete()
-      .eq('conversation_id', supabaseAdmin.from('conversations').select('id').eq('user_id', userId));
-    
-    // Alternative: delete messages by joining through conversations
     const { data: conversations } = await supabaseAdmin
       .from('conversations')
       .select('id')
