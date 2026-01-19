@@ -241,6 +241,26 @@ const ModuleEditor = () => {
     return currentSnapshot !== originalData;
   }, [formData, prompts, originalData]);
 
+  // Calculate chapter.module position indicator (e.g., "4.1")
+  const positionIndicator = useMemo(() => {
+    if (!formData.chapterId || isNew) return null;
+    
+    // Find the chapter's order number
+    const chapter = chapters.find(c => c.id === formData.chapterId);
+    if (!chapter) return null;
+    
+    // Get all modules in this chapter, sorted by order
+    const modulesInChapter = allModules
+      .filter(m => m.chapter_id === formData.chapterId)
+      .sort((a, b) => a.order_number - b.order_number);
+    
+    // Find this module's position within the chapter
+    const moduleIndex = modulesInChapter.findIndex(m => m.id === moduleId);
+    if (moduleIndex === -1) return null;
+    
+    return `${chapter.order_number}.${moduleIndex + 1}`;
+  }, [formData.chapterId, chapters, allModules, moduleId, isNew]);
+
   // Load existing module data
   useEffect(() => {
     if (existingModule) {
@@ -633,6 +653,11 @@ const ModuleEditor = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
+            {positionIndicator && (
+              <span className="text-sm font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                {positionIndicator}
+              </span>
+            )}
             <h1 className="font-heading text-3xl font-bold text-foreground">
               {isNew ? 'Create New Module' : formData.title || 'Edit Module'}
             </h1>
