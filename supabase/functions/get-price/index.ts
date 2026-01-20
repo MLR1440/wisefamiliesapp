@@ -13,18 +13,24 @@ serve(async (req) => {
   }
 
   try {
+    // Use service role to bypass RLS - allows public homepage to read price settings
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     // Get price ID from database settings
-    const { data: setting } = await supabaseClient
+    const { data: setting, error: dbError } = await supabaseClient
       .from('course_settings')
       .select('value')
       .eq('key', 'stripe_price_id')
       .single();
 
+    if (dbError) {
+      console.error("Error reading course_settings:", dbError.message);
+    }
+    
     const priceId = setting?.value || "price_1SaqpSQLJHCz1zk9H6YyndT4";
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
