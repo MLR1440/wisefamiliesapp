@@ -31,10 +31,10 @@ const Bonuses = () => {
   const totalValue = bonuses.reduce((acc, bonus) => acc + parseInt(bonus.value.replace('$', '')), 0);
   
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-background via-primary/5 to-background">
       <div className="container px-4 sm:px-6">
         <div className="mx-auto mb-8 sm:mb-12 max-w-2xl text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-cta text-secondary-foreground mb-4 shadow-md">
             <Gift className="h-4 w-4" />
             <span className="text-sm font-medium">Included Free</span>
           </div>
@@ -47,30 +47,34 @@ const Bonuses = () => {
         </div>
 
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto">
-          {bonuses.map((bonus, index) => (
-            <div
-              key={index}
-              className="relative group rounded-xl sm:rounded-2xl border border-border bg-card p-5 sm:p-6 transition-all duration-300 hover:border-accent/30 hover:shadow-card"
-            >
-              {/* Value badge */}
-              <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full bg-accent text-accent-foreground text-xs font-bold">
-                {bonus.value} value
-              </div>
+          {bonuses.map((bonus, index) => {
+            const bgColors = ['bg-secondary/5', 'bg-accent/5', 'bg-primary/5', 'bg-success/5'];
+            const iconColors = ['text-secondary', 'text-accent', 'text-primary', 'text-success'];
+            const iconBgColors = ['bg-secondary/15', 'bg-accent/15', 'bg-primary/10', 'bg-success/10'];
+            return (
+              <div
+                key={index}
+                className={`relative group rounded-xl sm:rounded-2xl border border-border ${bgColors[index]} p-5 sm:p-6 transition-all duration-300 hover:border-accent/30 hover:shadow-card`}
+              >
+                {/* Value badge */}
+                <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full bg-gradient-cta text-secondary-foreground text-xs font-bold shadow-md">
+                  {bonus.value} value
+                </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-accent/10 text-accent transition-transform duration-300 group-hover:scale-110">
-                  <bonus.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 inline-flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl ${iconBgColors[index]} ${iconColors[index]} transition-transform duration-300 group-hover:scale-110`}>
+                    <bonus.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="mb-2 font-heading text-base sm:text-lg font-semibold text-foreground">
+                      {bonus.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {bonus.description}
+                    </p>
+                  </div>
                 </div>
-                
-                <div className="flex-1 min-w-0">
-                  <h3 className="mb-2 font-heading text-base sm:text-lg font-semibold text-foreground">
-                    {bonus.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {bonus.description}
-                  </p>
-                </div>
-              </div>
 
               {/* Included badge */}
               <div className="mt-4 pt-4 border-t border-border">
@@ -80,7 +84,8 @@ const Bonuses = () => {
                 </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
