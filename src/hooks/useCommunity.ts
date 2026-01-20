@@ -27,6 +27,7 @@ export interface CommunityReply {
 export const COMMUNITY_CATEGORIES = [
   { value: 'all', label: 'All Discussions' },
   { value: 'ai-tools', label: 'AI Tools' },
+  { value: 'ai-safety', label: 'AI Safety' },
   { value: 'parenting-tips', label: 'Parenting Tips' },
   { value: 'course-discussion', label: 'Course Discussion' },
   { value: 'general', label: 'General' },
