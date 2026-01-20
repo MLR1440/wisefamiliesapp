@@ -41,7 +41,7 @@ const challenges = [
 
 const Benefits = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-secondary/5 via-accent/5 to-background">
       <div className="container px-4 sm:px-6">
         {/* Opening scenario */}
         <div className="mx-auto mb-10 sm:mb-14 max-w-3xl text-center">
@@ -64,12 +64,14 @@ const Benefits = () => {
           {challenges.map((challenge, index) => (
             <div
               key={index}
-              className="group relative rounded-xl sm:rounded-2xl border border-border bg-card p-5 sm:p-6 md:p-8 transition-all duration-300 hover:border-primary/30 hover:shadow-card"
+              className="group relative rounded-xl sm:rounded-2xl border-l-4 border-l-primary border border-border bg-card p-5 sm:p-6 md:p-8 transition-all duration-300 hover:border-primary/30 hover:shadow-card hover:bg-card/80"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Pain point tag */}
               <div className="mb-4 sm:mb-5">
-                <span className="inline-block text-xs font-medium text-secondary bg-secondary/10 px-2 py-1 rounded-full">
+                <span className={`inline-block text-xs font-medium px-2 py-1 rounded-full ${
+                  index % 2 === 0 ? 'text-secondary bg-secondary/10' : 'text-accent-foreground bg-accent/15'
+                }`}>
                   {challenge.painPoint}
                 </span>
               </div>

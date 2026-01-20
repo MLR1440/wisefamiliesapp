@@ -75,7 +75,7 @@ const CoursePreview = () => {
   const totalModules = chaptersWithModules.reduce((acc, ch) => acc + ch.modules.length, 0);
 
   return (
-    <section className="bg-muted/50 py-12 sm:py-16 md:py-20 lg:py-28">
+    <section className="bg-gradient-to-b from-accent/5 via-secondary/5 to-muted/30 py-12 sm:py-16 md:py-20 lg:py-28">
       <div className="container px-4 sm:px-6">
         {/* What You'll Master - Outcomes section */}
         <div className="mx-auto mb-10 sm:mb-14 max-w-3xl text-center">
@@ -94,15 +94,15 @@ const CoursePreview = () => {
           
           {/* Mini outcomes preview */}
           <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20">
               <Clock className="h-3.5 w-3.5" />
               ~3 hours total
             </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-medium border border-secondary/20">
               <BookOpen className="h-3.5 w-3.5" />
               {totalModules || 12}+ lessons
             </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/15 text-accent-foreground text-sm font-medium border border-accent/20">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Practical exercises
             </div>
@@ -200,23 +200,31 @@ const CoursePreview = () => {
 
           {/* Course stats */}
           <div className="mt-8 sm:mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border">
-              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-2" />
+            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              </div>
               <p className="text-lg sm:text-xl font-semibold text-foreground">~3 hrs</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Video Content</p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border">
-              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-2" />
+            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-secondary/20 hover:border-secondary/40 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-secondary/10 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-secondary" />
+              </div>
               <p className="text-lg sm:text-xl font-semibold text-foreground">{totalModules || 12}+</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Lessons</p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border">
-              <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-2" />
+            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-accent/20 hover:border-accent/40 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-accent/15 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+              </div>
               <p className="text-lg sm:text-xl font-semibold text-foreground">Exercises</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Interactive</p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-border">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary mx-auto mb-2" />
+            <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-success/20 hover:border-success/40 transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-xl bg-success/10 flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
+              </div>
               <p className="text-lg sm:text-xl font-semibold text-foreground">Lifetime</p>
               <p className="text-xs sm:text-sm text-muted-foreground">Access</p>
             </div>

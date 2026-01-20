@@ -28,7 +28,7 @@ const outcomes = [
 
 const Solution = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-primary/10 via-primary/5 to-muted/30">
       <div className="container px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center mb-10 sm:mb-14">
           <p className="text-sm sm:text-base font-medium text-secondary mb-2">
@@ -45,28 +45,31 @@ const Solution = () => {
 
         {/* 3 Pillars */}
         <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto mb-12 sm:mb-16">
-          {pillars.map((pillar, index) => (
-            <div
-              key={index}
-              className="relative group text-center p-6 sm:p-8 rounded-2xl bg-card border border-border transition-all duration-300 hover:shadow-card hover:border-primary/30"
-            >
-              {/* Pillar number */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-secondary text-secondary-foreground text-xs font-bold flex items-center justify-center">
-                {index + 1}
+          {pillars.map((pillar, index) => {
+            const borderColors = ['border-t-secondary', 'border-t-accent', 'border-t-primary'];
+            return (
+              <div
+                key={index}
+                className={`relative group text-center p-6 sm:p-8 rounded-2xl bg-card border border-border border-t-4 ${borderColors[index]} transition-all duration-300 hover:shadow-card hover:border-primary/30`}
+              >
+                {/* Pillar number */}
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-cta text-secondary-foreground text-sm font-bold flex items-center justify-center shadow-lg">
+                  {index + 1}
+                </div>
+                
+                <div className="mt-2 mb-4 sm:mb-5 inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-hero text-primary-foreground transition-transform duration-300 group-hover:scale-110">
+                  <pillar.icon className="h-7 w-7 sm:h-8 sm:w-8" />
+                </div>
+                
+                <h3 className="mb-3 font-heading text-xl sm:text-2xl font-semibold text-foreground">
+                  {pillar.title}
+                </h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  {pillar.description}
+                </p>
               </div>
-              
-              <div className="mb-4 sm:mb-5 inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-hero text-primary-foreground transition-transform duration-300 group-hover:scale-110">
-                <pillar.icon className="h-7 w-7 sm:h-8 sm:w-8" />
-              </div>
-              
-              <h3 className="mb-3 font-heading text-xl sm:text-2xl font-semibold text-foreground">
-                {pillar.title}
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                {pillar.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Outcomes */}
@@ -78,15 +81,18 @@ const Solution = () => {
           </div>
           
           <div className="space-y-3 sm:space-y-4">
-            {outcomes.map((outcome, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border"
-              >
-                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-success flex-shrink-0 mt-0.5" />
-                <span className="text-sm sm:text-base text-foreground">{outcome}</span>
-              </div>
-            ))}
+            {outcomes.map((outcome, index) => {
+              const iconColors = ['text-success', 'text-secondary', 'text-accent', 'text-primary', 'text-success'];
+              return (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
+                >
+                  <CheckCircle2 className={`h-5 w-5 sm:h-6 sm:w-6 ${iconColors[index]} flex-shrink-0 mt-0.5`} />
+                  <span className="text-sm sm:text-base text-foreground">{outcome}</span>
+                </div>
+              );
+            })}
           </div>
 
           {/* Transition text */}

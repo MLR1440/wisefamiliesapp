@@ -2,14 +2,17 @@ import { Shield, CheckCircle2 } from 'lucide-react';
 
 const Guarantee = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28">
+    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-primary/5 to-background">
       <div className="container px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
-          <div className="relative rounded-2xl sm:rounded-3xl border-2 border-success/30 bg-gradient-to-br from-success/5 to-background p-6 sm:p-10 md:p-12">
-            {/* Shield icon */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success shadow-lg">
-                <Shield className="h-6 w-6 text-success-foreground" />
+          <div className="relative rounded-2xl sm:rounded-3xl border-2 border-success/40 bg-gradient-to-br from-success/10 via-success/5 to-background p-6 sm:p-10 md:p-12 shadow-lg">
+            {/* Shield icon with glow */}
+            <div className="absolute -top-7 left-1/2 -translate-x-1/2">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-success/30 blur-md scale-150" />
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-success to-primary shadow-lg">
+                  <Shield className="h-7 w-7 text-success-foreground" />
+                </div>
               </div>
             </div>
 
