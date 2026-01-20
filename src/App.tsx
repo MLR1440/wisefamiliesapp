@@ -15,6 +15,9 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Onboarding from "./pages/Onboarding";
 import Profile from "./pages/Profile";
 import CourseComplete from "./pages/CourseComplete";
+import Community from "./pages/Community";
+import CommunityTopic from "./pages/CommunityTopic";
+import NewCommunityTopic from "./pages/NewCommunityTopic";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminModules from "./pages/admin/AdminModules";
 import ModuleEditor from "./pages/admin/ModuleEditor";
@@ -74,6 +77,23 @@ const App = () => (
             <Route path="/course-complete" element={
               <ProtectedRoute>
                 <CourseComplete />
+              </ProtectedRoute>
+            } />
+            
+            {/* Community pages - Protected */}
+            <Route path="/community" element={
+              <ProtectedRoute>
+                <Community />
+              </ProtectedRoute>
+            } />
+            <Route path="/community/new" element={
+              <ProtectedRoute>
+                <NewCommunityTopic />
+              </ProtectedRoute>
+            } />
+            <Route path="/community/:topicId" element={
+              <ProtectedRoute>
+                <CommunityTopic />
               </ProtectedRoute>
             } />
             

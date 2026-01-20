@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock, Users, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
@@ -342,6 +342,33 @@ const Dashboard = () => {
               </Link>
             </div>
           )}
+        </div>
+
+        {/* Community Section */}
+        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <h3 className="font-medium text-foreground">Community</h3>
+            </div>
+            <Link to="/community">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                View All
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+          
+          <p className="text-sm text-muted-foreground mb-4">
+            Connect with other parents navigating AI and parenting together.
+          </p>
+          
+          <Link to="/community">
+            <Button variant="outline" className="gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Join Discussion
+            </Button>
+          </Link>
         </div>
 
         {/* Course content */}

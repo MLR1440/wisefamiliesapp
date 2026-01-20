@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogOut, Shield } from 'lucide-react';
+import { Menu, X, LogOut, Shield, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import wiseFamiliesLogo from '@/assets/wise-families-logo.jpg';
@@ -51,6 +51,11 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
               <Link to="/progress">
                 <Button variant="ghost" size="sm" className={isActive('/progress') ? 'text-foreground' : 'text-muted-foreground'}>
                   Progress
+                </Button>
+              </Link>
+              <Link to="/community">
+                <Button variant="ghost" size="sm" className={isActive('/community') || location.pathname.startsWith('/community') ? 'text-foreground' : 'text-muted-foreground'}>
+                  Community
                 </Button>
               </Link>
             </>
@@ -123,6 +128,12 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                 <Link to="/progress" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant="ghost" className="w-full justify-start">
                     Progress
+                  </Button>
+                </Link>
+                <Link to="/community" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start gap-2">
+                    <Users className="h-4 w-4" />
+                    Community
                   </Button>
                 </Link>
               </>
