@@ -2,12 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Shield, CheckCircle } from 'lucide-react';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
-
 const Hero = () => {
-  const { formattedPrice } = useCoursePrice();
-
-  return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-muted/50 to-background py-12 sm:py-16 md:py-24 lg:py-32">
+  const {
+    formattedPrice
+  } = useCoursePrice();
+  return <section className="relative overflow-hidden bg-gradient-to-b from-muted/50 to-background py-12 sm:py-16 md:py-24 lg:py-32">
       {/* Background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-1/4 top-1/4 h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-primary/5 blur-3xl" />
@@ -24,28 +23,23 @@ const Hero = () => {
           </div>
 
           {/* Headline */}
-          <h1 
-            className="mb-4 sm:mb-6 font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground animate-fade-up leading-tight"
-            style={{ animationDelay: '0.1s' }}
-          >
+          <h1 className="mb-4 sm:mb-6 font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground animate-fade-up leading-tight" style={{
+          animationDelay: '0.1s'
+        }}>
             Raise Kids Who Are{' '}
             <span className="text-gradient">Wiser Than the AI</span>{' '}
             They Use
           </h1>
 
           {/* Subheadline */}
-          <p 
-            className="mb-6 sm:mb-8 text-base sm:text-lg md:text-xl text-muted-foreground animate-fade-up px-2 sm:px-0"
-            style={{ animationDelay: '0.2s' }}
-          >
-            A proven framework to help your children think critically, create authentically, and thrive in an AI-enhanced world.
-          </p>
+          <p className="mb-6 sm:mb-8 text-base sm:text-lg md:text-xl text-muted-foreground animate-fade-up px-2 sm:px-0" style={{
+          animationDelay: '0.2s'
+        }}>A fundamental framework to help your children think critically, create authentically, and thrive in an AI-enhanced world.</p>
 
           {/* CTA Buttons */}
-          <div 
-            className="flex flex-col items-center justify-center gap-3 sm:gap-4 animate-fade-up px-4 sm:px-0"
-            style={{ animationDelay: '0.3s' }}
-          >
+          <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 animate-fade-up px-4 sm:px-0" style={{
+          animationDelay: '0.3s'
+        }}>
             <Link to="/signup" className="w-full sm:w-auto">
               <Button variant="cta" size="xl" className="gap-2 w-full sm:w-auto text-sm sm:text-base">
                 Get Instant Access for {formattedPrice}
@@ -60,10 +54,9 @@ const Hero = () => {
           </div>
 
           {/* Trust indicators */}
-          <div 
-            className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground animate-fade-up"
-            style={{ animationDelay: '0.4s' }}
-          >
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground animate-fade-up" style={{
+          animationDelay: '0.4s'
+        }}>
             <div className="flex items-center gap-1.5">
               <Shield className="h-4 w-4 text-primary" />
               <span>90-Day Money-Back Guarantee</span>
@@ -75,8 +68,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
