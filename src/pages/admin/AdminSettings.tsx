@@ -15,8 +15,9 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { useCoursePrice, useInvalidateCoursePrice } from '@/hooks/useCoursePrice';
+import { useStripePrices } from '@/hooks/useStripePrices';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -27,6 +28,7 @@ const AdminSettings = () => {
   const { settings, loading: settingsLoading, getSetting, updateSetting } = useCourseSettings();
   const { price: priceData, loading: priceLoading } = useCoursePrice();
   const invalidatePrice = useInvalidateCoursePrice();
+  const { data: stripePrices, isLoading: pricesLoading, refetch: refetchPrices } = useStripePrices();
   
   // Guardrail settings
   const [guardrailAppendix, setGuardrailAppendix] = useState('');
@@ -360,16 +362,53 @@ const AdminSettings = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stripePriceId">Stripe Price ID</Label>
-                <Input
-                  id="stripePriceId"
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="stripePriceId">Select Price</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => refetchPrices()}
+                    disabled={pricesLoading}
+                    className="h-7 gap-1 text-xs"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${pricesLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+                <Select
                   value={stripePriceId}
-                  onChange={(e) => setStripePriceId(e.target.value)}
-                  placeholder="price_..."
-                  className="font-mono text-sm"
-                />
+                  onValueChange={setStripePriceId}
+                  disabled={pricesLoading}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={pricesLoading ? "Loading prices..." : "Select a price..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stripePrices?.map((price) => (
+                      <SelectItem key={price.id} value={price.id}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{price.productName}</span>
+                          <span className="text-muted-foreground">-</span>
+                          <span className="font-semibold text-primary">
+                            ${price.amount} {price.currency.toUpperCase()}
+                          </span>
+                          {price.recurring && (
+                            <span className="text-xs text-muted-foreground">
+                              /{price.recurring}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {stripePrices?.length === 0 && (
+                      <SelectItem value="_empty" disabled>
+                        No prices found in Stripe
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground">
-                  The Stripe Price ID to use for course purchases. Find this in your Stripe Dashboard under Products.
+                  Select the price to use for course purchases. Only active prices from your connected Stripe account are shown.
                 </p>
               </div>
 
