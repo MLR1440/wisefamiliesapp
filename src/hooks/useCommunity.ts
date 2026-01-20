@@ -59,16 +59,15 @@ export function useTopics(category?: string) {
               .eq('topic_id', topic.id),
             supabase
               .from('user_profiles')
-              .select('id')
+              .select('first_name')
               .eq('user_id', topic.user_id)
               .single()
           ]);
 
-          // Get first name from auth metadata via edge or just show "Member"
           return {
             ...topic,
             reply_count: repliesRes.count || 0,
-            author_name: 'Member', // We'll enhance this later if needed
+            author_name: profileRes.data?.first_name || 'Member',
           };
         })
       );
@@ -106,7 +105,24 @@ export function useReplies(topicId: string) {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as CommunityReply[];
+
+      // Enrich replies with author names
+      const repliesWithAuthors = await Promise.all(
+        (data || []).map(async (reply) => {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('first_name')
+            .eq('user_id', reply.user_id)
+            .single();
+
+          return {
+            ...reply,
+            author_name: profile?.first_name || 'Member',
+          };
+        })
+      );
+
+      return repliesWithAuthors as CommunityReply[];
     },
     enabled: !!topicId,
   });
