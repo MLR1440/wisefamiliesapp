@@ -19,7 +19,10 @@ export const useCoursePrice = () => {
     staleTime: 5 * 60 * 1000, // Consider fresh for 5 minutes
   });
 
-  const formattedPrice = `$${price?.amount ?? 99}`;
+  const formattedPrice = new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: price?.currency?.toUpperCase() || 'USD',
+  }).format(price?.amount ?? 99);
 
   return { 
     price: price ?? { amount: 99, currency: 'usd' }, 
