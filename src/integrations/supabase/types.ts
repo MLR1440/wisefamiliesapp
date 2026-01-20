@@ -365,6 +365,7 @@ export type Database = {
           child_likes: string | null
           created_at: string
           current_issues: string | null
+          first_name: string | null
           id: string
           memory_enabled: boolean
           onboarding_completed: boolean
@@ -378,6 +379,7 @@ export type Database = {
           child_likes?: string | null
           created_at?: string
           current_issues?: string | null
+          first_name?: string | null
           id?: string
           memory_enabled?: boolean
           onboarding_completed?: boolean
@@ -391,6 +393,7 @@ export type Database = {
           child_likes?: string | null
           created_at?: string
           current_issues?: string | null
+          first_name?: string | null
           id?: string
           memory_enabled?: boolean
           onboarding_completed?: boolean

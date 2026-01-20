@@ -27,7 +27,7 @@ const ReplyCard = ({ reply, topicId }: ReplyCardProps) => {
     <div className="rounded-lg border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium text-foreground">Member</span>
+          <span className="font-medium text-foreground">{reply.author_name || 'Member'}</span>
           <span className="text-muted-foreground">·</span>
           <span className="text-muted-foreground">{timeAgo}</span>
         </div>
