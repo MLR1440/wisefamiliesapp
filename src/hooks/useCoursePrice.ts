@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PriceData {
@@ -7,27 +7,29 @@ interface PriceData {
 }
 
 export const useCoursePrice = () => {
-  const [price, setPrice] = useState<PriceData>({ amount: 99, currency: 'usd' });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-price');
-        if (!error && data?.amount) {
-          setPrice({ amount: data.amount, currency: data.currency || 'usd' });
-        }
-      } catch (err) {
-        console.error('Error fetching price:', err);
-      } finally {
-        setLoading(false);
+  const { data: price, isLoading: loading } = useQuery({
+    queryKey: ['course-price'],
+    queryFn: async (): Promise<PriceData> => {
+      const { data, error } = await supabase.functions.invoke('get-price');
+      if (error || !data?.amount) {
+        return { amount: 99, currency: 'usd' };
       }
-    };
+      return { amount: data.amount, currency: data.currency || 'usd' };
+    },
+    staleTime: 5 * 60 * 1000, // Consider fresh for 5 minutes
+  });
 
-    fetchPrice();
-  }, []);
+  const formattedPrice = `$${price?.amount ?? 99}`;
 
-  const formattedPrice = `$${price.amount}`;
+  return { 
+    price: price ?? { amount: 99, currency: 'usd' }, 
+    formattedPrice, 
+    loading 
+  };
+};
 
-  return { price, formattedPrice, loading };
+// Export function to invalidate price cache
+export const useInvalidateCoursePrice = () => {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: ['course-price'] });
 };

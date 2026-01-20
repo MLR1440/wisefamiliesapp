@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
-import { useCoursePrice } from '@/hooks/useCoursePrice';
+import { useCoursePrice, useInvalidateCoursePrice } from '@/hooks/useCoursePrice';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ const AdminSettings = () => {
   
   const { settings, loading: settingsLoading, getSetting, updateSetting } = useCourseSettings();
   const { price: priceData, loading: priceLoading } = useCoursePrice();
+  const invalidatePrice = useInvalidateCoursePrice();
   
   // Guardrail settings
   const [guardrailAppendix, setGuardrailAppendix] = useState('');
@@ -132,6 +133,7 @@ const AdminSettings = () => {
     setIsSavingPayment(true);
     try {
       await updateSetting('stripe_price_id', stripePriceId);
+      invalidatePrice(); // Refresh price across all components
       toast.success('Payment settings saved!');
     } catch (error) {
       toast.error('Failed to save payment settings');
