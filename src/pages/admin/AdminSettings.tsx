@@ -43,6 +43,7 @@ const AdminSettings = () => {
   const [courseDescription, setCourseDescription] = useState('');
   const [stripePriceId, setStripePriceId] = useState('');
   const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
 
   // Branding settings
   const [primaryColor, setPrimaryColor] = useState('#0d9488');
@@ -51,9 +52,14 @@ const AdminSettings = () => {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSavingBranding, setIsSavingBranding] = useState(false);
 
-  // Load all settings from database
+  // Track initial load to prevent useEffect from overwriting user edits
+  const hasInitiallyLoaded = useRef(false);
+
+  // Load all settings from database - only on initial load
   useEffect(() => {
-    if (!settingsLoading && settings.length > 0) {
+    if (!settingsLoading && settings.length > 0 && !hasInitiallyLoaded.current) {
+      hasInitiallyLoaded.current = true;
+      
       // Guardrails
       setGuardrailAppendix(getSetting('guardrail_appendix'));
       
@@ -112,7 +118,6 @@ const AdminSettings = () => {
       await Promise.all([
         updateSetting('course_title', courseTitle),
         updateSetting('course_description', courseDescription),
-        updateSetting('stripe_price_id', stripePriceId),
       ]);
       toast.success('Course settings saved!');
     } catch (error) {
@@ -120,6 +125,19 @@ const AdminSettings = () => {
       console.error(error);
     } finally {
       setIsSavingCourse(false);
+    }
+  };
+
+  const handleSavePayment = async () => {
+    setIsSavingPayment(true);
+    try {
+      await updateSetting('stripe_price_id', stripePriceId);
+      toast.success('Payment settings saved!');
+    } catch (error) {
+      toast.error('Failed to save payment settings');
+      console.error(error);
+    } finally {
+      setIsSavingPayment(false);
     }
   };
 
@@ -353,8 +371,8 @@ const AdminSettings = () => {
                 </p>
               </div>
 
-              <Button onClick={handleSaveCourse} disabled={isSavingCourse} className="gap-2">
-                {isSavingCourse ? (
+              <Button onClick={handleSavePayment} disabled={isSavingPayment} className="gap-2">
+                {isSavingPayment ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Save className="h-4 w-4" />
