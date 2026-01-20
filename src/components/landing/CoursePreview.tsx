@@ -77,19 +77,36 @@ const CoursePreview = () => {
   return (
     <section className="bg-muted/50 py-12 sm:py-16 md:py-20 lg:py-28">
       <div className="container px-4 sm:px-6">
-        <div className="mx-auto mb-8 sm:mb-12 max-w-2xl text-center">
+        {/* What You'll Master - Outcomes section */}
+        <div className="mx-auto mb-10 sm:mb-14 max-w-3xl text-center">
           <p className="text-sm sm:text-base font-medium text-secondary mb-2">
             What's Inside
           </p>
-          <h2 className="mb-3 sm:mb-4 font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+          <h2 className="mb-4 sm:mb-6 font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
             Your Complete AI Parenting Roadmap
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground mb-8">
             {totalModules > 0 
               ? `${totalModules} video lessons with practical exercises you can use today`
               : "Comprehensive video lessons with practical exercises you can use today"
             }
           </p>
+          
+          {/* Mini outcomes preview */}
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+              <Clock className="h-3.5 w-3.5" />
+              ~3 hours total
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+              <BookOpen className="h-3.5 w-3.5" />
+              {totalModules || 12}+ lessons
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Practical exercises
+            </div>
+          </div>
         </div>
 
         <div className="mx-auto max-w-3xl">
