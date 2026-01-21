@@ -1,27 +1,19 @@
 import { Target, Brain, Handshake } from 'lucide-react';
-import courseModuleScreenshot from '@/assets/course-module-screenshot.png';
-
-const differentiators = [
-  {
-    icon: Target,
-    title: 'Not "Ban AI"',
-    description: "We teach your child to use AI as a tool, not a crutch",
-  },
-  {
-    icon: Brain,
-    title: "Brain-First Philosophy",
-    description: "Protect their thinking skills while they learn to leverage AI",
-  },
-  {
-    icon: Handshake,
-    title: "Connection Over Control",
-    description: "Build trust instead of surveillance",
-  },
-];
-
+const differentiators = [{
+  icon: Target,
+  title: 'Not "Ban AI"',
+  description: "We teach your child to use AI as a tool, not a crutch"
+}, {
+  icon: Brain,
+  title: "Brain-First Philosophy",
+  description: "Protect their thinking skills while they learn to leverage AI"
+}, {
+  icon: Handshake,
+  title: "Connection Over Control",
+  description: "Build trust instead of surveillance"
+}];
 const Solution = () => {
-  return (
-    <section className="py-16 md:py-24 bg-primary/5">
+  return <section className="py-16 md:py-24 bg-primary/5">
       <div className="container px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -35,22 +27,21 @@ const Solution = () => {
 
         {/* Course mockup placeholder */}
         <div className="max-w-4xl mx-auto mb-16">
-          <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
-            <img 
-              src={courseModuleScreenshot} 
-              alt="WiseFamilies course module showing video lesson about the prefrontal cortex and AI coaching assistant" 
-              className="w-full h-auto"
-            />
+          <div className="aspect-video rounded-2xl bg-card border border-border shadow-card overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center">
+              <div className="text-center border-4 rounded-xl shadow">
+                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Brain className="h-10 w-10 text-primary" />
+                </div>
+                <p className="text-muted-foreground">Course Interface Preview</p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Key differentiators */}
         <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
-          {differentiators.map((item, index) => (
-            <div
-              key={index}
-              className="text-center p-8 rounded-xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300"
-            >
+          {differentiators.map((item, index) => <div key={index} className="text-center p-8 rounded-xl bg-card border border-border shadow-soft hover:shadow-card transition-all duration-300">
               <div className="w-16 h-16 rounded-full bg-secondary/20 flex items-center justify-center mx-auto mb-6">
                 <item.icon className="h-8 w-8 text-secondary" />
               </div>
@@ -60,12 +51,9 @@ const Solution = () => {
               <p className="text-muted-foreground">
                 {item.description}
               </p>
-            </div>
-          ))}
+            </div>)}
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Solution;
