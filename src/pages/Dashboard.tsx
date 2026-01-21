@@ -4,12 +4,15 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock, Users, MessageSquare } from 'lucide-react';
+import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock, Users, MessageSquare, FileText, Download, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserDocuments } from '@/hooks/useUserDocuments';
+import { downloadDocument } from '@/lib/documentGenerators';
+import { toast } from '@/hooks/use-toast';
 
 interface Module {
   id: string;
@@ -41,9 +44,12 @@ const Dashboard = () => {
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [openChapters, setOpenChapters] = useState<Set<string>>(new Set());
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
   const userId = user?.id || '';
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
+  
+  const { documents, loading: docsLoading, deleteDocument } = useUserDocuments({ userId });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +115,51 @@ const Dashboard = () => {
         next.add(chapterId);
       }
       return next;
+    });
+  };
+
+  const handleDocumentDownload = async (doc: typeof documents[0]) => {
+    setDownloadingDocId(doc.id);
+    try {
+      await downloadDocument(doc.document_data);
+      toast({
+        title: 'Document downloaded!',
+        description: 'Open it in Google Docs, Word, or any word processor.',
+      });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: 'Download failed',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingDocId(null);
+    }
+  };
+
+  const handleDocumentDelete = async (docId: string) => {
+    try {
+      await deleteDocument(docId);
+      toast({
+        title: 'Document deleted',
+        description: 'The document has been removed.',
+      });
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast({
+        title: 'Delete failed',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   };
 
@@ -340,6 +391,69 @@ const Dashboard = () => {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
+            </div>
+          )}
+        </div>
+
+        {/* My Documents Section */}
+        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-5 w-5 text-primary" />
+            <h3 className="font-medium text-foreground">My Documents</h3>
+          </div>
+          
+          {docsLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Complete Module 16 or 21 to create your personalized documents.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {documents.map(doc => (
+                <div 
+                  key={doc.id} 
+                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <FileText className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{doc.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Created {formatDate(doc.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDocumentDownload(doc)}
+                      disabled={downloadingDocId === doc.id}
+                      className="gap-1.5"
+                    >
+                      {downloadingDocId === doc.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                      Download
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDocumentDelete(doc.id)}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

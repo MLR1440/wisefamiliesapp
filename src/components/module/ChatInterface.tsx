@@ -64,9 +64,13 @@ const parseDocumentFromMessage = (content: string): DocumentData | null => {
 };
 
 const MessageBubble = ({
-  message
+  message,
+  userId,
+  moduleId,
 }: {
   message: ChatMessage;
+  userId?: string;
+  moduleId?: string;
 }) => {
   const isUser = message.role === 'user';
   const isError = message.id.startsWith('error-');
@@ -78,7 +82,7 @@ const MessageBubble = ({
     return (
       <div className="flex justify-start">
         <div className="max-w-[90%]">
-          <DocumentPreview data={documentData} />
+          <DocumentPreview data={documentData} userId={userId} moduleId={moduleId} />
         </div>
       </div>
     );
@@ -306,7 +310,7 @@ const ChatInterface = ({
                 No starter prompts available. Type your question below.
               </p>}
           </div> : <div className="space-y-4">
-            {messages.map(message => <MessageBubble key={message.id} message={message} />)}
+            {messages.map(message => <MessageBubble key={message.id} message={message} userId={userId} moduleId={moduleId} />)}
             {isLoading && messages[messages.length - 1]?.role === 'user' && <TypingIndicator />}
             {error && !isLoading && <ErrorMessage onRetry={handleRetry} onClear={handleClearAndRestart} />}
             <div ref={messagesEndRef} />

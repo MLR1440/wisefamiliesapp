@@ -319,6 +319,47 @@ export type Database = {
           },
         ]
       }
+      user_documents: {
+        Row: {
+          created_at: string
+          document_data: Json
+          document_type: string
+          id: string
+          module_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_data: Json
+          document_type: string
+          id?: string
+          module_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_data?: Json
+          document_type?: string
+          id?: string
+          module_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_documents_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_memories: {
         Row: {
           created_at: string | null

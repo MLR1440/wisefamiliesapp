@@ -4,9 +4,12 @@ import { FileText, Download, Loader2, CheckCircle } from 'lucide-react';
 import { DocumentData, FamilyAgreementData, ThirtyDayPlanData } from '@/lib/documentTypes';
 import { downloadDocument } from '@/lib/documentGenerators';
 import { toast } from '@/hooks/use-toast';
+import { useUserDocuments } from '@/hooks/useUserDocuments';
 
 interface DocumentPreviewProps {
   data: DocumentData;
+  userId?: string;
+  moduleId?: string;
   onDownload?: () => void;
 }
 
@@ -96,19 +99,31 @@ const ThirtyDayPlanPreview = ({ data }: { data: ThirtyDayPlanData }) => {
   );
 };
 
-const DocumentPreview = ({ data, onDownload }: DocumentPreviewProps) => {
+const DocumentPreview = ({ data, userId, moduleId, onDownload }: DocumentPreviewProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const { saveDocument } = useUserDocuments({ userId: userId || '' });
 
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
+      // Save to database first if user is logged in
+      if (userId) {
+        const title = data.type === 'family_agreement' 
+          ? 'Family Technology Agreement' 
+          : '30-Day Family Tech Plan';
+        await saveDocument(data, moduleId || null, title);
+      }
+
+      // Then generate and download the DOCX
       await downloadDocument(data);
       setHasDownloaded(true);
       onDownload?.();
       toast({
         title: 'Document downloaded!',
-        description: 'Open it in Google Docs, Word, or any word processor.',
+        description: userId 
+          ? 'Saved to your dashboard for easy access later.' 
+          : 'Open it in Google Docs, Word, or any word processor.',
       });
     } catch (error) {
       console.error('Download failed:', error);
