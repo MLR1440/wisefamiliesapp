@@ -7,83 +7,66 @@ import {
 
 const faqs = [
   {
-    question: 'What age children is this course designed for?',
-    answer: 'This framework is specifically designed for parents of children ages 8-16. The concepts are adaptable for different developmental stages, and we provide age-specific guidance throughout the modules.',
+    question: "What ages is this course designed for?",
+    answer: "The AI-Ready Families System is specifically designed for parents of children aged 8-16. The frameworks adapt to different developmental stages — from \"Curious Navigators\" (8-9) through \"Co-Pilots\" (10-12) to \"Balancers\" (13-14) and \"Mentors\" (15-16)."
   },
   {
-    question: 'Do I need to be tech-savvy to take this course?',
-    answer: "Not at all! This course is designed for parents of all technical backgrounds. We explain AI concepts in simple, accessible terms and focus on practical parenting strategies rather than technical details. If you can use a smartphone, you can complete this course.",
+    question: "How long do I have access to the course?",
+    answer: "You get lifetime access to all course materials, including any future updates. Community access is included for 12 months (24 months with the Premium package)."
   },
   {
-    question: 'How long does it take to complete the course?',
-    answer: 'The course contains approximately 3 hours of video content spread across 6 chapters. Most parents complete it within 1-2 weeks, going at their own pace. You have lifetime access to revisit any content whenever you need it.',
+    question: "What if my child is already heavily dependent on AI?",
+    answer: "That's exactly who this course is for. Chapter 2 helps you assess where your child actually is, and the Scaffolding-Fading Framework (Chapter 6) gives you a clear path to gradually rebuild their independent thinking skills."
   },
   {
-    question: 'What if the course is not right for me?',
-    answer: 'We offer a 90-day money-back guarantee. If you\'re not satisfied with the course for any reason, simply contact us for a full refund. No questions asked. See our full refund policy at wisefamilies.co/refund-policy.',
+    question: "I'm not very tech-savvy. Will I be able to follow this?",
+    answer: "Absolutely. The course is designed for parents, not technologists. We explain everything in plain language with practical examples. You don't need to understand how AI works — you just need to understand your child."
   },
   {
-    question: 'Do I get access to future updates?',
-    answer: 'Absolutely! AI technology evolves rapidly, and so does our course. All future updates, new modules, and bonus content are included with your one-time purchase at no additional cost.',
+    question: "What are the AI coaching tools?",
+    answer: "These are personalised AI assistants trained on the WiseFamilies frameworks. They help you create custom family technology agreements, generate conversation scripts tailored to your child's age and situation, and get guidance for specific challenges you're facing."
   },
   {
-    question: 'Can both parents use the same account?',
-    answer: 'Yes! Your account includes access for your entire household. We encourage both parents to go through the course together and discuss the strategies as a team.',
+    question: "Do you offer refunds?",
+    answer: "Yes. You have a full 90 days to go through the entire course and implement the strategies. If it doesn't work for your family, email us for a full refund. No questions asked."
   },
   {
-    question: 'How do I access the course after purchase?',
-    answer: "After completing your purchase, you'll receive an email with login instructions. You can access the course immediately from any device - computer, tablet, or smartphone. Your progress is saved automatically.",
+    question: "My partner isn't on board with this. Can I still do it alone?",
+    answer: "Yes. While having both parents aligned is ideal, the frameworks work even if you're implementing them solo. The course includes guidance specifically for this situation."
   },
   {
-    question: 'Is this a one-time payment or a subscription?',
-    answer: "This is a one-time payment for lifetime access. There are no recurring charges or hidden fees. Pay once, and the course is yours forever, including all future updates.",
+    question: "What if I have questions while going through the course?",
+    answer: "Post in the private community! Other parents and our team are there to support you. Premium members also get priority support."
   },
   {
-    question: 'What if I have questions while taking the course?',
-    answer: "Each module includes an AI-powered assistant that can answer your questions and provide personalized guidance based on your family's situation. You can also reach our support team via email.",
-  },
-  {
-    question: 'Is my payment secure?',
-    answer: "Yes, absolutely. We use Stripe, a leading payment processor trusted by millions of businesses worldwide. Your payment information is encrypted and never stored on our servers.",
-  },
+    question: "Is this available in Australia?",
+    answer: "Yes! WiseFamilies is based in Perth, Australia. All prices are in AUD, and the content is relevant for families in Australia, NZ, UK, US, and other English-speaking countries."
+  }
 ];
 
 const FAQ = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-secondary/5 via-accent/5 to-background">
+    <section className="py-16 md:py-24 bg-background">
       <div className="container px-4 sm:px-6">
-        <div className="mx-auto mb-8 sm:mb-12 max-w-2xl text-center">
-          <h2 className="mb-3 sm:mb-4 font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
-            Frequently Asked Questions
+        <div className="mx-auto max-w-3xl text-center mb-12">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Questions? We've Got Answers.
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground">
-            Got questions? We've got answers.
-          </p>
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
+          <Accordion type="single" collapsible className="space-y-4">
             {faqs.map((faq, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="rounded-lg sm:rounded-xl border border-border bg-card px-4 sm:px-6 data-[state=open]:border-primary/40 data-[state=open]:shadow-card data-[state=open]:bg-primary/5 transition-all"
+                className="bg-card border border-border rounded-xl px-6 data-[state=open]:shadow-soft transition-shadow"
               >
-                <AccordionTrigger className="py-4 sm:py-5 font-heading text-left text-sm sm:text-base font-semibold hover:no-underline">
+                <AccordionTrigger className="text-left font-heading font-semibold text-foreground hover:text-primary py-5">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 sm:pb-5 text-sm sm:text-base text-muted-foreground">
+                <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
                   {faq.answer}
-                  {faq.question.includes('not right for me') && (
-                    <a 
-                      href="https://wisefamilies.co/refund-policy/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="block mt-2 text-primary hover:underline"
-                    >
-                      View our full refund policy →
-                    </a>
-                  )}
                 </AccordionContent>
               </AccordionItem>
             ))}

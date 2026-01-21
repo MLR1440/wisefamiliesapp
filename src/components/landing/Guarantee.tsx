@@ -2,55 +2,57 @@ import { Shield, CheckCircle2 } from 'lucide-react';
 
 const Guarantee = () => {
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28 bg-gradient-to-b from-primary/5 to-background">
+    <section className="py-16 md:py-24 bg-primary/5">
       <div className="container px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto">
-          <div className="relative rounded-2xl sm:rounded-3xl border-2 border-success/40 bg-gradient-to-br from-success/10 via-success/5 to-background p-6 sm:p-10 md:p-12 shadow-lg">
+        <div className="mx-auto max-w-3xl text-center mb-8">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground">
+            The WiseFamilies Promise
+          </h2>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <div className="relative bg-card rounded-2xl p-8 md:p-12 shadow-card border border-border">
             {/* Shield icon with glow */}
-            <div className="absolute -top-7 left-1/2 -translate-x-1/2">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-success/30 blur-md scale-150" />
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-success to-primary shadow-lg">
-                  <Shield className="h-7 w-7 text-success-foreground" />
+                <div className="absolute inset-0 bg-success/20 blur-xl rounded-full" />
+                <div className="relative w-16 h-16 rounded-full bg-success flex items-center justify-center shadow-lg">
+                  <Shield className="h-8 w-8 text-success-foreground" />
                 </div>
               </div>
             </div>
 
-            <div className="text-center pt-4">
-              <h2 className="mb-4 font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+            <div className="pt-8 text-center">
+              <h3 className="font-heading text-2xl font-bold text-foreground mb-6">
                 90-Day "Try It All" Guarantee
-              </h2>
-              
-              <p className="mb-6 sm:mb-8 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                I'm so confident this course will transform how your family navigates AI that I'm giving you a full 90 days to go through every lesson, complete every exercise, and implement the strategies with your kids.
+              </h3>
+
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                I'm so confident this course will transform how your family navigates AI that I'm giving you a full 90 days to go through every lesson, complete every exercise, and implement the strategies with your child.
               </p>
 
-              <div className="space-y-3 sm:space-y-4 text-left max-w-lg mx-auto mb-6 sm:mb-8">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm sm:text-base text-foreground">
-                    Full access to all course materials immediately
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm sm:text-base text-foreground">
-                    90 days to try everything, risk-free
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm sm:text-base text-foreground">
-                    If you don't feel more confident about parenting in the AI age, just email us
-                  </span>
-                </div>
-              </div>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                If you don't see a real difference in how your family approaches technology, email us for a full refund. No awkward conversations. No hoops to jump through.
+              </p>
 
-              <div className="p-4 sm:p-5 rounded-xl bg-card border border-border">
-                <p className="text-sm sm:text-base text-muted-foreground italic">
-                  "If after going through the course you don't feel significantly more confident about guiding your children's AI use, simply email me at <span className="text-foreground font-medium">support@wisefamilies.com</span> and I'll refund every penny. No questions asked, no hoops to jump through."
-                </p>
-              </div>
+              <ul className="space-y-3 text-left max-w-md mx-auto mb-8">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground">Full 90 days to try everything</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground">No questions asked refund</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground">Simple email request process</span>
+                </li>
+              </ul>
+
+              <p className="text-sm text-muted-foreground italic">
+                I believe in this system because it works. If it doesn't work for you, I don't want your money.
+              </p>
             </div>
           </div>
         </div>

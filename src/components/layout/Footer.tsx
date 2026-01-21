@@ -85,9 +85,9 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="transition-colors hover:text-primary">
+                <a href="mailto:hello@wisefamilies.co" className="transition-colors hover:text-primary">
                   Contact Us
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -95,6 +95,7 @@ const Footer = () => {
 
         <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} WiseFamilies. All rights reserved.</p>
+          <p className="mt-1">Perth, Australia</p>
         </div>
       </div>
     </footer>
