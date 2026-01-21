@@ -300,7 +300,8 @@ const ModulePage = () => {
             onFirstInteraction={handleFirstInteraction} 
             onPromptClicked={handlePromptClicked} 
             clickedPromptIds={clickedPromptIds} 
-            onResetPrompts={handleResetPrompts} 
+            onResetPrompts={handleResetPrompts}
+            documentConfig={currentModule ? getDocumentConfig(currentModule.order_number) : null}
           />
         </div>
 
