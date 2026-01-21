@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 
 const coreFeatures = [
+  "12-month course access",
   "Complete 7-chapter video course",
   "AI-powered coaching tools",
   "Custom Family Tech Agreement builder",
@@ -13,11 +14,12 @@ const coreFeatures = [
 ];
 
 const premiumExtras = [
+  "36-month course access (3 years)",
   "1-hour private video consultation with a qualified child psychologist",
   "Personalised assessment of your child's AI use",
   "Custom action plan designed specifically for your family",
   "Priority community support",
-  "Extended community access (24 months)",
+  "Extended community access (36 months)",
 ];
 
 const Pricing = () => {

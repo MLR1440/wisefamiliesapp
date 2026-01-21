@@ -105,8 +105,8 @@ const CourseComplete = () => {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
               <Heart className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-heading font-semibold text-foreground mb-2">Lifelong Access</h3>
-            <p className="text-sm text-muted-foreground">Return anytime to revisit the course materials</p>
+            <h3 className="font-heading font-semibold text-foreground mb-2">Extended Access</h3>
+            <p className="text-sm text-muted-foreground">Return anytime during your subscription to revisit course materials</p>
           </div>
         </div>
 

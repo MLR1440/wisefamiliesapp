@@ -50,10 +50,10 @@ const Paywall = () => {
   };
 
   const benefits = [
-    'Lifetime access to all course modules',
+    '12-month access to all course modules',
     'AI-powered coaching conversations',
     'Progress tracking and achievements',
-    'New content as it becomes available',
+    'New content during your subscription',
   ];
 
   return (
@@ -67,7 +67,7 @@ const Paywall = () => {
       </h2>
       
       <p className="mb-6 text-muted-foreground">
-        Get lifetime access to the A.I - Ready Family Framework and all future updates.
+        Get 12-month access to the A.I - Ready Family Framework and all updates during your subscription.
       </p>
 
       <div className="mb-6 space-y-3 text-left">
@@ -99,7 +99,7 @@ const Paywall = () => {
             Processing...
           </>
         ) : (
-          'Get Lifetime Access'
+          'Get 12-Month Access'
         )}
       </Button>
 

@@ -61,7 +61,7 @@ const PaymentSuccess = () => {
         <h1 className="text-3xl font-bold text-foreground">Payment Successful!</h1>
         
         <p className="text-muted-foreground">
-          Thank you for your purchase! You now have lifetime access to the WiseFamilies course.
+          Thank you for your purchase! You now have access to the WiseFamilies course. Check your email for details about your subscription.
         </p>
 
         {isLoading ? (
