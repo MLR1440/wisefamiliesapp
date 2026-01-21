@@ -38,7 +38,7 @@ const Hero = () => {
             <p className="mb-6 sm:mb-8 text-base sm:text-lg md:text-xl text-muted-foreground animate-fade-up" style={{
             animationDelay: '0.1s'
           }}>
-              The complete system for parents who want to prepare their children for an AI-powered future — without the fear, without the fights, without feeling like you're always one step behind.
+              The complete system for parents who want to prepare their children for an AI-powered future without the fear, without the fights, without feeling like you're always one step behind.
             </p>
 
             {/* CTA Button */}
