@@ -32,11 +32,7 @@ const Solution = () => {
             Preview of Course Content
           </h3>
           <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
-            <img
-              src={courseModuleScreenshot} 
-              alt="WiseFamilies course interface showing video lessons and module navigation"
-              className="w-full h-auto"
-            />
+            <img src={courseModuleScreenshot} alt="WiseFamilies course interface showing video lessons and module navigation" className="w-full h-auto object-contain shadow-lg opacity-100 rounded-2xl border-8 border-solid" />
           </div>
         </div>
 
