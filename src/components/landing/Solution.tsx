@@ -1,5 +1,5 @@
 import { Target, Brain, Handshake } from 'lucide-react';
-import courseInterfaceMockup from '@/assets/course-interface-mockup.jpg';
+import courseModuleScreenshot from '@/assets/course-module-screenshot.png';
 
 const differentiators = [
   {
@@ -37,9 +37,9 @@ const Solution = () => {
         <div className="max-w-4xl mx-auto mb-16">
           <div className="aspect-video rounded-2xl bg-card border border-border shadow-card overflow-hidden">
             <img 
-              src={courseInterfaceMockup} 
-              alt="WiseFamilies course interface showing video lessons, chapter navigation, and progress tracking" 
-              className="w-full h-full object-cover"
+              src={courseModuleScreenshot} 
+              alt="WiseFamilies course module showing video lesson about the prefrontal cortex and AI coaching assistant" 
+              className="w-full h-full object-cover object-top"
             />
           </div>
         </div>
