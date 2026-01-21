@@ -1,4 +1,5 @@
 import { Target, Brain, Handshake } from 'lucide-react';
+import courseModuleScreenshot from '@/assets/course-module-screenshot.png';
 const differentiators = [{
   icon: Target,
   title: 'Not "Ban AI"',
@@ -25,17 +26,14 @@ const Solution = () => {
           </p>
         </div>
 
-        {/* Course mockup placeholder */}
+        {/* Course screenshot */}
         <div className="max-w-4xl mx-auto mb-16">
-          <div className="aspect-video rounded-2xl bg-card border border-border shadow-card overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center">
-              <div className="text-center border-4 rounded-xl shadow">
-                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Brain className="h-10 w-10 text-primary" />
-                </div>
-                <p className="text-muted-foreground">Course Interface Preview</p>
-              </div>
-            </div>
+          <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
+            <img 
+              src={courseModuleScreenshot} 
+              alt="WiseFamilies course interface showing video lessons and module navigation"
+              className="w-full h-auto"
+            />
           </div>
         </div>
 
