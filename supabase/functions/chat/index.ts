@@ -85,17 +85,13 @@ function validateMessages(messages: unknown): { valid: boolean; error?: string; 
   return { valid: true, sanitized };
 }
 
-// Document generation prompts
-const DOCUMENT_PROMPTS: Record<string, string> = {
-  family_agreement: `You are helping a parent create a Family Technology Agreement. Your job is to gather information about their family's needs and then generate a complete, personalized agreement.
+// Document JSON output instructions - appended to module prompt, not replacing it
+const DOCUMENT_JSON_INSTRUCTIONS: Record<string, string> = {
+  family_agreement: `
 
-First, ask the parent a few questions to understand their situation:
-1. What are the ages of your children?
-2. What devices does your family currently use?
-3. What are your biggest concerns or challenges with technology use right now?
-4. What values are most important to your family around technology?
+=== DOCUMENT GENERATION MODE ===
 
-After gathering this information (usually after 3-4 back-and-forth messages), generate a comprehensive Family Technology Agreement. When you're ready to generate the final document, output ONLY a JSON code block in exactly this format:
+When the parent is ready to generate their complete Family Technology Agreement document (they explicitly ask you to generate, create, or download it), output ONLY a JSON code block in exactly this format (no text before or after):
 
 \`\`\`json
 {
@@ -113,17 +109,17 @@ After gathering this information (usually after 3-4 back-and-forth messages), ge
 }
 \`\`\`
 
-IMPORTANT: When outputting the final document, output ONLY the JSON code block with no additional text before or after it. The user will see a download button appear.`,
+IMPORTANT: 
+- Continue your normal conversation helping them build the agreement section by section following your module instructions
+- Only output the JSON when they explicitly ask you to generate/download/create the final document
+- When outputting JSON, output ONLY the code block with no additional text before or after
+- The user will see a "Download as Word Document" button appear automatically`,
 
-  '30_day_plan': `You are helping a parent create a personalized 30-Day Action Plan to improve their family's relationship with technology. Your job is to understand their situation and create a realistic, achievable week-by-week plan.
+  '30_day_plan': `
 
-First, ask the parent:
-1. What's your child's age and what devices do they use most?
-2. What's the ONE biggest change you want to see in 30 days?
-3. What's currently working well that you want to maintain?
-4. What time of day is most challenging for screen time?
+=== DOCUMENT GENERATION MODE ===
 
-After gathering this information (usually after 3-4 back-and-forth messages), generate a complete 30-Day Plan. When you're ready to generate the final document, output ONLY a JSON code block in exactly this format:
+When the parent is ready to generate their complete 30-Day Action Plan document (they explicitly ask you to generate, create, or download it), output ONLY a JSON code block in exactly this format (no text before or after):
 
 \`\`\`json
 {
@@ -153,7 +149,7 @@ After gathering this information (usually after 3-4 back-and-forth messages), ge
 }
 \`\`\`
 
-Include all 4 weeks in the plan. IMPORTANT: When outputting the final document, output ONLY the JSON code block with no additional text before or after it. The user will see a download button appear.`,
+Include all 4 weeks. IMPORTANT: Only output JSON when they explicitly ask to generate/download/create the final document - continue normal conversation until then.`,
 };
 
 serve(async (req) => {
@@ -322,12 +318,8 @@ serve(async (req) => {
     // Determine the system prompt to use
     let systemPrompt = "You are a helpful and empathetic parenting coach for the WiseFamilies platform. Help parents navigate challenges with technology and screen time for their children. Provide practical, actionable advice while being supportive and non-judgmental. Keep responses conversational and warm.";
     
-    // If document_type is provided, use the document generation prompt
-    if (document_type && DOCUMENT_PROMPTS[document_type]) {
-      systemPrompt = DOCUMENT_PROMPTS[document_type];
-      console.log(`Using document generation prompt for: ${document_type}`);
-    } else if (module_id) {
-      // Verify module exists and is published, get its system prompt
+    // First, always try to get the module's system prompt if module_id is provided
+    if (module_id) {
       const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
         .select('system_prompt, title, status')
@@ -353,6 +345,12 @@ serve(async (req) => {
         systemPrompt = moduleData.system_prompt;
         console.log('Using module system prompt for:', moduleData.title);
       }
+    }
+
+    // If document_type is provided, APPEND JSON output instructions to the module prompt
+    if (document_type && DOCUMENT_JSON_INSTRUCTIONS[document_type]) {
+      systemPrompt += DOCUMENT_JSON_INSTRUCTIONS[document_type];
+      console.log(`Appended document JSON instructions for: ${document_type}`);
     }
 
     // Combine system prompt with user context and guardrail appendix
