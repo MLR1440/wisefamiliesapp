@@ -57,7 +57,7 @@ const Hero = () => {
             <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 animate-fade-up px-[20px] border-0" style={{
             animationDelay: '0.3s'
           }}>
-              {trustSignals.map((signal, index) => <div key={index} className="items-center gap-2 text-sm text-muted-foreground shadow flex flex-col">
+              {trustSignals.map((signal, index) => <div key={index} className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
                   <span>{signal.text}</span>
                 </div>)}
