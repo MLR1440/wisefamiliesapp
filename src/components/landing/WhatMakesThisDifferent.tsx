@@ -10,7 +10,7 @@ const features = [{
 }, {
   icon: BookOpen,
   title: "Evidence-Based, Not Fear-Based",
-  description: "Every framework is grounded in developmental psychology and neuroscience — not clickbait headlines. We tell you what the research actually says, not what gets the most engagement."
+  description: "Every framework is grounded in developmental psychology and neuroscience, not clickbait headlines. We tell you what the research actually says, not what gets the most engagement."
 }];
 const WhatMakesThisDifferent = () => {
   return <section className="py-16 md:py-24 bg-muted/30">
