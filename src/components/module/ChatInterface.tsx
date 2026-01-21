@@ -177,7 +177,8 @@ const ChatInterface = ({
     hasHistory
   } = useChat({
     moduleId,
-    userId
+    userId,
+    documentType: documentConfig?.documentType || null,
   });
 
   // Auto-scroll to bottom on new messages

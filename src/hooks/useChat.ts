@@ -12,9 +12,10 @@ export interface ChatMessage {
 interface UseChatOptions {
   moduleId: string;
   userId: string;
+  documentType?: 'family_agreement' | '30_day_plan' | null;
 }
 
-export const useChat = ({ moduleId, userId }: UseChatOptions) => {
+export const useChat = ({ moduleId, userId, documentType }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -196,7 +197,7 @@ export const useChat = ({ moduleId, userId }: UseChatOptions) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: apiMessages, module_id: moduleId }),
+        body: JSON.stringify({ messages: apiMessages, module_id: moduleId, document_type: documentType || undefined }),
         signal: abortControllerRef.current.signal,
       });
 
