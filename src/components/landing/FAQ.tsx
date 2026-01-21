@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     question: "How long do I have access to the course?",
-    answer: "You get lifetime access to all course materials, including any future updates. Community access is included for 12 months (24 months with the Premium package)."
+    answer: "With the Core package, you get 12 months of access to all course materials, including any updates during that period. The Premium package extends this to 36 months. Community access is included for the duration of your course access."
   },
   {
     question: "What if my child is already heavily dependent on AI?",
