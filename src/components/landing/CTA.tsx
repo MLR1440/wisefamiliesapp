@@ -1,10 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-
 const CTA = () => {
-  return (
-    <section className="relative overflow-hidden bg-gradient-hero py-16 md:py-24">
+  return <section className="relative overflow-hidden bg-gradient-hero py-16 md:py-24">
       {/* Decorative elements */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-1/4 top-1/4 h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-green-400/20 blur-3xl" />
@@ -17,9 +15,7 @@ const CTA = () => {
             Your Child's Future Starts Today
           </h2>
           
-          <p className="mb-4 text-lg text-primary-foreground/90 leading-relaxed">
-            AI isn't going away. The question isn't whether your child will use it — it's whether they'll use it wisely.
-          </p>
+          <p className="mb-4 text-lg text-primary-foreground/90 leading-relaxed">AI isn't going away. The question isn't whether your child will use it,  it's whether they'll use it wisely.</p>
           
           <p className="mb-4 text-lg text-primary-foreground/90 leading-relaxed">
             The families who thrive in an AI-powered world won't be the ones who banned technology or the ones who ignored it. They'll be the ones who prepared their children to think for themselves AND use AI as a tool.
@@ -45,8 +41,6 @@ const CTA = () => {
           </p>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CTA;
