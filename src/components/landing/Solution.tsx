@@ -35,11 +35,11 @@ const Solution = () => {
 
         {/* Course mockup placeholder */}
         <div className="max-w-4xl mx-auto mb-16">
-          <div className="aspect-video rounded-2xl bg-card border border-border shadow-card overflow-hidden">
+          <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
             <img 
               src={courseModuleScreenshot} 
               alt="WiseFamilies course module showing video lesson about the prefrontal cortex and AI coaching assistant" 
-              className="w-full h-full object-cover object-top"
+              className="w-full h-auto"
             />
           </div>
         </div>
