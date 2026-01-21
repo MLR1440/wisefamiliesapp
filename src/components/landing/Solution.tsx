@@ -27,7 +27,7 @@ const Solution = () => {
         </div>
 
         {/* Course screenshot */}
-        <div className="max-w-4xl mx-auto mb-16">
+        <div className="max-w-6xl mx-auto mb-16">
           <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
             <img 
               src={courseModuleScreenshot} 
