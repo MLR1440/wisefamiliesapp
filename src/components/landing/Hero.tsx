@@ -58,7 +58,7 @@ const Hero = () => {
             animationDelay: '0.3s'
           }}>
               {trustSignals.map((signal, index) => <div key={index} className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-4 w-4 text-success flex-shrink-0" />
+                  <CheckCircle className="h-6 w-6 text-success flex-shrink-0" />
                   <span>{signal.text}</span>
                 </div>)}
             </div>
