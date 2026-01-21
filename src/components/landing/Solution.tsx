@@ -28,8 +28,11 @@ const Solution = () => {
 
         {/* Course screenshot */}
         <div className="max-w-6xl mx-auto mb-16">
+          <h3 className="text-center text-lg font-medium text-muted-foreground mb-4">
+            Preview of Course Content
+          </h3>
           <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
-            <img 
+            <img
               src={courseModuleScreenshot} 
               alt="WiseFamilies course interface showing video lessons and module navigation"
               className="w-full h-auto"
