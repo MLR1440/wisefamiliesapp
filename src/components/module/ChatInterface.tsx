@@ -7,11 +7,21 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { toast } from '@/hooks/use-toast';
 import { ChatSkeleton } from '@/components/ui/skeleton';
+import DocumentPreview from './DocumentPreview';
+import { DocumentData } from '@/lib/documentTypes';
+
 export interface StarterPrompt {
   id: string;
   label: string;
   prompt_text: string;
 }
+
+export interface DocumentConfig {
+  documentType: 'family_agreement' | '30_day_plan';
+  label: string;
+  starterPromptLabel: string;
+}
+
 interface ChatInterfaceProps {
   moduleId: string;
   userId: string;
@@ -20,7 +30,39 @@ interface ChatInterfaceProps {
   onPromptClicked?: (promptId: string) => void;
   clickedPromptIds?: Set<string>;
   onResetPrompts?: () => void;
+  documentConfig?: DocumentConfig | null;
 }
+
+// Try to parse document JSON from a message
+const parseDocumentFromMessage = (content: string): DocumentData | null => {
+  try {
+    // Look for JSON in code blocks
+    const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[1]);
+      if (parsed.type === 'family_agreement' || parsed.type === '30_day_plan') {
+        // Add dateCreated if not present
+        if (!parsed.dateCreated) {
+          parsed.dateCreated = new Date().toISOString();
+        }
+        return parsed as DocumentData;
+      }
+    }
+    
+    // Try parsing the whole content as JSON
+    const parsed = JSON.parse(content);
+    if (parsed.type === 'family_agreement' || parsed.type === '30_day_plan') {
+      if (!parsed.dateCreated) {
+        parsed.dateCreated = new Date().toISOString();
+      }
+      return parsed as DocumentData;
+    }
+  } catch {
+    // Not valid JSON, return null
+  }
+  return null;
+};
+
 const MessageBubble = ({
   message
 }: {
@@ -28,7 +70,22 @@ const MessageBubble = ({
 }) => {
   const isUser = message.role === 'user';
   const isError = message.id.startsWith('error-');
-  return <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+  
+  // Check if this is a document response
+  const documentData = !isUser ? parseDocumentFromMessage(message.content) : null;
+  
+  if (documentData) {
+    return (
+      <div className="flex justify-start">
+        <div className="max-w-[90%]">
+          <DocumentPreview data={documentData} />
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
         <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
         {message.created_at && <p className={`text-sm mt-1.5 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
@@ -38,8 +95,10 @@ const MessageBubble = ({
         })}
           </p>}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 const TypingIndicator = () => <div className="flex justify-start">
     <div className="rounded-2xl bg-muted px-4 py-3">
       <div className="flex gap-1">
@@ -84,6 +143,7 @@ const ErrorMessage = ({
       </div>
     </div>
   </div>;
+
 const ChatInterface = ({
   moduleId,
   userId,
@@ -91,7 +151,8 @@ const ChatInterface = ({
   onFirstInteraction,
   onPromptClicked,
   clickedPromptIds = new Set(),
-  onResetPrompts
+  onResetPrompts,
+  documentConfig,
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState('');
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
@@ -144,6 +205,7 @@ const ChatInterface = ({
       });
     }
   }, [isOnline]);
+
   const handlePromptClick = (prompt: StarterPrompt) => {
     if (!isOnline) {
       toast({
@@ -163,6 +225,7 @@ const ChatInterface = ({
 
   // Filter out already clicked prompts
   const remainingPrompts = starterPrompts.filter(p => !clickedPromptIds.has(p.id));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
@@ -179,17 +242,20 @@ const ChatInterface = ({
     sendMessage(inputValue.trim());
     setInputValue('');
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
+
   const handleRetry = () => {
     if (lastFailedMessage) {
       retryLastMessage(lastFailedMessage);
     }
   };
+
   const handleClearAndRestart = async () => {
     await clearConversation();
     setLastFailedMessage(null);
@@ -199,9 +265,11 @@ const ChatInterface = ({
       description: "You can start a fresh conversation."
     });
   };
+
   if (isLoadingHistory) {
     return <ChatSkeleton />;
   }
+
   return <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Offline banner */}
       {!isOnline && <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center gap-2">
@@ -268,4 +336,5 @@ const ChatInterface = ({
       </div>
     </div>;
 };
+
 export default ChatInterface;

@@ -85,6 +85,77 @@ function validateMessages(messages: unknown): { valid: boolean; error?: string; 
   return { valid: true, sanitized };
 }
 
+// Document generation prompts
+const DOCUMENT_PROMPTS: Record<string, string> = {
+  family_agreement: `You are helping a parent create a Family Technology Agreement. Your job is to gather information about their family's needs and then generate a complete, personalized agreement.
+
+First, ask the parent a few questions to understand their situation:
+1. What are the ages of your children?
+2. What devices does your family currently use?
+3. What are your biggest concerns or challenges with technology use right now?
+4. What values are most important to your family around technology?
+
+After gathering this information (usually after 3-4 back-and-forth messages), generate a comprehensive Family Technology Agreement. When you're ready to generate the final document, output ONLY a JSON code block in exactly this format:
+
+\`\`\`json
+{
+  "type": "family_agreement",
+  "sections": {
+    "familyValues": ["value1", "value2", "value3"],
+    "screenTimeRules": [{"rule": "rule text", "details": "optional details"}],
+    "deviceRules": [{"device": "device name", "rules": ["rule1", "rule2"]}],
+    "aiUsageGuidelines": ["guideline1", "guideline2"],
+    "consequences": ["consequence1", "consequence2"],
+    "rewards": ["reward1", "reward2"],
+    "exceptions": ["exception1", "exception2"],
+    "reviewSchedule": "When to review this agreement"
+  }
+}
+\`\`\`
+
+IMPORTANT: When outputting the final document, output ONLY the JSON code block with no additional text before or after it. The user will see a download button appear.`,
+
+  '30_day_plan': `You are helping a parent create a personalized 30-Day Action Plan to improve their family's relationship with technology. Your job is to understand their situation and create a realistic, achievable week-by-week plan.
+
+First, ask the parent:
+1. What's your child's age and what devices do they use most?
+2. What's the ONE biggest change you want to see in 30 days?
+3. What's currently working well that you want to maintain?
+4. What time of day is most challenging for screen time?
+
+After gathering this information (usually after 3-4 back-and-forth messages), generate a complete 30-Day Plan. When you're ready to generate the final document, output ONLY a JSON code block in exactly this format:
+
+\`\`\`json
+{
+  "type": "30_day_plan",
+  "mainGoal": "The primary goal for this plan",
+  "overview": "Brief overview of the approach",
+  "weeks": [
+    {
+      "weekNumber": 1,
+      "theme": "Week theme",
+      "goals": ["goal1", "goal2"],
+      "dailyActions": [
+        {"day": "Monday", "action": "Specific action"},
+        {"day": "Tuesday", "action": "Specific action"},
+        {"day": "Wednesday", "action": "Specific action"},
+        {"day": "Thursday", "action": "Specific action"},
+        {"day": "Friday", "action": "Specific action"},
+        {"day": "Weekend", "action": "Weekend activities"}
+      ],
+      "tips": ["tip1", "tip2"]
+    }
+  ],
+  "successMetrics": ["How to measure success"],
+  "troubleshooting": [
+    {"challenge": "Common challenge", "solution": "How to handle it"}
+  ]
+}
+\`\`\`
+
+Include all 4 weeks in the plan. IMPORTANT: When outputting the final document, output ONLY the JSON code block with no additional text before or after it. The user will see a download button appear.`,
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -123,7 +194,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, module_id } = body;
+    const { messages, module_id, document_type } = body;
 
     // Validate messages
     const validation = validateMessages(messages);
@@ -145,7 +216,16 @@ serve(async (req) => {
       }
     }
 
-    console.log('Chat request received:', { module_id, messageCount: validation.sanitized?.length });
+    // Validate document_type if provided
+    const validDocumentTypes = ['family_agreement', '30_day_plan'];
+    if (document_type && !validDocumentTypes.includes(document_type)) {
+      return new Response(JSON.stringify({ error: "Invalid document_type" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log('Chat request received:', { module_id, document_type, messageCount: validation.sanitized?.length });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -218,7 +298,7 @@ serve(async (req) => {
         if (userProfile.current_issues) contextParts.push(`Current parenting challenges: ${userProfile.current_issues}`);
         
         if (contextParts.length > 0) {
-          userContext = `\n\n--- PERSONALIZED CONTEXT FOR THIS PARENT ---\nUse this information to tailor your advice:\n${contextParts.join('\n')}\n--- END PERSONALIZED CONTEXT ---`;
+          userContext = `\n\n--- PERSONALIZED CONTEXT FOR THIS PARENT ---\nUse this information to tailor your advice and any documents you generate:\n${contextParts.join('\n')}\n--- END PERSONALIZED CONTEXT ---`;
           console.log('User profile context loaded');
         }
       }
@@ -239,11 +319,15 @@ serve(async (req) => {
       }
     }
 
-    // Get module's system prompt if module_id provided
+    // Determine the system prompt to use
     let systemPrompt = "You are a helpful and empathetic parenting coach for the WiseFamilies platform. Help parents navigate challenges with technology and screen time for their children. Provide practical, actionable advice while being supportive and non-judgmental. Keep responses conversational and warm.";
     
-    if (module_id) {
-      // Verify module exists and is published
+    // If document_type is provided, use the document generation prompt
+    if (document_type && DOCUMENT_PROMPTS[document_type]) {
+      systemPrompt = DOCUMENT_PROMPTS[document_type];
+      console.log(`Using document generation prompt for: ${document_type}`);
+    } else if (module_id) {
+      // Verify module exists and is published, get its system prompt
       const { data: moduleData, error: moduleError } = await supabase
         .from('modules')
         .select('system_prompt, title, status')

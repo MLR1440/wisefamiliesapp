@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle2, BookOpen, ChevronDown } from 'lucide-react';
 import VideoPlayer from '@/components/module/VideoPlayer';
-import ChatInterface from '@/components/module/ChatInterface';
+import ChatInterface, { DocumentConfig } from '@/components/module/ChatInterface';
 import { useModule } from '@/hooks/useModules';
 import { useProgress } from '@/hooks/useProgress';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -15,6 +15,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { VideoSkeleton, ChatSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
+
+// Document generation config by module order number
+const getDocumentConfig = (orderNumber: number): DocumentConfig | null => {
+  switch (orderNumber) {
+    case 16:
+      return {
+        documentType: 'family_agreement',
+        label: 'Generate Family Technology Agreement',
+        starterPromptLabel: 'Create my Family Technology Agreement',
+      };
+    case 21:
+      return {
+        documentType: '30_day_plan',
+        label: 'Generate 30-Day Action Plan',
+        starterPromptLabel: 'Create my 30-Day Plan',
+      };
+    default:
+      return null;
+  }
+};
 interface ModuleWithChapter {
   id: string;
   title: string;
