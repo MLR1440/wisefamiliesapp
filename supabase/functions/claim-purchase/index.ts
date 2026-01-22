@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { jwtVerify } from "https://deno.land/x/jose@v5.2.2/index.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,9 +25,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
-    if (!jwtSecret) throw new Error("SUPABASE_JWT_SECRET is not set");
-
     // Authenticate the user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -51,14 +47,22 @@ serve(async (req) => {
       });
     }
 
-    // Verify the claim token
-    const secret = new TextEncoder().encode(jwtSecret);
-    let payload;
-    try {
-      const verified = await jwtVerify(token, secret);
-      payload = verified.payload;
-    } catch (verifyError) {
-      logStep("Token verification failed", { error: String(verifyError) });
+    logStep("Looking up claim token", { token });
+
+    // Look up the pending purchase by claim token
+    const { data: pending, error: pendingError } = await supabaseClient
+      .from('pending_purchases')
+      .select('*')
+      .eq('claim_token', token)
+      .maybeSingle();
+
+    if (pendingError) {
+      logStep("Error fetching pending purchase", { error: pendingError.message });
+      throw new Error(`Database error: ${pendingError.message}`);
+    }
+
+    if (!pending) {
+      logStep("No pending purchase found for token");
       return new Response(JSON.stringify({ 
         success: false, 
         error: "Invalid or expired claim token" 
@@ -68,33 +72,9 @@ serve(async (req) => {
       });
     }
 
-    if (payload.type !== 'purchase_claim') {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Invalid token type" 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
-
-    const sessionId = payload.session_id as string;
-    const productId = payload.product_id as string;
-
-    logStep("Token verified", { sessionId, productId });
-
-    // Check pending purchase exists and not claimed
-    const { data: pending, error: pendingError } = await supabaseClient
-      .from('pending_purchases')
-      .select('*')
-      .eq('stripe_session_id', sessionId)
-      .maybeSingle();
-
-    if (pendingError) {
-      logStep("Error fetching pending purchase", { error: pendingError.message });
-    }
-
-    if (pending?.claimed_by) {
+    // Check if already claimed
+    if (pending.claimed_by) {
+      logStep("Purchase already claimed", { claimedBy: pending.claimed_by });
       return new Response(JSON.stringify({ 
         success: false, 
         error: "This purchase has already been claimed" 
@@ -104,13 +84,30 @@ serve(async (req) => {
       });
     }
 
+    // Check if token has expired
+    if (pending.expires_at && new Date(pending.expires_at) < new Date()) {
+      logStep("Claim token expired", { expiresAt: pending.expires_at });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Claim token has expired. Please contact support." 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    logStep("Valid pending purchase found", { 
+      sessionId: pending.stripe_session_id, 
+      productId: pending.product_id 
+    });
+
     // Create user_purchases record
     const { error: purchaseError } = await supabaseClient
       .from('user_purchases')
       .insert({
         user_id: user.id,
-        stripe_session_id: sessionId,
-        product_id: productId,
+        stripe_session_id: pending.stripe_session_id,
+        product_id: pending.product_id,
         purchased_at: new Date().toISOString(),
       });
 
@@ -127,20 +124,18 @@ serve(async (req) => {
     }
 
     // Mark pending purchase as claimed
-    if (pending) {
-      const { error: updateError } = await supabaseClient
-        .from('pending_purchases')
-        .update({
-          claimed_by: user.id,
-          claimed_at: new Date().toISOString(),
-        })
-        .eq('stripe_session_id', sessionId);
+    const { error: updateError } = await supabaseClient
+      .from('pending_purchases')
+      .update({
+        claimed_by: user.id,
+        claimed_at: new Date().toISOString(),
+      })
+      .eq('claim_token', token);
 
-      if (updateError) {
-        logStep("Warning: Could not update pending purchase", { error: updateError.message });
-      } else {
-        logStep("Pending purchase marked as claimed");
-      }
+    if (updateError) {
+      logStep("Warning: Could not update pending purchase", { error: updateError.message });
+    } else {
+      logStep("Pending purchase marked as claimed");
     }
 
     return new Response(JSON.stringify({ success: true }), {

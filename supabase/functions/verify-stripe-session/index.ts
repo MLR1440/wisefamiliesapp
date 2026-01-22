@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { SignJWT } from "https://deno.land/x/jose@v5.2.2/index.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,9 +24,6 @@ serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const jwtSecret = Deno.env.get("SUPABASE_JWT_SECRET");
-    if (!jwtSecret) throw new Error("SUPABASE_JWT_SECRET is not set");
 
     const { session_id } = await req.json();
     if (!session_id) {
@@ -109,7 +105,7 @@ serve(async (req) => {
     // Check if session already processed
     const { data: existing } = await supabaseClient
       .from('pending_purchases')
-      .select('id, claimed_by')
+      .select('id, claimed_by, claim_token')
       .eq('stripe_session_id', session_id)
       .maybeSingle();
 
@@ -123,44 +119,46 @@ serve(async (req) => {
       });
     }
 
-    // Insert or update pending purchase
-    if (!existing) {
-      const { error: insertError } = await supabaseClient
-        .from('pending_purchases')
-        .insert({
-          stripe_session_id: session_id,
-          stripe_customer_email: session.customer_email || session.customer_details?.email,
-          product_id: COURSE_PRODUCT_ID,
-          amount_total: session.amount_total,
-          currency: session.currency,
-        });
-
-      if (insertError) {
-        logStep("Error storing pending purchase", { error: insertError.message });
-        // Continue anyway - the important thing is the token
-      } else {
-        logStep("Pending purchase stored");
-      }
+    // If existing record, return its token
+    if (existing?.claim_token) {
+      logStep("Returning existing claim token");
+      return new Response(JSON.stringify({ 
+        valid: true, 
+        email: session.customer_email || session.customer_details?.email,
+        token: existing.claim_token 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Create a signed JWT token valid for 1 hour
-    const secret = new TextEncoder().encode(jwtSecret);
-    const token = await new SignJWT({ 
-      session_id,
-      product_id: COURSE_PRODUCT_ID,
-      type: 'purchase_claim'
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('1h')
-      .sign(secret);
+    // Generate a secure random claim token
+    const claimToken = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
 
-    logStep("Token generated successfully");
+    // Insert new pending purchase with claim token
+    const { error: insertError } = await supabaseClient
+      .from('pending_purchases')
+      .insert({
+        stripe_session_id: session_id,
+        stripe_customer_email: session.customer_email || session.customer_details?.email,
+        product_id: COURSE_PRODUCT_ID,
+        amount_total: session.amount_total,
+        currency: session.currency,
+        claim_token: claimToken,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (insertError) {
+      logStep("Error storing pending purchase", { error: insertError.message });
+      // Continue anyway - try to return the token
+    } else {
+      logStep("Pending purchase stored with claim token");
+    }
 
     return new Response(JSON.stringify({ 
       valid: true, 
       email: session.customer_email || session.customer_details?.email,
-      token 
+      token: claimToken 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

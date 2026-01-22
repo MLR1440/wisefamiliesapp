@@ -322,10 +322,12 @@ export type Database = {
       pending_purchases: {
         Row: {
           amount_total: number | null
+          claim_token: string | null
           claimed_at: string | null
           claimed_by: string | null
           created_at: string | null
           currency: string | null
+          expires_at: string | null
           id: string
           product_id: string
           stripe_customer_email: string | null
@@ -334,10 +336,12 @@ export type Database = {
         }
         Insert: {
           amount_total?: number | null
+          claim_token?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           created_at?: string | null
           currency?: string | null
+          expires_at?: string | null
           id?: string
           product_id: string
           stripe_customer_email?: string | null
@@ -346,10 +350,12 @@ export type Database = {
         }
         Update: {
           amount_total?: number | null
+          claim_token?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           created_at?: string | null
           currency?: string | null
+          expires_at?: string | null
           id?: string
           product_id?: string
           stripe_customer_email?: string | null
