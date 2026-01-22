@@ -15,7 +15,7 @@ const trustSignals = [{
   text: "90-day money-back guarantee"
 }];
 const Hero = () => {
-  return <section className="relative overflow-hidden bg-gradient-warm py-12 sm:py-16 md:py-24 lg:py-32">
+  return <section className="relative overflow-hidden bg-gradient-warm py-16 sm:py-20 md:py-28 lg:py-36">
       {/* Background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-1/4 top-1/4 h-48 w-48 sm:h-72 sm:w-72 rounded-full bg-primary/5 blur-3xl" />
@@ -24,59 +24,56 @@ const Hero = () => {
       </div>
 
       <div className="container px-4 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
-          {/* Left: Text content */}
-          <div className="text-center lg:text-left">
-            {/* Headline */}
-            <h1 className="mb-4 sm:mb-6 font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground animate-fade-up leading-tight">
-              Raise Kids Who Are{' '}
-              <span className="text-primary">Wiser Than the AI</span>{' '}
-              They Use
-            </h1>
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+          {/* Headline */}
+          <h1 className="mb-6 sm:mb-8 font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground animate-fade-up leading-[1.1]">
+            Raise Kids Who Are{' '}
+            <span className="text-primary relative">
+              Wiser Than the AI
+              <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30" viewBox="0 0 200 12" preserveAspectRatio="none">
+                <path d="M0,8 Q50,0 100,8 T200,8" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+            </span>{' '}
+            They Use
+          </h1>
 
-            {/* Subheadline */}
-            <p className="mb-6 sm:mb-8 text-base sm:text-lg md:text-xl text-muted-foreground animate-fade-up" style={{
+          {/* Subheadline */}
+          <p className="mb-8 sm:mb-10 text-lg sm:text-xl md:text-2xl text-muted-foreground animate-fade-up max-w-3xl leading-relaxed" style={{
             animationDelay: '0.1s'
           }}>
-              The complete system for parents who want to prepare their children for an AI-powered future without the fear, without the fights, without feeling like you're always one step behind.
-            </p>
+            The complete system for parents who want to prepare their children for an AI-powered future—without the fear, without the fights, without feeling like you're always one step behind.
+          </p>
 
-            {/* CTA Button */}
-            <div className="flex flex-col items-center lg:items-start gap-4 animate-fade-up" style={{
+          {/* CTA Button */}
+          <div className="flex flex-col items-center gap-4 animate-fade-up mb-10" style={{
             animationDelay: '0.2s'
           }}>
-              <a href="#course-content" className="w-full sm:w-auto">
-                <Button variant="cta" size="xl" className="gap-2 w-full sm:w-auto">
-                  See What's Inside
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </a>
-            </div>
+            <a href="#course-content">
+              <Button variant="cta" size="xl" className="gap-3 text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                See What's Inside
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </a>
+          </div>
 
-            {/* Trust signals */}
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 animate-fade-up px-[20px] border-0" style={{
+          {/* Trust signals */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-up w-full max-w-3xl" style={{
             animationDelay: '0.3s'
           }}>
-              {trustSignals.map((signal, index) => <div key={index} className="flex flex-row items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle className="h-6 w-6 text-success flex-shrink-0" />
-                  <span>{signal.text}</span>
-                </div>)}
-            </div>
+            {trustSignals.map((signal, index) => (
+              <div key={index} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 transition-colors">
+                <CheckCircle className="h-7 w-7 text-success" />
+                <span className="text-sm font-medium text-foreground text-center">{signal.text}</span>
+              </div>
+            ))}
+          </div>
 
-            {/* Founding member text */}
-            <p className="mt-6 text-sm text-secondary font-medium animate-fade-up" style={{
+          {/* Founding member text */}
+          <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
             animationDelay: '0.4s'
           }}>
-              Join the first 100 founding families and lock in 60% off before the price increases.
-            </p>
-          </div>
-
-          {/* Right: Video placeholder */}
-          <div className="animate-fade-up" style={{
-          animationDelay: '0.2s'
-        }}>
-            
-          </div>
+            🎉 Join the first 100 founding families and lock in 60% off before the price increases.
+          </p>
         </div>
       </div>
     </section>;
