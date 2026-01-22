@@ -67,6 +67,7 @@ const ModulePage = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [clickedPromptIds, setClickedPromptIds] = useState<Set<string>>(new Set());
   const [hasWatchedVideo, setHasWatchedVideo] = useState(false);
+  const [completionPageEnabled, setCompletionPageEnabled] = useState(true);
   const {
     trackModuleStarted,
     trackModuleCompleted,
@@ -93,12 +94,17 @@ const ModulePage = () => {
   // Has the user interacted with THIS module in any way?
   const hasInteracted = clickedPromptIds.size > 0 || hasStarted || hasWatchedVideo;
 
-  // Fetch all modules and chapters for navigation
+  // Fetch all modules, chapters, and completion page setting for navigation
   useEffect(() => {
     const fetchModulesAndChapters = async () => {
-      const [modulesRes, chaptersRes] = await Promise.all([supabase.from('modules').select('id, title, description, order_number, chapter_id').eq('status', 'published').order('order_number'), supabase.from('chapters').select('id, title, order_number').eq('status', 'published').order('order_number')]);
+      const [modulesRes, chaptersRes, settingsRes] = await Promise.all([
+        supabase.from('modules').select('id, title, description, order_number, chapter_id').eq('status', 'published').order('order_number'), 
+        supabase.from('chapters').select('id, title, order_number').eq('status', 'published').order('order_number'),
+        supabase.from('course_settings').select('value').eq('key', 'course_completion_enabled').maybeSingle()
+      ]);
       if (modulesRes.data) setModules(modulesRes.data);
       if (chaptersRes.data) setChapters(chaptersRes.data);
+      if (settingsRes.data) setCompletionPageEnabled(settingsRes.data.value !== 'false');
     };
     fetchModulesAndChapters();
   }, []);
@@ -143,12 +149,18 @@ const ModulePage = () => {
       // Check if this is the last module in course
       if (isLastModuleInCourse) {
         trackCourseCompleted();
-        setTimeout(() => {
-          navigate('/course-complete');
-        }, 1500);
+        
+        if (completionPageEnabled) {
+          setTimeout(() => {
+            navigate('/course-complete');
+          }, 1500);
+        }
+        
         toast({
           title: "Course Completed!",
-          description: "Congratulations! You've finished the entire course."
+          description: completionPageEnabled 
+            ? "Congratulations! You've finished the entire course."
+            : "Congratulations! You've completed all modules."
         });
         return;
       }
@@ -398,7 +410,7 @@ const ModulePage = () => {
                   <span className="text-xs font-medium uppercase tracking-wider text-success">
                     Final Module
                   </span>
-                  {isCompleted && (
+                  {isCompleted && completionPageEnabled && (
                     <Link to="/course-complete">
                       <Button variant="default" className="gap-2">
                         View Completion

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ const AdminSettings = () => {
   const [isSavingGuardrail, setIsSavingGuardrail] = useState(false);
   
   // Congratulations settings
+  const [completionPageEnabled, setCompletionPageEnabled] = useState(true);
   const [congratsVideoUrl, setCongratsVideoUrl] = useState('');
   const [congratsVideoType, setCongratsVideoType] = useState('youtube');
   const [congratsTitle, setCongratsTitle] = useState('');
@@ -66,6 +68,7 @@ const AdminSettings = () => {
       setGuardrailAppendix(getSetting('guardrail_appendix'));
       
       // Congratulations page
+      setCompletionPageEnabled(getSetting('course_completion_enabled') !== 'false');
       setCongratsVideoUrl(getSetting('congratulations_video_url'));
       setCongratsVideoType(getSetting('congratulations_video_type') || 'youtube');
       setCongratsTitle(getSetting('congratulations_title'));
@@ -104,6 +107,7 @@ const AdminSettings = () => {
     setIsSavingCongrats(true);
     try {
       await Promise.all([
+        updateSetting('course_completion_enabled', completionPageEnabled ? 'true' : 'false'),
         updateSetting('congratulations_video_url', congratsVideoUrl),
         updateSetting('congratulations_video_type', congratsVideoType),
         updateSetting('congratulations_title', congratsTitle),
@@ -417,10 +421,25 @@ const AdminSettings = () => {
                 Course Completion Page
               </h2>
             </div>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Customize the congratulations page students see when they complete the entire course.
-            </p>
-            <div className="space-y-5">
+            
+            {/* Enable/Disable Toggle */}
+            <div className="mb-6 flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="completionPageEnabled" className="text-base font-medium cursor-pointer">
+                  Show completion page
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, students see a celebration page after finishing the course
+                </p>
+              </div>
+              <Switch
+                id="completionPageEnabled"
+                checked={completionPageEnabled}
+                onCheckedChange={setCompletionPageEnabled}
+              />
+            </div>
+
+            <div className={`space-y-5 transition-opacity ${completionPageEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
               <div className="space-y-2">
                 <Label htmlFor="congratsVideoUrl">Congratulations Video URL</Label>
                 <Input
