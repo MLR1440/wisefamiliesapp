@@ -1,93 +1,90 @@
-import { useState } from 'react';
-import { Lock, Loader2, CheckCircle } from 'lucide-react';
+import { Lock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useCoursePrice } from '@/hooks/useCoursePrice';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { usePaymentLinks } from '@/hooks/usePaymentLinks';
+import { Link } from 'react-router-dom';
+
 const Paywall = () => {
-  const [loading, setLoading] = useState(false);
-  const {
-    formattedPrice,
-    loading: priceLoading
-  } = useCoursePrice();
-  const {
-    signOut
-  } = useAuth();
-  const navigate = useNavigate();
-  const handlePurchase = async () => {
-    setLoading(true);
-    try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-payment');
-      if (error) {
-        const errorMessage = error.message || '';
-        // Check for auth-related errors
-        if (errorMessage.includes('Auth') || errorMessage.includes('authenticated') || errorMessage.includes('session') || errorMessage.includes('500')) {
-          toast.error('Your session has expired. Please log in again.', {
-            action: {
-              label: 'Log In',
-              onClick: async () => {
-                await signOut();
-                navigate('/login');
-              }
-            }
-          });
-          return;
-        }
-        throw error;
-      }
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (err) {
-      console.error('Payment error:', err);
-      toast.error('Failed to start checkout. Please try again.');
-    } finally {
-      setLoading(false);
+  const { coreLink, coreInstallmentsLink, loading } = usePaymentLinks();
+
+  const handlePurchase = () => {
+    if (coreLink) {
+      window.open(coreLink, '_blank', 'noopener,noreferrer');
     }
   };
-  const benefits = ['Lifetime access to all course modules', 'AI-powered coaching conversations', 'Progress tracking and achievements', 'New content as it becomes available'];
-  return <div className="rounded-2xl border border-border bg-gradient-card p-8 text-center shadow-soft">
+
+  const handleInstallmentsClick = () => {
+    if (coreInstallmentsLink) {
+      window.open(coreInstallmentsLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const benefits = [
+    '12-month access to all course modules',
+    'AI-powered coaching conversations',
+    'Progress tracking and achievements',
+    'New content as it becomes available',
+  ];
+
+  return (
+    <div className="rounded-2xl border border-border bg-gradient-card p-8 text-center shadow-soft">
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
         <Lock className="h-8 w-8 text-primary" />
       </div>
-      
-      <h2 className="mb-2 font-heading text-2xl font-bold text-foreground">Unlock the Full Framework</h2>
-      
+
+      <h2 className="mb-2 font-heading text-2xl font-bold text-foreground">
+        Unlock the Full Framework
+      </h2>
+
       <p className="mb-6 text-muted-foreground">
-        Get lifetime access to the A.I - Ready Family Framework and all future updates.
+        Get 12-month access to the A.I-Ready Family Framework and all future updates.
       </p>
 
       <div className="mb-6 space-y-3 text-left">
-        {benefits.map((benefit, index) => <div key={index} className="flex items-center gap-3">
+        {benefits.map((benefit, index) => (
+          <div key={index} className="flex items-center gap-3">
             <CheckCircle className="h-5 w-5 flex-shrink-0 text-primary" />
             <span className="text-foreground">{benefit}</span>
-          </div>)}
+          </div>
+        ))}
       </div>
 
       <div className="mb-6">
-        <div className="text-4xl font-bold text-foreground">
-          {priceLoading ? '...' : formattedPrice}
-        </div>
+        <div className="text-4xl font-bold text-foreground">$139 AUD</div>
         <div className="text-sm text-muted-foreground">one-time payment</div>
       </div>
 
-      <Button variant="cta" size="lg" className="w-full gap-2" onClick={handlePurchase} disabled={loading}>
-        {loading ? <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Processing...
-          </> : 'Get Lifetime Access'}
-      </Button>
+      {coreLink ? (
+        <Button
+          variant="cta"
+          size="lg"
+          className="w-full gap-2"
+          onClick={handlePurchase}
+          disabled={loading}
+        >
+          Get 12-Month Access
+        </Button>
+      ) : (
+        <Link to="/signup" className="block">
+          <Button variant="cta" size="lg" className="w-full gap-2">
+            Get 12-Month Access
+          </Button>
+        </Link>
+      )}
+
+      {coreInstallmentsLink && (
+        <button
+          onClick={handleInstallmentsClick}
+          className="mt-3 text-sm text-primary hover:underline"
+        >
+          or pay in 3 installments of $47
+        </button>
+      )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Secure payment powered by Stripe. 30-day money-back guarantee.
+        Secure payment powered by Stripe. 90-day money-back guarantee.
       </p>
-    </div>;
+    </div>
+  );
 };
+
 export default Paywall;

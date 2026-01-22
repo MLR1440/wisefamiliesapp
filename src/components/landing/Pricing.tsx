@@ -24,11 +24,17 @@ const premiumExtras = [
 ];
 
 const Pricing = () => {
-  const { coreLink, premiumLink } = usePaymentLinks();
+  const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
 
   const handleCoreClick = () => {
     if (coreLink) {
       window.open(coreLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleCoreInstallmentsClick = () => {
+    if (coreInstallmentsLink) {
+      window.open(coreInstallmentsLink, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -84,6 +90,7 @@ const Pricing = () => {
               </ul>
             </div>
 
+            {/* Primary CTA - Pay in Full */}
             {coreLink ? (
               <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
                 Join as Founding Member
@@ -94,6 +101,28 @@ const Pricing = () => {
                   Join as Founding Member
                 </Button>
               </Link>
+            )}
+
+            {/* Secondary Option - Installments */}
+            {coreInstallmentsLink && (
+              <>
+                <div className="my-4 flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-sm text-muted-foreground">or</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleCoreInstallmentsClick}
+                >
+                  Pay in 3 Installments
+                </Button>
+                <p className="text-center text-sm text-muted-foreground mt-2">
+                  3 x $47/month
+                </p>
+              </>
             )}
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">

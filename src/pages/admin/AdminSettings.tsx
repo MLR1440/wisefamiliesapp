@@ -14,10 +14,8 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
-import { useCoursePrice, useInvalidateCoursePrice } from '@/hooks/useCoursePrice';
-import { useStripePrices } from '@/hooks/useStripePrices';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink, RefreshCw, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -26,9 +24,6 @@ const AdminSettings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { settings, loading: settingsLoading, getSetting, updateSetting } = useCourseSettings();
-  const { price: priceData, loading: priceLoading } = useCoursePrice();
-  const invalidatePrice = useInvalidateCoursePrice();
-  const { data: stripePrices, isLoading: pricesLoading, refetch: refetchPrices } = useStripePrices();
   
   // Guardrail settings
   const [guardrailAppendix, setGuardrailAppendix] = useState('');
@@ -44,12 +39,11 @@ const AdminSettings = () => {
   // Course settings
   const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
-  const [stripePriceId, setStripePriceId] = useState('');
   const [isSavingCourse, setIsSavingCourse] = useState(false);
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
 
   // Payment Links settings
   const [paymentLinkCore, setPaymentLinkCore] = useState('');
+  const [paymentLinkCoreInstallments, setPaymentLinkCoreInstallments] = useState('');
   const [paymentLinkPremium, setPaymentLinkPremium] = useState('');
   const [isSavingPaymentLinks, setIsSavingPaymentLinks] = useState(false);
 
@@ -80,10 +74,10 @@ const AdminSettings = () => {
       // Course settings
       setCourseTitle(getSetting('course_title') || 'A.I - Ready Family Framework');
       setCourseDescription(getSetting('course_description') || '');
-      setStripePriceId(getSetting('stripe_price_id') || '');
       
       // Payment Links
       setPaymentLinkCore(getSetting('payment_link_core') || '');
+      setPaymentLinkCoreInstallments(getSetting('payment_link_core_installments') || '');
       setPaymentLinkPremium(getSetting('payment_link_premium') || '');
       
       // Branding
@@ -140,25 +134,15 @@ const AdminSettings = () => {
     }
   };
 
-  const handleSavePayment = async () => {
-    setIsSavingPayment(true);
-    try {
-      await updateSetting('stripe_price_id', stripePriceId);
-      invalidatePrice(); // Refresh price across all components
-      toast.success('Payment settings saved!');
-    } catch (error) {
-      toast.error('Failed to save payment settings');
-      console.error(error);
-    } finally {
-      setIsSavingPayment(false);
-    }
-  };
-
   const handleSavePaymentLinks = async () => {
     // Validate URLs
     const urlPattern = /^https:\/\//;
     if (paymentLinkCore && !urlPattern.test(paymentLinkCore)) {
       toast.error('Core payment link must start with https://');
+      return;
+    }
+    if (paymentLinkCoreInstallments && !urlPattern.test(paymentLinkCoreInstallments)) {
+      toast.error('Core installments payment link must start with https://');
       return;
     }
     if (paymentLinkPremium && !urlPattern.test(paymentLinkPremium)) {
@@ -170,6 +154,7 @@ const AdminSettings = () => {
     try {
       await Promise.all([
         updateSetting('payment_link_core', paymentLinkCore),
+        updateSetting('payment_link_core_installments', paymentLinkCoreInstallments),
         updateSetting('payment_link_premium', paymentLinkPremium),
       ]);
       toast.success('Payment links saved!');
@@ -351,114 +336,6 @@ const AdminSettings = () => {
             </div>
           </div>
 
-          {/* Payment Integration */}
-          <div className="rounded-xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              <h2 className="font-heading text-xl font-semibold text-foreground">
-                Payment Integration
-              </h2>
-            </div>
-            
-            <div className="space-y-5">
-              <div className="flex items-center gap-3 rounded-lg bg-green-500/10 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Stripe Connected</p>
-                  <p className="text-sm text-muted-foreground">
-                    Payments are active and ready to process
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-border p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">Current Price</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {priceLoading ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      ) : (
-                        `$${priceData.amount} ${priceData.currency.toUpperCase()}`
-                      )}
-                    </p>
-                  </div>
-                  <a 
-                    href="https://dashboard.stripe.com/products" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                  >
-                    Manage in Stripe
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="stripePriceId">Select Price</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => refetchPrices()}
-                    disabled={pricesLoading}
-                    className="h-7 gap-1 text-xs"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${pricesLoading ? 'animate-spin' : ''}`} />
-                    Refresh
-                  </Button>
-                </div>
-                <Select
-                  value={stripePriceId}
-                  onValueChange={setStripePriceId}
-                  disabled={pricesLoading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={pricesLoading ? "Loading prices..." : "Select a price..."} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stripePrices?.map((price) => (
-                      <SelectItem key={price.id} value={price.id}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{price.productName}</span>
-                          <span className="text-muted-foreground">-</span>
-                          <span className="font-semibold text-primary">
-                            ${price.amount} {price.currency.toUpperCase()}
-                          </span>
-                          {price.recurring && (
-                            <span className="text-xs text-muted-foreground">
-                              /{price.recurring}
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                    {stripePrices?.length === 0 && (
-                      <SelectItem value="_empty" disabled>
-                        No prices found in Stripe
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Select the price to use for course purchases. Only active prices from your connected Stripe account are shown.
-                </p>
-              </div>
-
-              <Button onClick={handleSavePayment} disabled={isSavingPayment} className="gap-2">
-                {isSavingPayment ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save Payment Settings
-              </Button>
-            </div>
-          </div>
-
           {/* Payment Links */}
           <div className="rounded-xl border border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
@@ -468,12 +345,12 @@ const AdminSettings = () => {
               </h2>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
-              Paste your Stripe Payment Link URLs for each tier. These links will be used on the landing page pricing buttons.
+              Paste your Stripe Payment Link URLs. These links will be used on the landing page and paywall.
             </p>
             
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="paymentLinkCore">Core Tier (12-month access)</Label>
+                <Label htmlFor="paymentLinkCore">Core Tier - Pay in Full</Label>
                 <Input
                   id="paymentLinkCore"
                   type="url"
@@ -481,6 +358,23 @@ const AdminSettings = () => {
                   onChange={(e) => setPaymentLinkCore(e.target.value)}
                   placeholder="https://buy.stripe.com/..."
                 />
+                <p className="text-xs text-muted-foreground">
+                  One-time payment option for 12-month access
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="paymentLinkCoreInstallments">Core Tier - Payment Plan</Label>
+                <Input
+                  id="paymentLinkCoreInstallments"
+                  type="url"
+                  value={paymentLinkCoreInstallments}
+                  onChange={(e) => setPaymentLinkCoreInstallments(e.target.value)}
+                  placeholder="https://buy.stripe.com/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Installment option (e.g., 3 x $47/month) for customers who prefer to pay in installments
+                </p>
               </div>
 
               <div className="space-y-2">
