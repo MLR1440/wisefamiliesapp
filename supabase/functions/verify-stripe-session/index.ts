@@ -12,8 +12,6 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[VERIFY-SESSION] ${step}${detailsStr}`);
 };
 
-const COURSE_PRODUCT_ID = "prod_TXwi6z2RYRGvt2";
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -69,23 +67,67 @@ serve(async (req) => {
       });
     }
 
-    // Verify product matches our course
-    let productMatches = false;
+    // Store in pending_purchases using service role
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    // Fetch configured product IDs from course_settings
+    const { data: productSettings } = await supabaseClient
+      .from('course_settings')
+      .select('key, value')
+      .in('key', ['stripe_price_id_core', 'stripe_price_id_core_installments', 'stripe_price_id_premium']);
+
+    const settingsMap: Record<string, string> = {};
+    productSettings?.forEach(s => { settingsMap[s.key] = s.value; });
+
+    // Get all valid price IDs from settings
+    const validPriceIds = [
+      settingsMap['stripe_price_id_core'],
+      settingsMap['stripe_price_id_core_installments'],
+      settingsMap['stripe_price_id_premium'],
+    ].filter(Boolean);
+
+    logStep("Configured price IDs", { validPriceIds });
+
+    // Extract product_id and price_id from line items
+    let productId: string | null = null;
+    let priceId: string | null = null;
+    let priceMatches = false;
+
     if (session.line_items?.data) {
       for (const item of session.line_items.data) {
-        const product = item.price?.product;
-        if (typeof product === 'object' && product.id === COURSE_PRODUCT_ID) {
-          productMatches = true;
-          break;
-        } else if (product === COURSE_PRODUCT_ID) {
-          productMatches = true;
-          break;
+        const price = item.price;
+        if (price) {
+          priceId = price.id;
+          const product = price.product;
+          if (typeof product === 'object' && product.id) {
+            productId = product.id;
+          } else if (typeof product === 'string') {
+            productId = product;
+          }
+          
+          // Check if this price ID is configured (if we have settings)
+          if (validPriceIds.length > 0) {
+            if (priceId && validPriceIds.includes(priceId)) {
+              priceMatches = true;
+              break;
+            }
+          } else {
+            // No price IDs configured yet - allow any valid payment
+            priceMatches = true;
+            break;
+          }
         }
       }
     }
 
-    if (!productMatches) {
-      logStep("Product mismatch", { expected: COURSE_PRODUCT_ID });
+    logStep("Product verification", { productId, priceId, priceMatches });
+
+    if (!priceMatches && validPriceIds.length > 0) {
+      logStep("Price mismatch", { expected: validPriceIds, got: priceId });
       return new Response(JSON.stringify({ 
         valid: false, 
         error: "Invalid product" 
@@ -94,13 +136,6 @@ serve(async (req) => {
         status: 400,
       });
     }
-
-    // Store in pending_purchases using service role
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
 
     // Check if session already processed
     const { data: existing } = await supabaseClient
@@ -135,13 +170,14 @@ serve(async (req) => {
     const claimToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
 
-    // Insert new pending purchase with claim token
+    // Insert new pending purchase with claim token and price_id
     const { error: insertError } = await supabaseClient
       .from('pending_purchases')
       .insert({
         stripe_session_id: session_id,
         stripe_customer_email: session.customer_email || session.customer_details?.email,
-        product_id: COURSE_PRODUCT_ID,
+        product_id: productId || 'unknown',
+        price_id: priceId, // NEW: Store price_id for Kit.com routing
         amount_total: session.amount_total,
         currency: session.currency,
         claim_token: claimToken,
@@ -152,7 +188,7 @@ serve(async (req) => {
       logStep("Error storing pending purchase", { error: insertError.message });
       // Continue anyway - try to return the token
     } else {
-      logStep("Pending purchase stored with claim token");
+      logStep("Pending purchase stored with claim token", { priceId });
     }
 
     return new Response(JSON.stringify({ 

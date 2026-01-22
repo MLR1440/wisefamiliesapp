@@ -329,6 +329,7 @@ export type Database = {
           currency: string | null
           expires_at: string | null
           id: string
+          price_id: string | null
           product_id: string
           stripe_customer_email: string | null
           stripe_session_id: string
@@ -343,6 +344,7 @@ export type Database = {
           currency?: string | null
           expires_at?: string | null
           id?: string
+          price_id?: string | null
           product_id: string
           stripe_customer_email?: string | null
           stripe_session_id: string
@@ -357,6 +359,7 @@ export type Database = {
           currency?: string | null
           expires_at?: string | null
           id?: string
+          price_id?: string | null
           product_id?: string
           stripe_customer_email?: string | null
           stripe_session_id?: string
