@@ -42,8 +42,10 @@ export const useCourseSettings = () => {
   const updateSetting = async (key: string, value: string) => {
     const { error } = await supabase
       .from('course_settings')
-      .update({ value })
-      .eq('key', key);
+      .upsert(
+        { key, value, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      );
 
     if (error) throw error;
     await fetchSettings();

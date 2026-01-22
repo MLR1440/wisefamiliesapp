@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +50,34 @@ const PaymentSuccess = () => {
   };
 
   const isLoading = checkingPayment || checkingOnboarding;
+
+  // Guest checkout: user paid but isn't logged in yet
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle className="h-10 w-10 text-green-600" />
+          </div>
+          
+          <h1 className="text-3xl font-bold text-foreground">Payment Successful!</h1>
+          
+          <p className="text-muted-foreground">
+            Thank you for your purchase! Create an account or log in with the same email you used for payment to access your course.
+          </p>
+          
+          <div className="flex gap-3">
+            <Link to="/signup" className="flex-1">
+              <Button size="lg" className="w-full">Create Account</Button>
+            </Link>
+            <Link to="/login" className="flex-1">
+              <Button variant="outline" size="lg" className="w-full">Log In</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
