@@ -132,6 +132,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
+      // Check if payment was refunded
+      if (!error && data?.refunded) {
+        console.log('Payment was refunded, signing out');
+        await supabase.auth.signOut();
+        clearAuthState();
+        // Small delay to ensure state is cleared before toast
+        setTimeout(() => {
+          // Import toast dynamically to avoid circular deps
+          import('sonner').then(({ toast }) => {
+            toast.error('Your purchase was refunded. Please purchase again to access the course.');
+          });
+        }, 100);
+        return;
+      }
+      
       if (!error && data?.hasPurchased) {
         setHasPurchased(true);
       } else {

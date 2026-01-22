@@ -20,3 +20,12 @@ verify_jwt = false
 
 [functions.save-memory]
 verify_jwt = false
+
+[functions.get-payment-links]
+verify_jwt = false
+
+[functions.verify-stripe-session]
+verify_jwt = false
+
+[functions.claim-purchase]
+verify_jwt = true

@@ -319,6 +319,45 @@ export type Database = {
           },
         ]
       }
+      pending_purchases: {
+        Row: {
+          amount_total: number | null
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          product_id: string
+          stripe_customer_email: string | null
+          stripe_session_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount_total?: number | null
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          product_id: string
+          stripe_customer_email?: string | null
+          stripe_session_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount_total?: number | null
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          product_id?: string
+          stripe_customer_email?: string | null
+          stripe_session_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       user_documents: {
         Row: {
           created_at: string
@@ -490,6 +529,8 @@ export type Database = {
           id: string
           product_id: string
           purchased_at: string
+          refund_checked_at: string | null
+          refunded: boolean | null
           stripe_session_id: string
           user_id: string
         }
@@ -498,6 +539,8 @@ export type Database = {
           id?: string
           product_id: string
           purchased_at?: string
+          refund_checked_at?: string | null
+          refunded?: boolean | null
           stripe_session_id: string
           user_id: string
         }
@@ -506,6 +549,8 @@ export type Database = {
           id?: string
           product_id?: string
           purchased_at?: string
+          refund_checked_at?: string | null
+          refunded?: boolean | null
           stripe_session_id?: string
           user_id?: string
         }
