@@ -41,12 +41,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             
-            {/* Payment success - Protected but doesn't require purchase */}
-            <Route path="/payment-success" element={
-              <ProtectedRoute>
-                <PaymentSuccess />
-              </ProtectedRoute>
-            } />
+            {/* Payment success - Public (validates session_id before allowing signup) */}
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             
             {/* Student pages - Protected */}
             <Route path="/onboarding" element={
