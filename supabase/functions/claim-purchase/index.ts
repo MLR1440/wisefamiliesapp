@@ -138,6 +138,41 @@ serve(async (req) => {
       logStep("Pending purchase marked as claimed");
     }
 
+    // Add subscriber to Kit.com for welcome email
+    const kitApiKey = Deno.env.get("KIT_API_KEY");
+    const kitFormId = Deno.env.get("KIT_FORM_ID");
+
+    if (kitApiKey && kitFormId) {
+      try {
+        const kitResponse = await fetch(
+          `https://api.kit.com/v4/forms/${kitFormId}/subscribers`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Kit-Api-Key': kitApiKey,
+            },
+            body: JSON.stringify({
+              email_address: user.email,
+              first_name: user.user_metadata?.first_name || '',
+            }),
+          }
+        );
+
+        if (kitResponse.ok) {
+          logStep("Subscriber added to Kit.com", { email: user.email });
+        } else {
+          const kitError = await kitResponse.text();
+          logStep("Kit.com warning", { status: kitResponse.status, error: kitError });
+        }
+      } catch (kitError) {
+        // Log but don't fail the purchase claim
+        logStep("Kit.com integration error (non-blocking)", { error: String(kitError) });
+      }
+    } else {
+      logStep("Kit.com integration skipped - missing credentials");
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
