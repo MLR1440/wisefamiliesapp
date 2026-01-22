@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CHECK-PAYMENT] ${step}${detailsStr}`);
 };
@@ -46,13 +46,85 @@ serve(async (req) => {
     // First check if we already have a purchase record in our database
     const { data: existingPurchase } = await supabaseClient
       .from('user_purchases')
-      .select('id, purchased_at')
+      .select('id, purchased_at, stripe_session_id, refunded, refund_checked_at')
       .eq('user_id', user.id)
       .limit(1)
       .maybeSingle();
 
     if (existingPurchase) {
       logStep("Found existing purchase record", { purchaseId: existingPurchase.id });
+      
+      // Check if the purchase was refunded
+      if (existingPurchase.refunded) {
+        logStep("Purchase was previously refunded");
+        return new Response(JSON.stringify({ 
+          hasPurchased: false, 
+          refunded: true 
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      // Check with Stripe for refund status (max once per hour to reduce API calls)
+      const lastCheck = existingPurchase.refund_checked_at 
+        ? new Date(existingPurchase.refund_checked_at).getTime() 
+        : 0;
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      
+      if (lastCheck < oneHourAgo && existingPurchase.stripe_session_id) {
+        logStep("Checking Stripe for refund status");
+        
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        
+        try {
+          // Get the session to find the payment intent
+          const session = await stripe.checkout.sessions.retrieve(existingPurchase.stripe_session_id);
+          
+          if (session.payment_intent) {
+            const paymentIntentId = typeof session.payment_intent === 'string' 
+              ? session.payment_intent 
+              : session.payment_intent.id;
+            
+            // Check for refunds on this payment intent
+            const refunds = await stripe.refunds.list({ 
+              payment_intent: paymentIntentId,
+              limit: 1 
+            });
+            
+            const isRefunded = refunds.data.length > 0 && 
+              refunds.data.some((r: { status: string }) => r.status === 'succeeded');
+            
+            // Update the purchase record with refund status
+            await supabaseClient
+              .from('user_purchases')
+              .update({
+                refunded: isRefunded,
+                refund_checked_at: new Date().toISOString()
+              })
+              .eq('id', existingPurchase.id);
+            
+            if (isRefunded) {
+              logStep("Purchase has been refunded in Stripe");
+              return new Response(JSON.stringify({ 
+                hasPurchased: false, 
+                refunded: true 
+              }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 200,
+              });
+            }
+            
+            logStep("Refund check complete - no refund found");
+          }
+        } catch (stripeError) {
+          // Log but don't fail - allow access if we can't check refund status
+          logStep("Warning: Could not check refund status", { 
+            error: stripeError instanceof Error ? stripeError.message : String(stripeError) 
+          });
+        }
+      }
+      
       return new Response(JSON.stringify({ 
         hasPurchased: true, 
         purchaseDate: existingPurchase.purchased_at 

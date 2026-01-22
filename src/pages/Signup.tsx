@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -20,12 +19,12 @@ const signupSchema = z.object({
 const Signup = () => {
   const navigate = useNavigate();
   const { signUp, signInWithGoogle, user } = useAuth();
-  const { formattedPrice, loading: priceLoading } = useCoursePrice();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasPaymentToken, setHasPaymentToken] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,12 +32,39 @@ const Signup = () => {
     password: '',
   });
 
+  // Check for payment token on mount
+  useEffect(() => {
+    const token = localStorage.getItem('purchase_claim_token');
+    if (token) {
+      setHasPaymentToken(true);
+      // Pre-fill email from Stripe if available
+      const storedEmail = localStorage.getItem('purchase_stripe_email');
+      if (storedEmail) {
+        setFormData(prev => ({ ...prev, email: storedEmail }));
+      }
+    } else {
+      setHasPaymentToken(false);
+    }
+  }, []);
+
   // Redirect if already logged in - to dashboard (where paywall shows if not paid)
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Redirect to home if no payment token (must pay first)
+  useEffect(() => {
+    if (hasPaymentToken === false) {
+      // Small delay to prevent flash
+      const timeout = setTimeout(() => {
+        navigate('/');
+        toast.info('Please complete payment first to create an account.');
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [hasPaymentToken, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +106,8 @@ const Signup = () => {
         }
       } else {
         toast.success('Account created successfully!');
-        navigate('/dashboard');
+        // PaymentSuccess page handles claiming the purchase
+        navigate('/payment-success');
       }
     } catch (err) {
       toast.error('An unexpected error occurred');
@@ -101,6 +128,35 @@ const Signup = () => {
     }
     setIsGoogleLoading(false);
   };
+
+  // Show loading while checking for token
+  if (hasPaymentToken === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Will redirect if no token, but show message briefly
+  if (!hasPaymentToken) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Payment Required</h1>
+          <p className="text-muted-foreground">
+            Please complete your purchase first to create an account.
+          </p>
+          <Link to="/#pricing">
+            <Button size="lg">View Pricing</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -129,7 +185,7 @@ const Signup = () => {
           {/* Heading */}
           <div className="mb-8">
             <h1 className="mb-2 font-heading text-3xl font-bold text-foreground">Create your account</h1>
-            <p className="text-muted-foreground">Start your A.I - Ready Family journey today</p>
+            <p className="text-muted-foreground">Complete your registration to access the course</p>
           </div>
 
           {/* Form */}
@@ -177,6 +233,9 @@ const Signup = () => {
                   required
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                This can be different from the email you used for payment
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -222,8 +281,8 @@ const Signup = () => {
               </Label>
             </div>
 
-            <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading || priceLoading}>
-              {isLoading ? 'Creating account...' : `Get Instant Access for ${priceLoading ? '...' : formattedPrice}`}
+            <Button type="submit" variant="cta" size="lg" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Create Account'}
             </Button>
 
             <div className="relative">
@@ -278,9 +337,9 @@ const Signup = () => {
       {/* Right side - Decorative */}
       <div className="hidden bg-gradient-hero lg:flex lg:w-1/2 lg:items-center lg:justify-center lg:p-12">
         <div className="max-w-md text-center text-primary-foreground">
-          <h2 className="mb-4 font-heading text-3xl font-bold">Join 200+ Parents</h2>
+          <h2 className="mb-4 font-heading text-3xl font-bold">Almost There!</h2>
           <p className="mb-6 text-lg text-primary-foreground/80">
-            Who are already preparing their children for the AI age with our proven framework.
+            Complete your registration to join 200+ parents preparing their children for the AI age.
           </p>
           <div className="rounded-xl bg-primary-foreground/10 p-6 backdrop-blur-sm">
             <p className="italic text-primary-foreground/90">
