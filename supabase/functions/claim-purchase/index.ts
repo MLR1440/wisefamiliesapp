@@ -98,7 +98,8 @@ serve(async (req) => {
 
     logStep("Valid pending purchase found", { 
       sessionId: pending.stripe_session_id, 
-      productId: pending.product_id 
+      productId: pending.product_id,
+      priceId: pending.price_id
     });
 
     // Create user_purchases record
@@ -138,15 +139,59 @@ serve(async (req) => {
       logStep("Pending purchase marked as claimed");
     }
 
-    // Add subscriber to Kit.com for welcome email
+    // ========================================
+    // Kit.com Integration - Two-Step Process
+    // ========================================
     const kitApiKey = Deno.env.get("KIT_API_KEY");
-    const kitFormId = Deno.env.get("KIT_FORM_ID");
+    const defaultKitFormId = Deno.env.get("KIT_FORM_ID");
 
-    if (kitApiKey && kitFormId) {
+    if (kitApiKey) {
       try {
-        const kitResponse = await fetch(
-          `https://api.kit.com/v4/forms/${kitFormId}/subscribers`,
-          {
+        // Fetch email marketing settings from course_settings
+        const { data: emailSettings } = await supabaseClient
+          .from('course_settings')
+          .select('key, value')
+          .in('key', [
+            'stripe_price_id_core',
+            'stripe_price_id_core_installments',
+            'stripe_price_id_premium',
+            'kit_form_id_core',
+            'kit_form_id_core_installments',
+            'kit_form_id_premium'
+          ]);
+
+        const settingsMap: Record<string, string> = {};
+        emailSettings?.forEach(s => { settingsMap[s.key] = s.value; });
+
+        logStep("Email marketing settings loaded", { 
+          hasSettings: !!emailSettings?.length,
+          priceId: pending.price_id 
+        });
+
+        // Determine which Kit.com form to use based on price_id
+        let kitFormId: string | undefined;
+        const priceId = pending.price_id;
+
+        if (priceId === settingsMap['stripe_price_id_premium']) {
+          kitFormId = settingsMap['kit_form_id_premium'];
+          logStep("Routing to Premium form", { kitFormId });
+        } else if (priceId === settingsMap['stripe_price_id_core_installments']) {
+          kitFormId = settingsMap['kit_form_id_core_installments'];
+          logStep("Routing to Core Installments form", { kitFormId });
+        } else if (priceId === settingsMap['stripe_price_id_core']) {
+          kitFormId = settingsMap['kit_form_id_core'];
+          logStep("Routing to Core Pay-in-Full form", { kitFormId });
+        }
+
+        // Fall back to default KIT_FORM_ID if no mapping configured
+        if (!kitFormId) {
+          kitFormId = defaultKitFormId;
+          logStep("Using default KIT_FORM_ID", { kitFormId });
+        }
+
+        if (kitFormId) {
+          // Step 1: Create or update subscriber to get subscriber_id
+          const createResponse = await fetch('https://api.kit.com/v4/subscribers', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -155,22 +200,59 @@ serve(async (req) => {
             body: JSON.stringify({
               email_address: user.email,
               first_name: user.user_metadata?.first_name || '',
+              state: 'active',
             }),
-          }
-        );
+          });
 
-        if (kitResponse.ok) {
-          logStep("Subscriber added to Kit.com", { email: user.email });
+          if (!createResponse.ok) {
+            const createError = await createResponse.text();
+            logStep("Kit.com create subscriber warning", { 
+              status: createResponse.status, 
+              error: createError 
+            });
+          } else {
+            const subscriberData = await createResponse.json();
+            const subscriberId = subscriberData.subscriber?.id;
+            
+            logStep("Subscriber created/updated", { subscriberId, email: user.email });
+
+            // Step 2: Add subscriber to the specific form
+            if (subscriberId) {
+              const addToFormResponse = await fetch(
+                `https://api.kit.com/v4/forms/${kitFormId}/subscribers/${subscriberId}`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Kit-Api-Key': kitApiKey,
+                  },
+                }
+              );
+
+              if (addToFormResponse.ok) {
+                logStep("Subscriber added to Kit.com form", { 
+                  email: user.email, 
+                  formId: kitFormId 
+                });
+              } else {
+                const formError = await addToFormResponse.text();
+                logStep("Kit.com add to form warning", { 
+                  status: addToFormResponse.status, 
+                  formId: kitFormId,
+                  error: formError 
+                });
+              }
+            }
+          }
         } else {
-          const kitError = await kitResponse.text();
-          logStep("Kit.com warning", { status: kitResponse.status, error: kitError });
+          logStep("Kit.com integration skipped - no form ID configured");
         }
       } catch (kitError) {
         // Log but don't fail the purchase claim
         logStep("Kit.com integration error (non-blocking)", { error: String(kitError) });
       }
     } else {
-      logStep("Kit.com integration skipped - missing credentials");
+      logStep("Kit.com integration skipped - missing API key");
     }
 
     return new Response(JSON.stringify({ success: true }), {

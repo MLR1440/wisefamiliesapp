@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -48,6 +48,15 @@ const AdminSettings = () => {
   const [paymentLinkCoreInstallments, setPaymentLinkCoreInstallments] = useState('');
   const [paymentLinkPremium, setPaymentLinkPremium] = useState('');
   const [isSavingPaymentLinks, setIsSavingPaymentLinks] = useState(false);
+
+  // Email Marketing settings (Kit.com)
+  const [stripePriceIdCore, setStripePriceIdCore] = useState('');
+  const [stripePriceIdCoreInstallments, setStripePriceIdCoreInstallments] = useState('');
+  const [stripePriceIdPremium, setStripePriceIdPremium] = useState('');
+  const [kitFormIdCore, setKitFormIdCore] = useState('');
+  const [kitFormIdCoreInstallments, setKitFormIdCoreInstallments] = useState('');
+  const [kitFormIdPremium, setKitFormIdPremium] = useState('');
+  const [isSavingEmailMarketing, setIsSavingEmailMarketing] = useState(false);
 
   // Branding settings
   const [primaryColor, setPrimaryColor] = useState('#0d9488');
@@ -82,6 +91,14 @@ const AdminSettings = () => {
       setPaymentLinkCore(getSetting('payment_link_core') || '');
       setPaymentLinkCoreInstallments(getSetting('payment_link_core_installments') || '');
       setPaymentLinkPremium(getSetting('payment_link_premium') || '');
+      
+      // Email Marketing (Kit.com)
+      setStripePriceIdCore(getSetting('stripe_price_id_core') || '');
+      setStripePriceIdCoreInstallments(getSetting('stripe_price_id_core_installments') || '');
+      setStripePriceIdPremium(getSetting('stripe_price_id_premium') || '');
+      setKitFormIdCore(getSetting('kit_form_id_core') || '');
+      setKitFormIdCoreInstallments(getSetting('kit_form_id_core_installments') || '');
+      setKitFormIdPremium(getSetting('kit_form_id_premium') || '');
       
       // Branding
       setPrimaryColor(getSetting('branding_primary_color') || '#0d9488');
@@ -167,6 +184,26 @@ const AdminSettings = () => {
       console.error(error);
     } finally {
       setIsSavingPaymentLinks(false);
+    }
+  };
+
+  const handleSaveEmailMarketing = async () => {
+    setIsSavingEmailMarketing(true);
+    try {
+      await Promise.all([
+        updateSetting('stripe_price_id_core', stripePriceIdCore),
+        updateSetting('stripe_price_id_core_installments', stripePriceIdCoreInstallments),
+        updateSetting('stripe_price_id_premium', stripePriceIdPremium),
+        updateSetting('kit_form_id_core', kitFormIdCore),
+        updateSetting('kit_form_id_core_installments', kitFormIdCoreInstallments),
+        updateSetting('kit_form_id_premium', kitFormIdPremium),
+      ]);
+      toast.success('Email marketing settings saved!');
+    } catch (error) {
+      toast.error('Failed to save email marketing settings');
+      console.error(error);
+    } finally {
+      setIsSavingEmailMarketing(false);
     }
   };
 
@@ -409,6 +446,113 @@ const AdminSettings = () => {
                   <Save className="h-4 w-4" />
                 )}
                 Save Payment Links
+              </Button>
+            </div>
+          </div>
+
+          {/* Email Marketing (Kit.com) */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Email Marketing
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Map Stripe Price IDs to Kit.com Form IDs to send different welcome email sequences based on purchase type.
+            </p>
+            
+            <div className="space-y-6">
+              {/* Core Pay-in-Full */}
+              <div className="rounded-lg border border-border p-4 space-y-3">
+                <h4 className="font-medium text-foreground">Core Tier - Pay in Full</h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="stripePriceIdCore">Stripe Price ID</Label>
+                    <Input
+                      id="stripePriceIdCore"
+                      value={stripePriceIdCore}
+                      onChange={(e) => setStripePriceIdCore(e.target.value)}
+                      placeholder="price_..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="kitFormIdCore">Kit.com Form ID</Label>
+                    <Input
+                      id="kitFormIdCore"
+                      value={kitFormIdCore}
+                      onChange={(e) => setKitFormIdCore(e.target.value)}
+                      placeholder="e.g., 9001458"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Core Installments */}
+              <div className="rounded-lg border border-border p-4 space-y-3">
+                <h4 className="font-medium text-foreground">Core Tier - Installments</h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="stripePriceIdCoreInstallments">Stripe Price ID</Label>
+                    <Input
+                      id="stripePriceIdCoreInstallments"
+                      value={stripePriceIdCoreInstallments}
+                      onChange={(e) => setStripePriceIdCoreInstallments(e.target.value)}
+                      placeholder="price_..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="kitFormIdCoreInstallments">Kit.com Form ID</Label>
+                    <Input
+                      id="kitFormIdCoreInstallments"
+                      value={kitFormIdCoreInstallments}
+                      onChange={(e) => setKitFormIdCoreInstallments(e.target.value)}
+                      placeholder="e.g., 9001459"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Premium */}
+              <div className="rounded-lg border border-border p-4 space-y-3">
+                <h4 className="font-medium text-foreground">Premium Tier</h4>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="stripePriceIdPremium">Stripe Price ID</Label>
+                    <Input
+                      id="stripePriceIdPremium"
+                      value={stripePriceIdPremium}
+                      onChange={(e) => setStripePriceIdPremium(e.target.value)}
+                      placeholder="price_..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="kitFormIdPremium">Kit.com Form ID</Label>
+                    <Input
+                      id="kitFormIdPremium"
+                      value={kitFormIdPremium}
+                      onChange={(e) => setKitFormIdPremium(e.target.value)}
+                      placeholder="e.g., 9001460"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-muted/50 p-4">
+                <h4 className="mb-2 text-sm font-medium text-foreground">How to find these IDs:</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li><strong>Stripe Price ID:</strong> In Stripe Dashboard → Products → select a product → copy the Price ID (starts with <code className="bg-muted px-1 rounded">price_</code>)</li>
+                  <li><strong>Kit.com Form ID:</strong> In Kit.com → Forms → select a form → the ID is in the URL (e.g., <code className="bg-muted px-1 rounded">kit.com/forms/9001458</code>)</li>
+                </ul>
+              </div>
+
+              <Button onClick={handleSaveEmailMarketing} disabled={isSavingEmailMarketing} className="gap-2">
+                {isSavingEmailMarketing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Email Settings
               </Button>
             </div>
           </div>
