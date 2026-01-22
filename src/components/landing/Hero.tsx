@@ -3,16 +3,20 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users } from 'lucide-react';
 const trustSignals = [{
   icon: BookOpen,
-  text: "7-chapter video course"
+  text: "7-chapter video course",
+  href: "#course-content"
 }, {
   icon: Bot,
-  text: "AI-powered coaching tools"
+  text: "AI-powered coaching tools",
+  href: "#what-makes-this-different"
 }, {
   icon: Users,
-  text: "Private parent community"
+  text: "Private parent community",
+  href: "#who-this-is-for"
 }, {
   icon: Shield,
-  text: "90-day money-back guarantee"
+  text: "90-day money-back guarantee",
+  href: "#guarantee"
 }];
 const Hero = () => {
   return <section className="relative overflow-hidden bg-gradient-warm py-16 sm:py-20 md:py-28 lg:py-36">
@@ -60,11 +64,15 @@ const Hero = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-up w-full max-w-3xl" style={{
             animationDelay: '0.3s'
           }}>
-            {trustSignals.map((signal, index) => (
-              <div key={index} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 transition-colors">
-                <CheckCircle className="h-7 w-7 text-success" />
-                <span className="text-sm font-medium text-foreground text-center">{signal.text}</span>
-              </div>
+          {trustSignals.map((signal, index) => (
+              <a 
+                key={index} 
+                href={signal.href}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:bg-background/70 transition-all cursor-pointer group"
+              >
+                <CheckCircle className="h-7 w-7 text-success group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-foreground text-center group-hover:text-primary transition-colors">{signal.text}</span>
+              </a>
             ))}
           </div>
 
