@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
+import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 
 const coreFeatures = [
   "12-month course access",
@@ -23,6 +24,20 @@ const premiumExtras = [
 ];
 
 const Pricing = () => {
+  const { coreLink, premiumLink } = usePaymentLinks();
+
+  const handleCoreClick = () => {
+    if (coreLink) {
+      window.open(coreLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handlePremiumClick = () => {
+    if (premiumLink) {
+      window.open(premiumLink, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <section id="pricing" className="py-16 md:py-24 bg-muted/30">
       <div className="container px-4 sm:px-6">
@@ -69,11 +84,17 @@ const Pricing = () => {
               </ul>
             </div>
 
-            <Link to="/signup" className="block">
-              <Button variant="cta" size="xl" className="w-full gap-2">
+            {coreLink ? (
+              <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
                 Join as Founding Member
               </Button>
-            </Link>
+            ) : (
+              <Link to="/signup" className="block">
+                <Button variant="cta" size="xl" className="w-full gap-2">
+                  Join as Founding Member
+                </Button>
+              </Link>
+            )}
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -117,11 +138,17 @@ const Pricing = () => {
               </ul>
             </div>
 
-            <Link to="/signup" className="block">
-              <Button variant="outline" size="xl" className="w-full gap-2">
+            {premiumLink ? (
+              <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick}>
                 Get Personalised Support
               </Button>
-            </Link>
+            ) : (
+              <Link to="/signup" className="block">
+                <Button variant="outline" size="xl" className="w-full gap-2">
+                  Get Personalised Support
+                </Button>
+              </Link>
+            )}
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
