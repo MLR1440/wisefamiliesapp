@@ -17,7 +17,7 @@ import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { useCoursePrice, useInvalidateCoursePrice } from '@/hooks/useCoursePrice';
 import { useStripePrices } from '@/hooks/useStripePrices';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle2, Loader2, Upload, Shield, Trophy, CreditCard, ExternalLink, RefreshCw, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -48,6 +48,11 @@ const AdminSettings = () => {
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [isSavingPayment, setIsSavingPayment] = useState(false);
 
+  // Payment Links settings
+  const [paymentLinkCore, setPaymentLinkCore] = useState('');
+  const [paymentLinkPremium, setPaymentLinkPremium] = useState('');
+  const [isSavingPaymentLinks, setIsSavingPaymentLinks] = useState(false);
+
   // Branding settings
   const [primaryColor, setPrimaryColor] = useState('#0d9488');
   const [secondaryColor, setSecondaryColor] = useState('#f97316');
@@ -76,6 +81,10 @@ const AdminSettings = () => {
       setCourseTitle(getSetting('course_title') || 'A.I - Ready Family Framework');
       setCourseDescription(getSetting('course_description') || '');
       setStripePriceId(getSetting('stripe_price_id') || '');
+      
+      // Payment Links
+      setPaymentLinkCore(getSetting('payment_link_core') || '');
+      setPaymentLinkPremium(getSetting('payment_link_premium') || '');
       
       // Branding
       setPrimaryColor(getSetting('branding_primary_color') || '#0d9488');
@@ -142,6 +151,33 @@ const AdminSettings = () => {
       console.error(error);
     } finally {
       setIsSavingPayment(false);
+    }
+  };
+
+  const handleSavePaymentLinks = async () => {
+    // Validate URLs
+    const urlPattern = /^https:\/\//;
+    if (paymentLinkCore && !urlPattern.test(paymentLinkCore)) {
+      toast.error('Core payment link must start with https://');
+      return;
+    }
+    if (paymentLinkPremium && !urlPattern.test(paymentLinkPremium)) {
+      toast.error('Premium payment link must start with https://');
+      return;
+    }
+
+    setIsSavingPaymentLinks(true);
+    try {
+      await Promise.all([
+        updateSetting('payment_link_core', paymentLinkCore),
+        updateSetting('payment_link_premium', paymentLinkPremium),
+      ]);
+      toast.success('Payment links saved!');
+    } catch (error) {
+      toast.error('Failed to save payment links');
+      console.error(error);
+    } finally {
+      setIsSavingPaymentLinks(false);
     }
   };
 
@@ -419,6 +455,62 @@ const AdminSettings = () => {
                   <Save className="h-4 w-4" />
                 )}
                 Save Payment Settings
+              </Button>
+            </div>
+          </div>
+
+          {/* Payment Links */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <LinkIcon className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Payment Links
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Paste your Stripe Payment Link URLs for each tier. These links will be used on the landing page pricing buttons.
+            </p>
+            
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="paymentLinkCore">Core Tier (12-month access)</Label>
+                <Input
+                  id="paymentLinkCore"
+                  type="url"
+                  value={paymentLinkCore}
+                  onChange={(e) => setPaymentLinkCore(e.target.value)}
+                  placeholder="https://buy.stripe.com/..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="paymentLinkPremium">Premium Tier (36-month access)</Label>
+                <Input
+                  id="paymentLinkPremium"
+                  type="url"
+                  value={paymentLinkPremium}
+                  onChange={(e) => setPaymentLinkPremium(e.target.value)}
+                  placeholder="https://buy.stripe.com/..."
+                />
+              </div>
+
+              <div className="rounded-lg bg-muted/50 p-4">
+                <h4 className="mb-2 text-sm font-medium text-foreground">How to create Payment Links:</h4>
+                <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+                  <li>Go to your <a href="https://dashboard.stripe.com/payment-links" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Stripe Dashboard → Payment Links</a></li>
+                  <li>Click "New" to create a payment link</li>
+                  <li>Configure products, payment plans, and options</li>
+                  <li>Copy the generated link and paste it here</li>
+                </ol>
+              </div>
+
+              <Button onClick={handleSavePaymentLinks} disabled={isSavingPaymentLinks} className="gap-2">
+                {isSavingPaymentLinks ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Payment Links
               </Button>
             </div>
           </div>
