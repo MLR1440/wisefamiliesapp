@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 const CTA = () => {
   return <section className="relative overflow-hidden bg-gradient-hero py-16 md:py-24">
@@ -25,12 +24,12 @@ const CTA = () => {
             That's what the AI-Ready Families System gives you.
           </p>
           
-          <Link to="/signup" className="inline-block">
+          <a href="#pricing" className="inline-block">
             <Button variant="cta" size="xl" className="gap-2 shadow-lg">
               Join the Founding 100
               <ArrowRight className="h-5 w-5" />
             </Button>
-          </Link>
+          </a>
           
           <p className="mt-8 text-sm text-primary-foreground/70">
             Questions? Email{' '}
