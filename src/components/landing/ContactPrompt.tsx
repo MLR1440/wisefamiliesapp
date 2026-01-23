@@ -19,11 +19,7 @@ const ContactPrompt = () => {
             <span className="italic">(or as soon as the kids are asleep)</span>.
           </p>
           
-          <a 
-            href="https://wisefamilies.co/contact/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
+          <a href="mailto:hello@wisefamilies.co">
             <Button variant="outline-primary" size="lg" className="gap-2">
               <MessageCircle className="h-5 w-5" />
               Chat with Us
