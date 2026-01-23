@@ -10,6 +10,7 @@ import Pricing from '@/components/landing/Pricing';
 import Guarantee from '@/components/landing/Guarantee';
 import FAQ from '@/components/landing/FAQ';
 import CTA from '@/components/landing/CTA';
+import ContactPrompt from '@/components/landing/ContactPrompt';
 
 const Index = () => {
   return (
@@ -26,6 +27,7 @@ const Index = () => {
         <Guarantee />
         <FAQ />
         <CTA />
+        <ContactPrompt />
       </main>
       <Footer />
     </div>
