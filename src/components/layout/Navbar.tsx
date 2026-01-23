@@ -96,11 +96,11 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                   Login
                 </Button>
               </Link>
-              <Link to="/signup">
+              <a href="https://wisefamilies.co" target="_blank" rel="noopener noreferrer">
                 <Button size="sm">
-                  Get Started
+                  Back to WiseFamilies
                 </Button>
-              </Link>
+              </a>
             </>
           )}
         </div>
@@ -168,11 +168,16 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
                     Login
                   </Button>
                 </Link>
-                <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                <a 
+                  href="https://wisefamilies.co" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
                   <Button className="w-full">
-                    Get Started
+                    Back to WiseFamilies
                   </Button>
-                </Link>
+                </a>
               </>
             )}
           </div>
