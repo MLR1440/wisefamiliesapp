@@ -75,17 +75,32 @@ const Footer = () => {
             <h4 className="font-heading font-semibold text-foreground">Legal</h4>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link to="/privacy" className="transition-colors hover:text-primary">
+                <a 
+                  href="https://wisefamilies.co/privacy-policy/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-primary"
+                >
                   Privacy Policy
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/terms" className="transition-colors hover:text-primary">
+                <a 
+                  href="https://wisefamilies.co/terms-of-use/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-primary"
+                >
                   Terms of Service
-                </Link>
+                </a>
               </li>
               <li>
-                <a href="mailto:hello@wisefamilies.co" className="transition-colors hover:text-primary">
+                <a 
+                  href="https://wisefamilies.co/contact/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-primary"
+                >
                   Contact Us
                 </a>
               </li>
