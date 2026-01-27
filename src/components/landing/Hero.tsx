@@ -42,9 +42,7 @@ const Hero = () => {
           {/* Subheadline */}
           <p className="mb-8 sm:mb-10 text-lg sm:text-xl md:text-2xl text-muted-foreground animate-fade-up max-w-3xl leading-relaxed" style={{
           animationDelay: '0.1s'
-        }}>
-            The complete system for parents who want to prepare their children for an AI-powered future—without the fear, without the fights, without feeling like you're always one step behind.
-          </p>
+        }}>The complete system for parents who want to prepare their children for an AI-powered future, without the fear, without the fights, without feeling like you're always one step behind.</p>
 
           {/* CTA Button */}
           <div className="flex flex-col items-center gap-4 animate-fade-up mb-10" style={{
