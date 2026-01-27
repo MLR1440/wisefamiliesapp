@@ -34,24 +34,22 @@ const Hero = () => {
             Raise Kids Who Are{' '}
             <span className="text-primary relative">
               Wiser Than the AI
-              <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30" viewBox="0 0 200 12" preserveAspectRatio="none">
-                <path d="M0,8 Q50,0 100,8 T200,8" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
-              </svg>
+              
             </span>{' '}
             They Use
           </h1>
 
           {/* Subheadline */}
           <p className="mb-8 sm:mb-10 text-lg sm:text-xl md:text-2xl text-muted-foreground animate-fade-up max-w-3xl leading-relaxed" style={{
-            animationDelay: '0.1s'
-          }}>
+          animationDelay: '0.1s'
+        }}>
             The complete system for parents who want to prepare their children for an AI-powered future—without the fear, without the fights, without feeling like you're always one step behind.
           </p>
 
           {/* CTA Button */}
           <div className="flex flex-col items-center gap-4 animate-fade-up mb-10" style={{
-            animationDelay: '0.2s'
-          }}>
+          animationDelay: '0.2s'
+        }}>
             <a href="#course-content">
               <Button variant="cta" size="xl" className="gap-3 text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                 See What's Inside
@@ -62,24 +60,18 @@ const Hero = () => {
 
           {/* Trust signals */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-up w-full max-w-3xl" style={{
-            animationDelay: '0.3s'
-          }}>
-          {trustSignals.map((signal, index) => (
-              <a 
-                key={index} 
-                href={signal.href}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:bg-background/70 transition-all cursor-pointer group"
-              >
+          animationDelay: '0.3s'
+        }}>
+          {trustSignals.map((signal, index) => <a key={index} href={signal.href} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:bg-background/70 transition-all cursor-pointer group">
                 <CheckCircle className="h-7 w-7 text-success group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-medium text-foreground text-center group-hover:text-primary transition-colors">{signal.text}</span>
-              </a>
-            ))}
+              </a>)}
           </div>
 
           {/* Founding member text */}
           <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
-            animationDelay: '0.4s'
-          }}>
+          animationDelay: '0.4s'
+        }}>
             🎉 Join the first 100 founding families and lock in 60% off before the price increases.
           </p>
         </div>
