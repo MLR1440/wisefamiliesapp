@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Users, Shield, Loader2, Mail, Calendar, Clock, Search, MessageSquare, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Loader2, Mail, Calendar, Clock, Search, MessageSquare, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Table,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import CreateUserDialog from '@/components/admin/CreateUserDialog';
+import DeleteUserDialog from '@/components/admin/DeleteUserDialog';
 
 interface User {
   id: string;
@@ -282,6 +283,9 @@ const AdminUsers = () => {
                         {getSortIcon('lastSignIn')}
                       </Button>
                     </TableHead>
+                    <TableHead>
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -348,6 +352,15 @@ const AdminUsers = () => {
                             <span className="text-muted-foreground/60">Never</span>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <DeleteUserDialog
+                          userId={u.id}
+                          userName={u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
+                          userEmail={u.email}
+                          currentUserId={user?.id || ''}
+                          onUserDeleted={fetchUsers}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
