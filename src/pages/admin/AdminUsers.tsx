@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import CreateUserDialog from '@/components/admin/CreateUserDialog';
 
 interface User {
   id: string;
@@ -186,6 +187,7 @@ const AdminUsers = () => {
               </p>
             </div>
           </div>
+          <CreateUserDialog onUserCreated={fetchUsers} />
         </div>
 
         {/* Search and Filters */}
