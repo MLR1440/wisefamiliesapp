@@ -1,88 +1,99 @@
 
 
-## Admin Manual User Creation Feature
+## Admin User Deletion Feature
 
 ### Overview
-Add the ability for admins to manually create user accounts directly from the User Management page. This bypasses the normal payment-first signup flow and allows admins to grant access to users (e.g., for comps, partners, or special cases).
+Add the ability for admins to delete any user account directly from the User Management page. This will include a confirmation dialog with appropriate warnings about the irreversible nature of the action.
 
 ### User Flow
-1. Admin clicks "Add User" button in the User Management header
-2. A dialog opens with a form to enter user details
-3. Admin fills in: email, first name, last name, and optionally assigns admin role
-4. On submit, a new edge function creates the user account and grants course access
-5. The new user receives a password reset email to set their password
-6. User list refreshes to show the new user
+1. Admin sees a "Delete" button (trash icon) in the Actions column for each user row
+2. Clicking the button opens a confirmation dialog
+3. Dialog shows the user's name/email and warns that this action is permanent
+4. Admin confirms by clicking "Delete User"
+5. Edge function deletes all user data and the auth account
+6. User list refreshes to reflect the change
+7. Success toast confirms deletion
 
 ### Components to Create/Modify
 
-#### 1. New Edge Function: `create-user`
-**Location:** `supabase/functions/create-user/index.ts`
+#### 1. New Edge Function: `delete-user`
+**Location:** `supabase/functions/delete-user/index.ts`
 
 **Responsibilities:**
-- Verify the requesting user is an admin (using existing pattern from `list-users`)
-- Use Supabase Admin API to create the user account with email/password
-- Generate a temporary random password (user will reset via email)
-- Create a `user_purchases` record to grant course access (with a special `product_id` like "admin_granted")
-- Optionally create a `user_roles` record if admin role is requested
-- Trigger a password reset email so the user can set their own password
+- Verify the requesting user is an admin (same pattern as `create-user`)
+- Accept `userId` in the request body
+- Prevent admin from deleting themselves
+- Delete all user data in the correct order (respecting foreign keys):
+  1. Messages (via conversation IDs)
+  2. Conversations
+  3. Events
+  4. User progress
+  5. User purchases
+  6. User memories
+  7. User documents
+  8. User roles
+  9. Community replies
+  10. Community topics
+  11. User profiles
+  12. Auth user record
 - Return success/failure status
 
 **Security:**
 - Only accessible to admins (JWT validation + role check)
-- Uses service role key for admin operations
-- Validates email format and required fields
+- Uses service role key for deletion operations
+- Cannot delete your own account through this endpoint (prevents lockout)
 
-#### 2. New Component: `CreateUserDialog`
-**Location:** `src/components/admin/CreateUserDialog.tsx`
+#### 2. New Component: `DeleteUserDialog`
+**Location:** `src/components/admin/DeleteUserDialog.tsx`
 
 **Features:**
-- Modal dialog triggered by "Add User" button
-- Form fields:
-  - Email (required)
-  - First Name (required)
-  - Last Name (required)
-  - Grant Admin Role (checkbox, optional)
-- Form validation using zod
-- Loading state during submission
+- Uses AlertDialog component for destructive action confirmation
+- Shows user name and email being deleted
+- Red "Delete User" button to indicate danger
+- Loading state during deletion
 - Success/error toast notifications
-- Auto-closes and refreshes user list on success
+- Triggers user list refresh on success
 
 #### 3. Update: `AdminUsers.tsx`
 **Location:** `src/pages/admin/AdminUsers.tsx`
 
 **Changes:**
-- Add "Add User" button in the header section
-- Import and render `CreateUserDialog`
-- Pass `fetchUsers` as a callback to refresh after creation
+- Add new "Actions" column to the table
+- Import and render `DeleteUserDialog` for each user row
+- Pass user data and `fetchUsers` callback to the dialog
+- Hide delete button for the currently logged-in admin (can't delete yourself)
 
 ### Technical Details
 
-#### Edge Function Implementation
+#### Edge Function Flow
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                    create-user Flow                         │
+│                    delete-user Flow                         │
 ├─────────────────────────────────────────────────────────────┤
 │  1. Validate admin JWT                                      │
-│  2. Parse request body (email, firstName, lastName, isAdmin)│
-│  3. Create auth user with temporary password                │
-│  4. Set user metadata (first_name, last_name)               │
-│  5. Insert user_purchases record (grants course access)     │
-│  6. If isAdmin, insert user_roles record                    │
-│  7. Send password recovery email                            │
-│  8. Return success response                                 │
+│  2. Parse request body (userId)                             │
+│  3. Check userId is not the requesting admin's ID           │
+│  4. Delete messages via conversation IDs                    │
+│  5. Delete conversations                                    │
+│  6. Delete events                                           │
+│  7. Delete user_progress                                    │
+│  8. Delete user_purchases                                   │
+│  9. Delete user_memories                                    │
+│  10. Delete user_documents                                  │
+│  11. Delete user_roles                                      │
+│  12. Delete community_replies                               │
+│  13. Delete community_topics                                │
+│  14. Delete user_profiles                                   │
+│  15. Delete auth user via admin API                         │
+│  16. Return success response                                │
 └─────────────────────────────────────────────────────────────┘
 ```
-
-#### Database Operations
-- **user_purchases**: Insert with `product_id: "admin_granted"` and `stripe_session_id: "manual_{timestamp}"` to distinguish from paid users
-- **user_roles**: Optionally insert with `role: "admin"` if checkbox selected
-- **user_profiles**: Created automatically by existing trigger or needs manual insert
 
 #### Config Update
 Update `supabase/config.toml` to register the new edge function:
 ```toml
-[functions.create-user]
+[functions.delete-user]
 verify_jwt = false
 ```
 
@@ -90,22 +101,20 @@ verify_jwt = false
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/create-user/index.ts` | Create | New edge function for admin user creation |
+| `supabase/functions/delete-user/index.ts` | Create | New edge function for admin user deletion |
 | `supabase/config.toml` | Update | Add function config entry |
-| `src/components/admin/CreateUserDialog.tsx` | Create | Dialog component with user creation form |
-| `src/pages/admin/AdminUsers.tsx` | Update | Add "Add User" button and dialog integration |
+| `src/components/admin/DeleteUserDialog.tsx` | Create | Alert dialog component with delete confirmation |
+| `src/pages/admin/AdminUsers.tsx` | Update | Add Actions column with delete button |
 
 ### Edge Cases Handled
-- Email already exists: Return friendly error message
-- Invalid email format: Client-side and server-side validation
-- Missing required fields: Form validation prevents submission
-- Network errors: Toast notification with retry option
-- Admin creating another admin: Requires explicit checkbox confirmation
+- Admin trying to delete themselves: Prevented with clear error message
+- User has no data in some tables: Deletions continue without error
+- Network errors: Toast notification with error details
+- User already deleted: Graceful handling
 
 ### Security Considerations
-- Admin role verified server-side before any user creation
-- Temporary password is randomly generated (never exposed)
-- User must go through password reset to gain access
-- All operations logged for audit trail
-- Service role key only used in edge function (not exposed to client)
+- Admin role verified server-side before any deletion
+- Self-deletion prevented to avoid admin lockout
+- All operations use service role key (not exposed to client)
+- Cascade deletion ensures no orphaned records
 
