@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.claim-purchase]
 verify_jwt = true
+
+[functions.create-user]
+verify_jwt = false
+
+[functions.list-users]
+verify_jwt = false
