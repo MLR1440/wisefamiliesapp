@@ -56,6 +56,21 @@ const Hero = () => {
             </a>
           </div>
 
+          {/* Hero Video */}
+          <div className="w-full max-w-4xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.25s' }}>
+            <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-card shadow-xl">
+              <video 
+                controls 
+                className="w-full h-full object-cover"
+                poster=""
+              >
+                {/* Replace this URL with your actual video file URL */}
+                <source src="YOUR_VIDEO_URL_HERE" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+
           {/* Trust signals */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-up w-full max-w-3xl" style={{
           animationDelay: '0.3s'
