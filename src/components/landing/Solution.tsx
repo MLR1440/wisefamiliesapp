@@ -19,7 +19,7 @@ const Solution = () => {
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
             Introducing the{' '}
-            <span className="text-primary">AI-Ready Families System</span>
+            <span className="text-primary">AI-Ready Families Framework</span>
           </h2>
           <p className="text-lg text-muted-foreground">
             Everything you need to raise confident, capable kids who can think for themselves in a world full of AI.
