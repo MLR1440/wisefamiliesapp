@@ -1,87 +1,84 @@
 
 
-## Add Hero Video Above the Fold
+## Add Hero Video URL to Admin Settings
 
 ### Overview
-Add a direct video file player to the Hero section, positioned below the headline and CTA button but above the trust signals. This creates an engaging "above the fold" experience that immediately shows visitors what the course offers.
+Add a new "Landing Page" settings section in Admin Settings where you can paste your Vimeo URL. The Hero component on the landing page will automatically fetch this URL and display the video using an embedded Vimeo player.
 
-### Visual Layout
+### Visual Layout - Admin Settings
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                        Navbar                               │
+│                     Admin Settings                          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│         "Raise Kids Who Are Wiser Than the AI..."           │
-│                      (Headline)                             │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  🎬 Landing Page                                        ││
+│  │  ─────────────────────────────────────────────────────  ││
+│  │                                                         ││
+│  │  Hero Video Type                                        ││
+│  │  ┌──────────────────────────────────────┐              ││
+│  │  │ Vimeo                            ▼  │              ││
+│  │  └──────────────────────────────────────┘              ││
+│  │                                                         ││
+│  │  Hero Video URL                                         ││
+│  │  ┌──────────────────────────────────────────────────┐  ││
+│  │  │ https://vimeo.com/123456789                      │  ││
+│  │  └──────────────────────────────────────────────────┘  ││
+│  │  Paste your Vimeo video URL                            ││
+│  │                                                         ││
+│  │  [ Save Landing Page Settings ]                         ││
+│  └─────────────────────────────────────────────────────────┘│
 │                                                             │
-│              The complete system for parents...             │
-│                     (Subheadline)                           │
-│                                                             │
-│                  [ See What's Inside ]                      │
-│                       (CTA Button)                          │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                                                       │  │
-│  │                    VIDEO PLAYER                       │  │  ← NEW
-│  │                   (16:9 aspect)                       │  │
-│  │                                                       │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                             │
-│   ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐          │
-│   │ 7-chap  │ │ AI tool │ │Community│ │Guarantee│          │
-│   └─────────┘ └─────────┘ └─────────┘ └─────────┘          │
-│                   (Trust Signals)                           │
-│                                                             │
-│         🎉 Join the first 100 founding families...          │
-│                                                             │
+│  ┌─ AI Guardrails ─────────────────────────────────────────┐│
+│  │  ...existing content...                                 ││
+│  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Implementation Approach
+### How It Will Work
 
-Since you want to use a direct video file, you'll need to provide the video URL. The implementation will:
-
-1. Add a video player component to the Hero section
-2. Use a simple HTML5 video element with controls
-3. Style it to match the existing design (rounded corners, border, shadow)
-4. Keep it responsive for all screen sizes
+1. **Admin enters Vimeo URL** in the new "Landing Page" settings section
+2. **URL is saved** to the `course_settings` table with keys:
+   - `hero_video_url` - The Vimeo URL (e.g., `https://vimeo.com/123456789`)
+   - `hero_video_type` - Set to "vimeo" (supports YouTube too if needed later)
+3. **Hero component fetches** the setting on page load
+4. **Vimeo embed** displays automatically using the existing video player pattern
 
 ### File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/landing/Hero.tsx` | Update | Add video player below CTA, above trust signals |
+| `src/pages/admin/AdminSettings.tsx` | Update | Add "Landing Page" section with hero video URL and type fields |
+| `src/components/landing/Hero.tsx` | Update | Fetch video URL from settings and render Vimeo embed |
 
 ### Technical Details
 
-#### Hero Component Update
+#### Admin Settings Changes
+- Add new state variables: `heroVideoUrl`, `heroVideoType`
+- Load settings on mount: `getSetting('hero_video_url')`, `getSetting('hero_video_type')`
+- Save function: `updateSetting('hero_video_url', heroVideoUrl)`
+- UI: Input field for URL, dropdown for video type (Vimeo/YouTube/Direct)
+- Position: New section at the top, before AI Guardrails
 
-The video will be added as a new section between the CTA button and the trust signals grid:
+#### Hero Component Changes
+- Import and use `useCourseSettings` hook
+- Fetch `hero_video_url` and `hero_video_type` settings
+- Replace hardcoded video with dynamic Vimeo embed
+- Show placeholder/skeleton while loading
+- Hide video section entirely if no URL is configured
 
-- **Container**: `max-w-4xl` to match the content width
-- **Styling**: Rounded corners, border, and soft shadow (matching existing card styles)
-- **Aspect ratio**: 16:9 using `aspect-video` class
-- **Controls**: Native browser video controls for play/pause/volume
-- **Animation**: Fade-up entrance animation to match other elements
+#### Vimeo Embed Format
+The component will convert a Vimeo URL like:
+- `https://vimeo.com/123456789`
 
-#### Video Configuration
+Into an embed iframe:
+- `https://player.vimeo.com/video/123456789`
 
-The video URL will be stored as a constant that you can easily update:
-- Placeholder URL initially (you'll replace with your actual video URL)
-- Supports MP4, WebM, and other standard formats
-- Falls back gracefully if video fails to load
-
-### What You'll Need to Provide
-
-After implementation, you'll need to provide the actual video file URL. Options:
-1. **External hosting**: A URL from Vimeo, Wistia, or your own CDN
-2. **Storage bucket**: Upload to the project's storage and use that URL
-
-### Mobile Optimization
-
-- Video scales to full width on mobile
-- Touch-friendly native controls
-- Reduced padding on smaller screens
-- Maintains aspect ratio across all breakpoints
+### What You'll Need To Do
+1. Approve this plan
+2. After implementation, go to Admin → Settings
+3. Paste your Vimeo video URL (e.g., `https://vimeo.com/123456789`)
+4. Click "Save Landing Page Settings"
+5. Your video will immediately appear on the landing page
 
