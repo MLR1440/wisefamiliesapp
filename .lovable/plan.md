@@ -1,82 +1,75 @@
 
-# Fix: Hero Video Disappearing on Page Load
+Goal
+- Fix the landing-page hero video that flashes briefly then disappears on initial load in Brave/Safari/Chrome.
 
-## Problem Summary
-The main video briefly appears (as a loading skeleton), then disappears because of a timing issue in how settings are loaded and checked.
+What I found (why the previous fix didn’t stick)
+- The hero video URL is definitely present in the backend settings (network request shows `hero_video_url = https://vimeo.com/1160948188` and `hero_video_type = vimeo`).
+- The hero video section is disappearing because the Hero component is deciding `showVideoSection` is false at some point.
+- The root cause is still a race, but it’s happening in the settings hook:
+  - `useCourseSettings` maintains `settings` and `loading` as separate pieces of state.
+  - It sets `setSettings(data)` and then `setLoading(false)` in the same async callback.
+  - React state updates are batched and not guaranteed to be reflected in the same render the way we intuitively expect; this can produce a render where `loading === false` but `settings` is still the previous value (initial `[]`), meaning `getSetting('hero_video_url')` returns `''`.
+  - In that render, Hero computes `heroVideoUrl === ''` and unmounts the entire video section, which matches the “appears for a millisecond then disappears” symptom.
 
-## What's Happening
-1. Page loads → shows a loading placeholder for the video
-2. Settings finish loading from the database
-3. **Bug**: For a split second, the video URL appears "empty" even though it exists in the database
-4. Video section hides because it thinks there's no video configured
-5. This happens too fast to recover, so the video stays hidden
+Solution approach (robust and simple)
+- Make “loading vs loaded” impossible to desync from the data by deriving loading from the presence of settings data, instead of tracking it separately.
+- Concretely:
+  - Store `settings` as `CourseSetting[] | null`.
+  - `null` means “not loaded yet”.
+  - Once fetch finishes (success or error), set `settings` to an array (possibly empty).
+  - Derive `loading` as `settings === null`.
+- This guarantees there is never a render where “loading is false but settings are still the old value”.
 
-## Solution
-Make the video section wait for settings to fully load before deciding whether to show or hide. The fix ensures:
-- Show skeleton while loading
-- Only hide if settings are loaded AND no video URL exists
+Implementation steps (code changes)
+1) Update `src/hooks/useCourseSettings.ts`
+   - Replace:
+     - `const [settings, setSettings] = useState<CourseSetting[]>([]);`
+     - `const [loading, setLoading] = useState(true);`
+   - With:
+     - `const [settings, setSettings] = useState<CourseSetting[] | null>(null);`
+     - `const loading = settings === null;` (derived)
+   - Update `fetchSettings`:
+     - Remove `setLoading(true/false)`
+     - On success: `setSettings(data ?? [])`
+     - On error: set error message and set `setSettings([])` (so the UI leaves “loading” state and can react accordingly)
+   - Keep the public API stable:
+     - Return `settings: settings ?? []` so existing screens (like Admin Settings) don’t break.
+     - Keep returning `loading` (now derived) so existing callers still work.
 
-## Technical Changes
+2) Keep `src/components/landing/Hero.tsx` logic as-is (or minimal touch)
+   - With the hook fix, Hero’s current pattern:
+     - `heroVideoUrl = !loading ? getSetting(...) : ''`
+     - `showVideoSection = loading || heroVideoUrl.length > 0`
+     becomes stable, because when `loading` flips to false, the settings array is already present.
+   - Optional hardening (if we want belt-and-suspenders):
+     - In Hero, also request `settings` from the hook and compute `const ready = !loading && settings.length > 0` to avoid any edge-case empty-state flicker. This should not be necessary after step 1, but it’s available if you want extra resilience.
 
-### File: `src/components/landing/Hero.tsx`
+3) Verify across browsers
+   - Hard refresh (Cmd+Shift+R / Ctrl+Shift+R) to avoid cached JS.
+   - Confirm on:
+     - Chrome
+     - Safari
+     - Brave
+   - Expected:
+     - On load: skeleton shows.
+     - After settings load: video container remains mounted and iframe appears.
+     - No brief flash then disappearance.
 
-**Change 1**: Update the visibility condition (line 96)
+Edge cases to handle explicitly
+- If the backend request fails:
+  - The hero video area should not flicker; it should either remain as a skeleton briefly then disappear (because we can’t confirm a URL) or optionally show a small “video unavailable” message. (We can decide this later; the key is fixing the flicker/disappear bug.)
 
-```text
-// Before (buggy)
-const showVideoSection = loading || heroVideoUrl;
+Notes (non-blocking, but important)
+- The security scan flagged that some backend tables could expose sensitive data if policies aren’t tightened (pending purchases, user profiles child fields, etc.). This is separate from the hero video issue, but I can address it after the hero video is stable.
 
-// After (fixed)
-const showVideoSection = loading || Boolean(heroVideoUrl);
-```
+Acceptance criteria
+- The hero video does not disappear after page load.
+- It behaves consistently across Brave/Safari/Chrome.
+- If `hero_video_url` is empty in Admin Settings, the hero video section remains hidden as intended (no blank container after loading).
 
-Actually, the real issue is more subtle - we need to ensure we don't hide prematurely. A better fix:
-
-```typescript
-// Keep showing video section while loading, 
-// and only hide if we've finished loading AND there's no URL
-const showVideoSection = loading ? true : Boolean(heroVideoUrl);
-```
-
-**Change 2**: Add a safeguard in `renderVideo()` (around line 42-49)
-
-```typescript
-const renderVideo = () => {
-  // Show skeleton while loading OR if we haven't gotten the URL yet
-  if (loading) {
-    return <Skeleton className="w-full h-full" />;
-  }
-
-  // Only return null if we've confirmed there's no video
-  if (!heroVideoUrl) {
-    return null;
-  }
-  
-  // ... rest of video rendering logic
-};
-```
-
-**Change 3**: Ensure stable state by using a derived "ready" state
-
-To prevent the flicker entirely, we should track when settings are truly ready:
-
-```typescript
-const { getSetting, loading, settings } = useCourseSettings();
-
-// Only compute these AFTER loading is complete
-const heroVideoUrl = !loading ? getSetting('hero_video_url') : '';
-const heroVideoType = !loading ? (getSetting('hero_video_type') || 'vimeo') : 'vimeo';
-
-// Show section during loading, or when we have a valid URL
-const showVideoSection = loading || heroVideoUrl.length > 0;
-```
-
-## Expected Result
-- Video section shows skeleton placeholder during load
-- Once settings load, video appears immediately without disappearing
-- If no video is configured, the section properly hides
-
-## Files Modified
-| File | Change |
-|------|--------|
-| `src/components/landing/Hero.tsx` | Fix race condition in video visibility logic |
+Feature suggestions (next things you may want)
+- After implementing, test the landing page end-to-end on desktop + mobile (especially Safari iOS) to confirm the hero video consistently renders.
+- Add a small “video failed to load” fallback UI (retry button / open video in new tab) if Vimeo is blocked by tracker protection.
+- Cache course settings in a React context so the app only fetches them once (faster landing page, fewer network calls).
+- Add an admin “Preview hero video” button that validates the URL and shows what visitors will see.
+- Tighten backend access rules for payment/customer tables and limit what community members can see in profiles.
