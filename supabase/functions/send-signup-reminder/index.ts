@@ -125,7 +125,7 @@ serve(async (req) => {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #2563eb; margin: 0;">Almost There!</h1>
+    <h1 style="color: #003400; margin: 0;">Almost There!</h1>
   </div>
   
   <p>Hi there,</p>
@@ -135,7 +135,7 @@ serve(async (req) => {
   <p>Your course is waiting for you! Click the button below to set up your account and get started:</p>
   
   <div style="text-align: center; margin: 30px 0;">
-    <a href="${signupUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">Create My Account</a>
+    <a href="${signupUrl}" style="display: inline-block; background-color: #f2ba3f; color: #003400; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">Create My Account</a>
   </div>
   
   <p>When you sign up, <strong>use the same email address</strong> you used for your purchase (${purchase.stripe_customer_email}) and we'll automatically link your account to your purchase.</p>
