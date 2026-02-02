@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon, Mail, Video } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon, Mail, Video, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -57,6 +57,12 @@ const AdminSettings = () => {
   const [kitFormIdCoreInstallments, setKitFormIdCoreInstallments] = useState('');
   const [kitFormIdPremium, setKitFormIdPremium] = useState('');
   const [isSavingEmailMarketing, setIsSavingEmailMarketing] = useState(false);
+
+  // Signup Reminder settings
+  const [signupReminderEnabled, setSignupReminderEnabled] = useState(true);
+  const [signupReminderHours, setSignupReminderHours] = useState('24');
+  const [signupReminderFromEmail, setSignupReminderFromEmail] = useState('');
+  const [isSavingSignupReminder, setIsSavingSignupReminder] = useState(false);
 
   // Branding settings
   const [primaryColor, setPrimaryColor] = useState('#0d9488');
@@ -104,6 +110,11 @@ const AdminSettings = () => {
       setKitFormIdCore(getSetting('kit_form_id_core') || '');
       setKitFormIdCoreInstallments(getSetting('kit_form_id_core_installments') || '');
       setKitFormIdPremium(getSetting('kit_form_id_premium') || '');
+      
+      // Signup Reminders
+      setSignupReminderEnabled(getSetting('signup_reminder_enabled') !== 'false');
+      setSignupReminderHours(getSetting('signup_reminder_hours') || '24');
+      setSignupReminderFromEmail(getSetting('signup_reminder_from_email') || '');
       
       // Branding
       setPrimaryColor(getSetting('branding_primary_color') || '#0d9488');
@@ -213,6 +224,23 @@ const AdminSettings = () => {
       console.error(error);
     } finally {
       setIsSavingEmailMarketing(false);
+    }
+  };
+
+  const handleSaveSignupReminder = async () => {
+    setIsSavingSignupReminder(true);
+    try {
+      await Promise.all([
+        updateSetting('signup_reminder_enabled', signupReminderEnabled ? 'true' : 'false'),
+        updateSetting('signup_reminder_hours', signupReminderHours),
+        updateSetting('signup_reminder_from_email', signupReminderFromEmail),
+      ]);
+      toast.success('Signup reminder settings saved!');
+    } catch (error) {
+      toast.error('Failed to save signup reminder settings');
+      console.error(error);
+    } finally {
+      setIsSavingSignupReminder(false);
     }
   };
 
@@ -639,6 +667,92 @@ const AdminSettings = () => {
                   <Save className="h-4 w-4" />
                 )}
                 Save Email Settings
+              </Button>
+            </div>
+          </div>
+
+          {/* Signup Reminders */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Signup Reminders
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Send reminder emails to customers who paid but haven't completed signup yet.
+            </p>
+            
+            {/* Enable/Disable Toggle */}
+            <div className="mb-6 flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="signupReminderEnabled" className="text-base font-medium cursor-pointer">
+                  Enable signup reminders
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Automatically send reminder emails to customers who haven't claimed their purchase
+                </p>
+              </div>
+              <Switch
+                id="signupReminderEnabled"
+                checked={signupReminderEnabled}
+                onCheckedChange={setSignupReminderEnabled}
+              />
+            </div>
+
+            <div className={`space-y-5 transition-opacity ${signupReminderEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+              <div className="space-y-2">
+                <Label htmlFor="signupReminderHours">Send reminder after</Label>
+                <Select
+                  value={signupReminderHours}
+                  onValueChange={setSignupReminderHours}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12 hours</SelectItem>
+                    <SelectItem value="24">24 hours</SelectItem>
+                    <SelectItem value="48">48 hours</SelectItem>
+                    <SelectItem value="72">72 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  How long to wait before sending a reminder email
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signupReminderFromEmail">From email address</Label>
+                <Input
+                  id="signupReminderFromEmail"
+                  type="email"
+                  value={signupReminderFromEmail}
+                  onChange={(e) => setSignupReminderFromEmail(e.target.value)}
+                  placeholder="noreply@yourdomain.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Must be a verified domain in <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Resend</a>
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-muted/50 p-4">
+                <h4 className="mb-2 text-sm font-medium text-foreground">How it works:</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
+                  <li>When a customer pays but doesn't create an account, their purchase is saved</li>
+                  <li>After the configured delay, they receive an email with a link to claim their access</li>
+                  <li>The system checks hourly for unclaimed purchases ready for reminders</li>
+                  <li>Each customer only receives one reminder email</li>
+                </ul>
+              </div>
+
+              <Button onClick={handleSaveSignupReminder} disabled={isSavingSignupReminder} className="gap-2">
+                {isSavingSignupReminder ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Reminder Settings
               </Button>
             </div>
           </div>
