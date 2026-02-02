@@ -1,6 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users } from 'lucide-react';
+import { useCourseSettings } from '@/hooks/useCourseSettings';
+import { Skeleton } from '@/components/ui/skeleton';
+
 const trustSignals = [{
   icon: BookOpen,
   text: "7-chapter video course",
@@ -19,6 +22,79 @@ const trustSignals = [{
   href: "#guarantee"
 }];
 const Hero = () => {
+  const { getSetting, loading } = useCourseSettings();
+  
+  const heroVideoUrl = getSetting('hero_video_url');
+  const heroVideoType = getSetting('hero_video_type') || 'vimeo';
+
+  // Convert Vimeo URL to embed format
+  const getVimeoEmbedUrl = (url: string) => {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    return match ? `https://player.vimeo.com/video/${match[1]}` : null;
+  };
+
+  // Convert YouTube URL to embed format
+  const getYouTubeEmbedUrl = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+  };
+
+  const renderVideo = () => {
+    if (loading) {
+      return <Skeleton className="w-full h-full" />;
+    }
+
+    if (!heroVideoUrl) {
+      return null;
+    }
+
+    if (heroVideoType === 'vimeo') {
+      const embedUrl = getVimeoEmbedUrl(heroVideoUrl);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            title="Hero Video"
+            className="w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        );
+      }
+    }
+
+    if (heroVideoType === 'youtube') {
+      const embedUrl = getYouTubeEmbedUrl(heroVideoUrl);
+      if (embedUrl) {
+        return (
+          <iframe
+            src={embedUrl}
+            title="Hero Video"
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        );
+      }
+    }
+
+    if (heroVideoType === 'direct') {
+      return (
+        <video 
+          controls 
+          className="w-full h-full object-cover"
+        >
+          <source src={heroVideoUrl} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+
+    return null;
+  };
+
+  const showVideoSection = loading || heroVideoUrl;
+
   return <section className="relative overflow-hidden bg-gradient-warm py-16 sm:py-20 md:py-28 lg:py-36">
       {/* Background decoration */}
       <div className="absolute inset-0 -z-10">
@@ -57,19 +133,13 @@ const Hero = () => {
           </div>
 
           {/* Hero Video */}
-          <div className="w-full max-w-4xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.25s' }}>
-            <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-card shadow-xl">
-              <video 
-                controls 
-                className="w-full h-full object-cover"
-                poster=""
-              >
-                {/* Replace this URL with your actual video file URL */}
-                <source src="YOUR_VIDEO_URL_HERE" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+          {showVideoSection && (
+            <div className="w-full max-w-4xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.25s' }}>
+              <div className="aspect-video rounded-2xl overflow-hidden border border-border bg-card shadow-xl">
+                {renderVideo()}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Trust signals */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 animate-fade-up w-full max-w-3xl" style={{
