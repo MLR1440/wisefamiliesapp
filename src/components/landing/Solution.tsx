@@ -1,7 +1,7 @@
-import { Target, Brain, Handshake } from 'lucide-react';
+import { BotOff, Brain, Handshake } from 'lucide-react';
 import courseModuleScreenshot from '@/assets/course-module-screenshot.png';
 const differentiators = [{
-  icon: Target,
+  icon: BotOff,
   title: 'Not "Ban AI"',
   description: "We teach your child to use AI as a tool, not a crutch"
 }, {
