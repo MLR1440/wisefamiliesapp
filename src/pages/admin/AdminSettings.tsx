@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon, Mail } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, Shield, Trophy, Link as LinkIcon, Mail, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -65,6 +65,11 @@ const AdminSettings = () => {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSavingBranding, setIsSavingBranding] = useState(false);
 
+  // Landing Page settings
+  const [heroVideoUrl, setHeroVideoUrl] = useState('');
+  const [heroVideoType, setHeroVideoType] = useState('vimeo');
+  const [isSavingLandingPage, setIsSavingLandingPage] = useState(false);
+
   // Track initial load to prevent useEffect from overwriting user edits
   const hasInitiallyLoaded = useRef(false);
 
@@ -104,6 +109,10 @@ const AdminSettings = () => {
       setPrimaryColor(getSetting('branding_primary_color') || '#0d9488');
       setSecondaryColor(getSetting('branding_secondary_color') || '#f97316');
       setLogoUrl(getSetting('branding_logo_url') || '');
+      
+      // Landing Page
+      setHeroVideoUrl(getSetting('hero_video_url') || '');
+      setHeroVideoType(getSetting('hero_video_type') || 'vimeo');
     }
   }, [settingsLoading, settings, getSetting]);
 
@@ -268,6 +277,22 @@ const AdminSettings = () => {
     }
   };
 
+  const handleSaveLandingPage = async () => {
+    setIsSavingLandingPage(true);
+    try {
+      await Promise.all([
+        updateSetting('hero_video_url', heroVideoUrl),
+        updateSetting('hero_video_type', heroVideoType),
+      ]);
+      toast.success('Landing page settings saved!');
+    } catch (error) {
+      toast.error('Failed to save landing page settings');
+      console.error(error);
+    } finally {
+      setIsSavingLandingPage(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn isAdmin={isAdmin} hasPurchased userName={userName} />
@@ -293,6 +318,67 @@ const AdminSettings = () => {
         </div>
 
         <div className="space-y-8">
+          {/* Landing Page */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-xl font-semibold text-foreground">
+                Landing Page
+              </h2>
+            </div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Configure the hero video displayed at the top of your landing page.
+            </p>
+            
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="heroVideoType">Hero Video Type</Label>
+                <Select
+                  value={heroVideoType}
+                  onValueChange={setHeroVideoType}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="vimeo">Vimeo</SelectItem>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="direct">Direct URL (MP4)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="heroVideoUrl">Hero Video URL</Label>
+                <Input
+                  id="heroVideoUrl"
+                  type="url"
+                  value={heroVideoUrl}
+                  onChange={(e) => setHeroVideoUrl(e.target.value)}
+                  placeholder={
+                    heroVideoType === 'vimeo' 
+                      ? 'https://vimeo.com/123456789' 
+                      : heroVideoType === 'youtube' 
+                        ? 'https://www.youtube.com/watch?v=...' 
+                        : 'https://example.com/video.mp4'
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Paste your {heroVideoType === 'vimeo' ? 'Vimeo' : heroVideoType === 'youtube' ? 'YouTube' : 'video'} URL here
+                </p>
+              </div>
+
+              <Button onClick={handleSaveLandingPage} disabled={isSavingLandingPage} className="gap-2">
+                {isSavingLandingPage ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Landing Page Settings
+              </Button>
+            </div>
+          </div>
+
           {/* AI Guardrails */}
           <div className="rounded-xl border border-primary/20 bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
