@@ -24,8 +24,9 @@ const trustSignals = [{
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
   
-  const heroVideoUrl = getSetting('hero_video_url');
-  const heroVideoType = getSetting('hero_video_type') || 'vimeo';
+  // Only compute these AFTER loading is complete to prevent race condition
+  const heroVideoUrl = !loading ? getSetting('hero_video_url') : '';
+  const heroVideoType = !loading ? (getSetting('hero_video_type') || 'vimeo') : 'vimeo';
 
   // Convert Vimeo URL to embed format
   const getVimeoEmbedUrl = (url: string) => {
@@ -93,7 +94,8 @@ const Hero = () => {
     return null;
   };
 
-  const showVideoSection = loading || heroVideoUrl;
+  // Show section during loading, or when we have a valid URL after loading completes
+  const showVideoSection = loading || heroVideoUrl.length > 0;
 
   return <section className="relative overflow-hidden bg-gradient-warm py-16 sm:py-20 md:py-28 lg:py-36">
       {/* Background decoration */}
