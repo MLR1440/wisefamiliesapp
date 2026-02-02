@@ -331,6 +331,7 @@ export type Database = {
           id: string
           price_id: string | null
           product_id: string
+          reminder_sent_at: string | null
           stripe_customer_email: string | null
           stripe_session_id: string
           verified_at: string | null
@@ -346,6 +347,7 @@ export type Database = {
           id?: string
           price_id?: string | null
           product_id: string
+          reminder_sent_at?: string | null
           stripe_customer_email?: string | null
           stripe_session_id: string
           verified_at?: string | null
@@ -361,6 +363,7 @@ export type Database = {
           id?: string
           price_id?: string | null
           product_id?: string
+          reminder_sent_at?: string | null
           stripe_customer_email?: string | null
           stripe_session_id?: string
           verified_at?: string | null
