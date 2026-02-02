@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.delete-user]
 verify_jwt = false
+
+[functions.send-signup-reminder]
+verify_jwt = false
+
+[functions.list-stripe-prices]
+verify_jwt = false
