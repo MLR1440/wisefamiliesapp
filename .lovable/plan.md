@@ -1,133 +1,124 @@
 
 
-## Kit.com Integration for Recovered Purchases + Signup Reminder Emails
+## Set Up Hourly Cron Job + Admin Settings for Signup Reminders
 
 ### Overview
-This plan addresses two related issues:
-1. **Kit.com Gap**: Customers who recover their purchase via `check-payment` (after signing up later) are NOT added to your email list
-2. **Abandoned Signups**: Customers who pay but don't create an account within a timeframe don't receive any reminder to complete signup
+This plan adds:
+1. A scheduled cron job to run the `send-signup-reminder` function every hour
+2. A new "Signup Reminders" section in Admin Settings with configurable options
 
-### Solution Architecture
+---
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CURRENT FLOW                                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Payment → verify-stripe-session → pending_purchases → signup               │
-│                                                        ↓                    │
-│                                                  claim-purchase             │
-│                                                        ↓                    │
-│                                                   Kit.com ✓                 │
-│                                                                             │
-│  Payment → (exit) → signup later → check-payment                            │
-│                                          ↓                                  │
-│                                     user_purchases                          │
-│                                          ↓                                  │
-│                                     Kit.com ✗ ← MISSING!                    │
-└─────────────────────────────────────────────────────────────────────────────┘
+### Part 1: Set Up pg_cron Job
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           NEW FLOW                                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Payment → verify-stripe-session → pending_purchases → signup               │
-│                ↓                        ↓              ↓                    │
-│         Kit.com ✓ (immediate)    24h later         claim-purchase           │
-│                                        ↓              ↓                     │
-│                             send-signup-reminder    Kit.com ✓ (form)        │
-│                                        ↓                                    │
-│                               Reminder Email                                │
-│                                                                             │
-│  Payment → (exit) → signup later → check-payment                            │
-│                                          ↓                                  │
-│                                     user_purchases                          │
-│                                          ↓                                  │
-│                                     Kit.com ✓ ← FIXED!                      │
-└─────────────────────────────────────────────────────────────────────────────┘
+The cron job will call the `send-signup-reminder` edge function every hour to process unclaimed purchases and send reminder emails.
+
+**SQL to Execute (via SQL insert tool):**
+```sql
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Schedule the signup reminder function to run every hour
+SELECT cron.schedule(
+  'send-signup-reminders-hourly',
+  '0 * * * *',  -- Every hour at minute 0
+  $$
+  SELECT net.http_post(
+    url := 'https://vfswqkrxwrjzimpzvhen.supabase.co/functions/v1/send-signup-reminder',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmc3dxa3J4d3JqemltcHp2aGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4MTkxMzcsImV4cCI6MjA4MDM5NTEzN30.vfpfxnmOKBai3OV1nehpBDVTMtWAnlKpxHARcd9l5AM"}'::jsonb,
+    body := '{}'::jsonb
+  ) AS request_id;
+  $$
+);
 ```
 
-### Part 1: Add Kit.com to check-payment Function
+---
 
-When `check-payment` discovers a purchase in Stripe and creates a `user_purchases` record, it will ALSO add the user to Kit.com using the same logic as `claim-purchase`.
+### Part 2: Add Admin Settings UI
 
-**Changes to `check-payment/index.ts`:**
-- After successfully recording a new purchase (lines 193-208), call Kit.com API
-- Fetch email marketing settings from `course_settings`
-- Look up the `price_id` from the Stripe session to determine which form to use
-- Create/update subscriber and add to the appropriate form
+Add a new "Signup Reminders" card to the Admin Settings page between "Email Marketing" and "Course Completion" sections.
 
-### Part 2: Add Kit.com Immediately After Payment Verification
+**New State Variables:**
+```typescript
+// Signup Reminder settings
+const [signupReminderEnabled, setSignupReminderEnabled] = useState(true);
+const [signupReminderHours, setSignupReminderHours] = useState('24');
+const [signupReminderFromEmail, setSignupReminderFromEmail] = useState('');
+const [isSavingSignupReminder, setIsSavingSignupReminder] = useState(false);
+```
 
-For better reliability, add customers to Kit.com immediately when their payment is verified (before they even sign up). This ensures they're on your list regardless of what happens next.
+**Settings to Load:**
+- `signup_reminder_enabled` - Toggle (default: true)
+- `signup_reminder_hours` - Delay in hours before sending (default: 24)
+- `signup_reminder_from_email` - Sender email (must be verified in Resend)
 
-**Changes to `verify-stripe-session/index.ts`:**
-- After storing the pending purchase, add customer to Kit.com
-- Use the same two-step process (create subscriber → add to form)
-- This happens with their Stripe checkout email
+**UI Design:**
 
-**Note:** The `claim-purchase` function will still run its Kit.com logic when they sign up, but Kit.com handles duplicates gracefully.
+| Field | Type | Description |
+|-------|------|-------------|
+| Enable signup reminders | Switch toggle | Turn on/off the reminder system |
+| Delay (hours) | Select dropdown | 12, 24, 48, or 72 hours |
+| From email address | Input | Email address for sending (must be verified domain) |
 
-### Part 3: Signup Reminder Email System
+---
 
-Create a new edge function that runs on a schedule to find customers who paid but haven't signed up, and sends them a reminder email.
-
-**New Files:**
-| File | Purpose |
-|------|---------|
-| `supabase/functions/send-signup-reminder/index.ts` | Scheduled function to send reminder emails |
-
-**Database Changes:**
-- Add `reminder_sent_at` column to `pending_purchases` to track if reminder was sent
-- This prevents duplicate reminder emails
-
-**How It Works:**
-1. Scheduled to run every hour via pg_cron
-2. Queries `pending_purchases` for records where:
-   - `claimed_by` IS NULL (not yet signed up)
-   - `created_at` > 24 hours ago (give them time to finish)
-   - `reminder_sent_at` IS NULL (haven't sent reminder yet)
-   - Has `stripe_customer_email`
-3. Sends reminder email via Resend API
-4. Updates `reminder_sent_at` to prevent duplicates
-
-### File Changes Summary
+### File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/check-payment/index.ts` | Update | Add Kit.com integration when recovering purchases from Stripe |
-| `supabase/functions/verify-stripe-session/index.ts` | Update | Add immediate Kit.com subscription after payment verification |
-| `supabase/functions/send-signup-reminder/index.ts` | Create | New scheduled function for reminder emails |
-| `supabase/config.toml` | Update | Add config for new edge function |
-| Database migration | Create | Add `reminder_sent_at` column to `pending_purchases` |
+| `src/pages/admin/AdminSettings.tsx` | Update | Add new "Signup Reminders" settings card with toggle, delay selector, and from email input |
+| Database (via insert tool) | Execute | Create cron job to run hourly |
 
-### Email Reminder Content
+---
 
-The reminder email will include:
-- Friendly reminder that they purchased but haven't created their account
-- Direct link to `/signup` (the claim token may have expired, but `check-payment` will handle recovery)
-- Your branding/support contact
+### Technical Details
 
-### Required Secrets
+**AdminSettings.tsx Changes:**
 
-For the signup reminder emails, you'll need to add:
-- `RESEND_API_KEY` - For sending emails via Resend.com
+1. Add new state variables for the 3 settings
+2. Load settings in the existing `useEffect` block:
+   ```typescript
+   setSignupReminderEnabled(getSetting('signup_reminder_enabled') !== 'false');
+   setSignupReminderHours(getSetting('signup_reminder_hours') || '24');
+   setSignupReminderFromEmail(getSetting('signup_reminder_from_email') || '');
+   ```
 
-You already have `KIT_API_KEY` and `KIT_FORM_ID` configured.
+3. Add save handler:
+   ```typescript
+   const handleSaveSignupReminder = async () => {
+     setIsSavingSignupReminder(true);
+     try {
+       await Promise.all([
+         updateSetting('signup_reminder_enabled', signupReminderEnabled ? 'true' : 'false'),
+         updateSetting('signup_reminder_hours', signupReminderHours),
+         updateSetting('signup_reminder_from_email', signupReminderFromEmail),
+       ]);
+       toast.success('Signup reminder settings saved!');
+     } catch (error) {
+       toast.error('Failed to save signup reminder settings');
+     } finally {
+       setIsSavingSignupReminder(false);
+     }
+   };
+   ```
 
-### Admin Settings (Optional Enhancement)
+4. Add new UI section with:
+   - Mail/Bell icon header
+   - Enable/disable toggle (like course completion toggle)
+   - Delay hours dropdown (12, 24, 48, 72)
+   - From email input with helper text about Resend domain verification
+   - Info box explaining how the system works
 
-Could add to Admin Settings:
-- Toggle to enable/disable signup reminder emails
-- Customize the reminder email subject/content
-- Set the delay before sending reminder (default 24 hours)
+---
 
-### What You'll Need To Do
+### Edge Function Already Configured
 
-1. **Approve this plan**
-2. **Sign up for Resend.com** if you haven't already
-3. **Verify your email domain** at https://resend.com/domains
-4. **Create an API key** at https://resend.com/api-keys
-5. **Provide the `RESEND_API_KEY`** when prompted after implementation
-6. After deployment, reminders will be sent automatically to customers who don't complete signup within 24 hours
+The `send-signup-reminder` function already reads these settings:
+- `signup_reminder_enabled` - Skips if 'false'
+- `signup_reminder_hours` - Uses as delay threshold
+- `signup_reminder_from_email` - Uses as sender email
+- `course_name` - Uses in email subject/body
+
+No changes needed to the edge function.
 
