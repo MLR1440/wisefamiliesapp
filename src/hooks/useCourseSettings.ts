@@ -11,23 +11,28 @@ export interface CourseSetting {
 }
 
 export const useCourseSettings = () => {
-  const [settings, setSettings] = useState<CourseSetting[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use null to indicate "not yet loaded" - this prevents race conditions
+  // where loading becomes false before settings are available
+  const [settings, setSettings] = useState<CourseSetting[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Derive loading from settings state - guarantees they're always in sync
+  const loading = settings === null;
+
   const fetchSettings = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
+    // Set to null to indicate loading (only on refetch, initial is already null)
+    setSettings(null);
+    const { data, error: fetchError } = await supabase
       .from('course_settings')
       .select('*')
       .order('key');
 
-    if (error) {
-      setError(error.message);
+    if (fetchError) {
+      setError(fetchError.message);
+      setSettings([]); // Exit loading state even on error
     } else {
-      setSettings(data || []);
+      setSettings(data ?? []);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -35,7 +40,8 @@ export const useCourseSettings = () => {
   }, [fetchSettings]);
 
   const getSetting = (key: string): string => {
-    const setting = settings.find(s => s.key === key);
+    const settingsArray = settings ?? [];
+    const setting = settingsArray.find(s => s.key === key);
     return setting?.value || '';
   };
 
@@ -52,7 +58,7 @@ export const useCourseSettings = () => {
   };
 
   return {
-    settings,
+    settings: settings ?? [], // Return empty array for compatibility
     loading,
     error,
     getSetting,
