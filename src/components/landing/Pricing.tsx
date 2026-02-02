@@ -2,50 +2,30 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
-
-const coreFeatures = [
-  "12-month course access",
-  "Complete 7-chapter video course",
-  "AI-powered coaching tools",
-  "Custom Family Tech Agreement builder",
-  "Conversation script generator",
-  "Private parent community (12 months)",
-  "Downloadable resources & frameworks",
-  "90-day money-back guarantee",
-];
-
-const premiumExtras = [
-  "36-month course access (3 years)",
-  "1-hour private video consultation with a qualified child psychologist",
-  "Personalised assessment of your child's AI use",
-  "Custom action plan designed specifically for your family",
-  "Priority community support",
-  "Extended community access (36 months)",
-];
-
+const coreFeatures = ["12-month course access", "Complete 7-chapter video course", "AI-powered coaching tools", "Custom Family Tech Agreement builder", "Conversation script generator", "Private parent community (12 months)", "Downloadable resources & frameworks", "90-day money-back guarantee"];
+const premiumExtras = ["36-month course access (3 years)", "1-hour private video consultation with a qualified child psychologist", "Personalised assessment of your child's AI use", "Custom action plan designed specifically for your family", "Priority community support", "Extended community access (36 months)"];
 const Pricing = () => {
-  const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
-
+  const {
+    coreLink,
+    coreInstallmentsLink,
+    premiumLink
+  } = usePaymentLinks();
   const handleCoreClick = () => {
     if (coreLink) {
       window.open(coreLink, '_blank', 'noopener,noreferrer');
     }
   };
-
   const handleCoreInstallmentsClick = () => {
     if (coreInstallmentsLink) {
       window.open(coreInstallmentsLink, '_blank', 'noopener,noreferrer');
     }
   };
-
   const handlePremiumClick = () => {
     if (premiumLink) {
       window.open(premiumLink, '_blank', 'noopener,noreferrer');
     }
   };
-
-  return (
-    <section id="pricing" className="py-16 md:py-24 bg-muted/30">
+  return <section id="pricing" className="py-16 md:py-24 bg-muted/30">
       <div className="container px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -67,9 +47,7 @@ const Pricing = () => {
             </div>
 
             <div className="text-center mb-8 pt-4">
-              <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
-                AI-Ready Families System
-              </h3>
+              <h3 className="font-heading text-2xl font-bold text-foreground mb-2">AI-Ready Families Framework</h3>
               <div className="mb-2">
                 <span className="text-4xl font-bold text-primary">$139</span>
                 <span className="text-muted-foreground ml-1">AUD</span>
@@ -81,49 +59,36 @@ const Pricing = () => {
             <div className="mb-8">
               <p className="font-medium text-foreground mb-4">What's included:</p>
               <ul className="space-y-3">
-                {coreFeatures.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3">
+                {coreFeatures.map((feature, index) => <li key={index} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                     <span className="text-foreground/80">{feature}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
             </div>
 
             {/* Primary CTA - Pay in Full */}
-            {coreLink ? (
-              <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
+            {coreLink ? <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
                 Join as Founding Member
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
+              </Button> : <Link to="/signup" className="block">
                 <Button variant="cta" size="xl" className="w-full gap-2">
                   Join as Founding Member
                 </Button>
-              </Link>
-            )}
+              </Link>}
 
             {/* Secondary Option - Installments */}
-            {coreInstallmentsLink && (
-              <>
+            {coreInstallmentsLink && <>
                 <div className="my-4 flex items-center gap-3">
                   <div className="flex-1 h-px bg-border" />
                   <span className="text-sm text-muted-foreground">or</span>
                   <div className="flex-1 h-px bg-border" />
                 </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleCoreInstallmentsClick}
-                >
+                <Button variant="outline" size="lg" className="w-full" onClick={handleCoreInstallmentsClick}>
                   Pay in 3 Installments
                 </Button>
                 <p className="text-center text-sm text-muted-foreground mt-2">
                   3 x $47/month
                 </p>
-              </>
-            )}
+              </>}
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -158,26 +123,20 @@ const Pricing = () => {
             <div className="mb-4">
               <p className="font-medium text-foreground mb-4">Everything in Core, PLUS:</p>
               <ul className="space-y-3">
-                {premiumExtras.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3">
+                {premiumExtras.map((feature, index) => <li key={index} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <span className="text-foreground/80">{feature}</span>
-                  </li>
-                ))}
+                  </li>)}
               </ul>
             </div>
 
-            {premiumLink ? (
-              <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick}>
+            {premiumLink ? <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick}>
                 Get Personalised Support
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
+              </Button> : <Link to="/signup" className="block">
                 <Button variant="outline" size="xl" className="w-full gap-2">
                   Get Personalised Support
                 </Button>
-              </Link>
-            )}
+              </Link>}
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -199,8 +158,6 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Pricing;

@@ -5,9 +5,7 @@ const WhoThisIsFor = () => {
   return <section className="py-16 md:py-24 bg-background">
       <div className="container px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            The AI-Ready Families System Is For You If...
-          </h2>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">The AI-Ready Families Framework Is For You If...</h2>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
