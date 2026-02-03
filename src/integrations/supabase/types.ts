@@ -370,6 +370,36 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_leads: {
+        Row: {
+          answers: Json
+          created_at: string
+          email: string
+          id: string
+          kit_subscriber_id: string | null
+          score: number
+          source: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          email: string
+          id?: string
+          kit_subscriber_id?: string | null
+          score?: number
+          source?: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          email?: string
+          id?: string
+          kit_subscriber_id?: string | null
+          score?: number
+          source?: string
+        }
+        Relationships: []
+      }
       user_documents: {
         Row: {
           created_at: string

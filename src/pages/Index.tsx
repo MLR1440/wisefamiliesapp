@@ -1,6 +1,7 @@
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/landing/Hero';
+import Quiz from '@/components/landing/Quiz';
 import ProblemValidation from '@/components/landing/ProblemValidation';
 import Solution from '@/components/landing/Solution';
 import CourseContent from '@/components/landing/CourseContent';
@@ -18,6 +19,7 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
+        <Quiz />
         <ProblemValidation />
         <Solution />
         <CourseContent />

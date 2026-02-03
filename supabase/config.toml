@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.list-stripe-prices]
 verify_jwt = false
+
+[functions.submit-quiz]
+verify_jwt = false
