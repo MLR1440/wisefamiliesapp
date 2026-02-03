@@ -97,9 +97,9 @@ Deno.serve(async (req) => {
         // Step 1: Create/update subscriber to get subscriber ID
         const subscriberResponse = await fetch('https://api.kit.com/v4/subscribers', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${kitApiKey}`,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Kit-Api-Key': kitApiKey,
           },
           body: JSON.stringify({
             email_address: email,
@@ -115,9 +115,9 @@ Deno.serve(async (req) => {
           if (kitSubscriberId) {
             await fetch(`https://api.kit.com/v4/forms/${kitQuizFormId}/subscribers`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${kitApiKey}`,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Kit-Api-Key': kitApiKey,
               },
               body: JSON.stringify({
                 email_address: email,
