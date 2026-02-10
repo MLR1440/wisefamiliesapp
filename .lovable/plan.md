@@ -1,59 +1,63 @@
 
 
-# Plan: Fix Kit.com API Authentication Header
+# Plan: Fix Kit.com Tag Application for Quiz Subscribers
 
-## Summary
-The quiz's Kit.com integration is failing because the Edge Function is using the wrong authentication header format. Kit.com's V4 API requires `X-Kit-Api-Key` header, not `Authorization: Bearer`.
+## Problem
+The current `submit-quiz` Edge Function passes tag names as strings in the subscriber creation request body, but Kit.com's V4 API ignores these. Tags must be applied using a separate API endpoint (`POST /v4/tags/{tag_id}/subscribers`) with numeric tag IDs.
 
-## What's Happening Now
-- Quiz saves to database: Working
-- Kit.com sync: Failing with "The access token is invalid"
-- Root cause: Wrong header format being sent to Kit API
+## Solution
+Update the Edge Function to:
+1. Auto-create tags via Kit's API if they don't already exist (`POST /v4/tags`)
+2. Apply each tag to the subscriber using the correct endpoint (`POST /v4/tags/{tag_id}/subscribers`)
 
-## The Fix
+This means **no manual tag creation needed** -- the code handles everything automatically.
 
-Update the `submit-quiz` Edge Function to use the correct Kit.com V4 authentication header.
+## How It Will Work
 
-### Current (Incorrect)
-```javascript
-headers: {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${kitApiKey}`,
-}
+```text
+Quiz Submitted
+      |
+      v
+Create/Update Subscriber (POST /v4/subscribers)
+      |
+      v
+For each tag name (e.g. "age:8-11", "quiz:growing"):
+   1. Create tag via POST /v4/tags (returns existing ID if already exists)
+   2. Apply tag via POST /v4/tags/{tag_id}/subscribers with email
+      |
+      v
+Add subscriber to Quiz Form (POST /v4/forms/{id}/subscribers)
 ```
 
-### Fixed (Correct)
-```javascript
-headers: {
-  'Content-Type': 'application/json',
-  'X-Kit-Api-Key': kitApiKey,
-}
-```
+## File to Update
 
-## Files to Update
+### supabase/functions/submit-quiz/index.ts
 
-### 1. supabase/functions/submit-quiz/index.ts
-- Change line 101-102: Replace `'Authorization': Bearer ${kitApiKey}` with `'X-Kit-Api-Key': kitApiKey`
-- Change line 119-120: Same header fix for the form subscription call
+Changes:
+- Remove `tags` array from the subscriber creation body (Kit V4 ignores it)
+- Add a helper function to create-or-get a tag by name via `POST /v4/tags`
+- After subscriber creation, loop through each tag and apply it via `POST /v4/tags/{tag_id}/subscribers` with the subscriber's email
+- Keep existing form subscription and database logic unchanged
 
-### 2. Other Edge Functions (for consistency)
-Check and fix the same issue in other functions that use Kit.com:
-- `supabase/functions/claim-purchase/index.ts`
-- `supabase/functions/verify-stripe-session/index.ts`
-- `supabase/functions/check-payment/index.ts`
+## Tags That Will Be Auto-Created
+
+Based on quiz answers:
+- `age:under-8`, `age:8-11`, `age:12-14`, `age:15-plus`
+- `concern:homework`, `concern:misinformation`, `concern:screen-time`, `concern:social`
+- `approach:guided`, `approach:monitoring`, `approach:no-rules`, `approach:banned`
+- `quiz:ai-ready` (score 7+), `quiz:growing` (score 4-6), `quiz:early` (score 0-3)
 
 ## Technical Details
 
-| File | Line Numbers | Change |
-|------|-------------|--------|
-| submit-quiz/index.ts | 100-102 | Change Authorization header to X-Kit-Api-Key |
-| submit-quiz/index.ts | 118-120 | Change Authorization header to X-Kit-Api-Key |
-| Other Kit-using functions | Various | Same header change pattern |
+The Kit V4 tag creation endpoint (`POST /v4/tags`) is idempotent-like -- if a tag with the same name exists, it returns the existing tag's ID (status 200) rather than creating a duplicate (status 201). This makes it safe to call every time without checking first.
 
-## Verification Steps
-After the fix is deployed:
+Tag application endpoint: `POST /v4/tags/{tag_id}/subscribers` with body `{"email_address": "user@example.com"}`
+
+All requests use the `X-Kit-Api-Key` header.
+
+## Verification
+After deployment:
 1. Complete the quiz with a test email
-2. Check the database for the new lead
-3. Verify `kit_subscriber_id` is populated (not null)
-4. Check Kit.com dashboard to confirm the subscriber appears with tags
+2. Check Kit.com dashboard -- subscriber should appear with all relevant tags applied
+3. Confirm `kit_subscriber_id` is populated in the database
 
