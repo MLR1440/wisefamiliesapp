@@ -12,8 +12,52 @@ interface QuizSubmission {
   source: string;
 }
 
+// Helper: create-or-get a tag by name, returns the tag ID
+async function getOrCreateTag(tagName: string, apiKey: string): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.kit.com/v4/tags', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Kit-Api-Key': apiKey,
+      },
+      body: JSON.stringify({ name: tagName }),
+    });
+
+    if (!res.ok) {
+      console.error(`Failed to create/get tag "${tagName}":`, await res.text());
+      return null;
+    }
+
+    const data = await res.json();
+    return data.tag?.id?.toString() || null;
+  } catch (err) {
+    console.error(`Error creating/getting tag "${tagName}":`, err);
+    return null;
+  }
+}
+
+// Helper: apply a tag to a subscriber by email
+async function applyTagToSubscriber(tagId: string, email: string, apiKey: string): Promise<void> {
+  try {
+    const res = await fetch(`https://api.kit.com/v4/tags/${tagId}/subscribers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Kit-Api-Key': apiKey,
+      },
+      body: JSON.stringify({ email_address: email }),
+    });
+
+    if (!res.ok) {
+      console.error(`Failed to apply tag ${tagId} to ${email}:`, await res.text());
+    }
+  } catch (err) {
+    console.error(`Error applying tag ${tagId}:`, err);
+  }
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,7 +65,6 @@ Deno.serve(async (req) => {
   try {
     const { email, answers, score, source }: QuizSubmission = await req.json();
 
-    // Validate required fields
     if (!email || !answers) {
       return new Response(
         JSON.stringify({ error: 'Email and answers are required' }),
@@ -29,7 +72,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return new Response(
@@ -38,12 +80,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Insert quiz lead into database
     const { data: quizLead, error: insertError } = await supabase
       .from('quiz_leads')
       .insert({
@@ -63,68 +103,68 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get Kit.com API key and form ID from secrets/settings
     const kitApiKey = Deno.env.get('KIT_API_KEY');
     const kitQuizFormId = Deno.env.get('KIT_QUIZ_FORM_ID');
 
     let kitSubscriberId: string | null = null;
 
-    // Sync to Kit.com if configured
     if (kitApiKey && kitQuizFormId) {
       try {
-        // Build tags based on quiz answers
-        const tags: string[] = [];
-        
+        // Build tag names based on quiz answers
+        const tagNames: string[] = [];
+
         if (answers.childAge) {
-          tags.push(`age:${answers.childAge}`);
+          tagNames.push(`age:${answers.childAge}`);
         }
         if (answers.biggestConcern) {
-          tags.push(`concern:${answers.biggestConcern}`);
+          tagNames.push(`concern:${answers.biggestConcern}`);
         }
         if (answers.currentApproach) {
-          tags.push(`approach:${answers.currentApproach}`);
-        }
-        
-        // Determine category tag
-        if (score >= 7) {
-          tags.push('quiz:ai-ready');
-        } else if (score >= 4) {
-          tags.push('quiz:growing');
-        } else {
-          tags.push('quiz:early');
+          tagNames.push(`approach:${answers.currentApproach}`);
         }
 
-        // Step 1: Create/update subscriber to get subscriber ID
+        // Score category tag
+        if (score >= 7) {
+          tagNames.push('quiz:ai-ready');
+        } else if (score >= 4) {
+          tagNames.push('quiz:growing');
+        } else {
+          tagNames.push('quiz:early');
+        }
+
+        // Step 1: Create/update subscriber (without tags - V4 ignores them)
         const subscriberResponse = await fetch('https://api.kit.com/v4/subscribers', {
           method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Kit-Api-Key': kitApiKey,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Kit-Api-Key': kitApiKey,
           },
-          body: JSON.stringify({
-            email_address: email,
-            tags,
-          }),
+          body: JSON.stringify({ email_address: email }),
         });
 
         if (subscriberResponse.ok) {
           const subscriberData = await subscriberResponse.json();
           kitSubscriberId = subscriberData.subscriber?.id?.toString() || null;
 
-          // Step 2: Add subscriber to the quiz-specific form
+          // Step 2: Create/get each tag and apply to subscriber
+          for (const tagName of tagNames) {
+            const tagId = await getOrCreateTag(tagName, kitApiKey);
+            if (tagId) {
+              await applyTagToSubscriber(tagId, email, kitApiKey);
+            }
+          }
+
+          // Step 3: Add subscriber to the quiz-specific form
           if (kitSubscriberId) {
             await fetch(`https://api.kit.com/v4/forms/${kitQuizFormId}/subscribers`, {
               method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Kit-Api-Key': kitApiKey,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Kit-Api-Key': kitApiKey,
               },
-              body: JSON.stringify({
-                email_address: email,
-              }),
+              body: JSON.stringify({ email_address: email }),
             });
 
-            // Update quiz_lead with Kit subscriber ID
             await supabase
               .from('quiz_leads')
               .update({ kit_subscriber_id: kitSubscriberId })
@@ -135,7 +175,6 @@ Deno.serve(async (req) => {
         }
       } catch (kitError) {
         console.error('Kit.com sync error:', kitError);
-        // Don't fail the request if Kit sync fails
       }
     }
 
