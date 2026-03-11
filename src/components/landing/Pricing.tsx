@@ -66,11 +66,9 @@ const Pricing = () => {
             <div className="text-center mb-8 pt-4">
               <h3 className="font-heading text-2xl font-bold text-foreground mb-2">AI-Ready Families Framework</h3>
               <div className="mb-2">
-                <span className="text-4xl font-bold text-primary">$139</span>
-                <span className="text-muted-foreground ml-1">AUD</span>
+                <span className="text-4xl font-bold text-primary">{priceLoading ? '...' : formattedPrice}</span>
               </div>
-              <p className="text-sm text-secondary font-medium">60% OFF founding member price</p>
-              <p className="text-sm text-muted-foreground line-through">Regular price: $347</p>
+              <p className="text-sm text-secondary font-medium">Founding member price</p>
             </div>
 
             <div className="mb-8">
