@@ -113,9 +113,9 @@ const Hero = () => {
           {/* Headline */}
           <h1 className="mb-6 sm:mb-8 font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground animate-fade-up leading-[1.1]">
             Raise Kids Who Are{' '}
-            <span className="text-gold-400">Wiser</span> Than the{' '}
+            <span className="text-gold-400">Wiser</span>{' '}
             <span className="text-primary relative">
-              Wiser Than the <span className="text-aipurple">AI</span>
+              Than the <span className="text-aipurple">AI</span>
             </span>{' '}
             They Use
           </h1>
