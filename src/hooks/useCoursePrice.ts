@@ -21,8 +21,8 @@ export const useCoursePrice = () => {
 
   const formattedPrice = new Intl.NumberFormat(undefined, {
     style: 'currency',
-    currency: price?.currency?.toUpperCase() || 'USD',
-  }).format(price?.amount ?? 99);
+    currency: price?.currency?.toUpperCase() || 'AUD',
+  }).format(price?.amount ?? 139);
 
   return { 
     price: price ?? { amount: 99, currency: 'usd' }, 
