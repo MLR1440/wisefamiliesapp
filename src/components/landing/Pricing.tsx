@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
@@ -83,17 +83,9 @@ const Pricing = () => {
               </ul>
             </div>
 
-            {coreLink ? (
-              <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
-                Join as Founding Member
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
-                <Button variant="cta" size="xl" className="w-full gap-2">
-                  Join as Founding Member
-                </Button>
-              </Link>
-            )}
+            <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick} disabled={!coreLink}>
+              {coreLink ? 'Join as Founding Member' : 'Loading...'}
+            </Button>
 
             {coreInstallmentsLink && (
               <>
@@ -153,17 +145,9 @@ const Pricing = () => {
               </ul>
             </div>
 
-            {premiumLink ? (
-              <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick}>
-                Get Personalised Support
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
-                <Button variant="outline" size="xl" className="w-full gap-2">
-                  Get Personalised Support
-                </Button>
-              </Link>
-            )}
+            <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick} disabled={!premiumLink}>
+              {premiumLink ? 'Get Personalised Support' : 'Loading...'}
+            </Button>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">

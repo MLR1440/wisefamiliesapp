@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
-import { Link } from 'react-router-dom';
 
 const Paywall = () => {
   const { coreLink, coreInstallmentsLink, loading } = usePaymentLinks();
@@ -58,30 +57,22 @@ const Paywall = () => {
         )}
       </div>
 
-      {coreLink ? (
-        <Button
-          variant="cta"
-          size="lg"
-          className="w-full gap-2"
-          onClick={handlePurchase}
-          disabled={loading}
-        >
-          Get 12-Month Access
-        </Button>
-      ) : (
-        <Link to="/signup" className="block">
-          <Button variant="cta" size="lg" className="w-full gap-2">
-            Get 12-Month Access
-          </Button>
-        </Link>
-      )}
+      <Button
+        variant="cta"
+        size="lg"
+        className="w-full gap-2"
+        onClick={handlePurchase}
+        disabled={loading || !coreLink}
+      >
+        {loading ? 'Loading...' : 'Get 12-Month Access'}
+      </Button>
 
       {coreInstallmentsLink && (
         <button
           onClick={handleInstallmentsClick}
           className="mt-3 text-sm text-primary hover:underline"
         >
-          or pay in 3 installments of $47
+          or pay in installments
         </button>
       )}
 
