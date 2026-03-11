@@ -24,6 +24,7 @@ import ModuleEditor from "./pages/admin/ModuleEditor";
 import ChapterEditor from "./pages/admin/ChapterEditor";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
