@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { Progress } from '@/components/ui/progress';
 
 const coreFeatures = ["12-month course access", "Complete 7-chapter video course", "AI-powered coaching tools", "Custom Family Tech Agreement builder", "Conversation script generator", "Private parent community (12 months)", "Downloadable resources & frameworks", "90-day money-back guarantee"];
