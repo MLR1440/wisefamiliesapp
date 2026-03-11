@@ -29,7 +29,7 @@ interface Progress {
 }
 
 const ProgressPage = () => {
-  const { user, isAdmin, hasPurchased } = useAuth();
+  const { user, isAdmin, hasAccess } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [progress, setProgress] = useState<Progress[]>([]);
