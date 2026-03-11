@@ -65,6 +65,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        aipurple: {
+          DEFAULT: "hsl(258 90% 66%)",
+          light: "hsl(258 90% 75%)",
+        },
         green: {
           50: "hsl(120 30% 95%)",
           100: "hsl(120 25% 90%)",
