@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
   const { spots, isUrgent, isSoldOut } = useFoundingSpots();
