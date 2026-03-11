@@ -40,6 +40,7 @@ const App = () => (
             {/* Public pages */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/signup" element={<Signup />} />
             
             {/* Payment success - Public (validates session_id before allowing signup) */}

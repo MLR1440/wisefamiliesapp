@@ -233,9 +233,9 @@ const Login = () => {
 
           {/* Sign up link */}
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/signup" className="font-medium text-primary transition-colors hover:text-primary/80">
-              Create account
+            Need access?{' '}
+            <Link to="/#pricing" className="font-medium text-primary transition-colors hover:text-primary/80">
+              View pricing
             </Link>
           </p>
         </div>

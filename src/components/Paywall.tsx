@@ -49,7 +49,7 @@ const Paywall = () => {
       </div>
 
       <div className="mb-6">
-        <div className="text-4xl font-bold text-foreground">$139 AUD</div>
+        <div className="text-4xl font-bold text-foreground">{priceLoading ? '...' : formattedPrice}</div>
         <div className="text-sm text-muted-foreground">one-time payment</div>
         {!isSoldOut && (
           <div className={`mt-2 text-sm font-medium ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
