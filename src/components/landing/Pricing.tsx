@@ -12,6 +12,7 @@ const premiumExtras = ["36-month course access (3 years)", "1-hour private video
 const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
   const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
 
   const handleCoreClick = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
