@@ -401,9 +401,9 @@ const PaymentSuccess = () => {
             />
             <Label htmlFor="terms" className="text-sm leading-relaxed">
               I agree to the{' '}
-              <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+              <a href="https://wisefamilies.co/terms-of-use/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms of Service</a>
               {' '}and{' '}
-              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+              <a href="https://wisefamilies.co/privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Privacy Policy</a>
             </Label>
           </div>
           

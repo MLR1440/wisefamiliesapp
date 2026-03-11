@@ -375,19 +375,35 @@ const Signup = () => {
         </div>
       </div>
 
-      {/* Right side - Decorative */}
+      {/* Right side - Course Preview */}
       <div className="hidden bg-gradient-hero lg:flex lg:w-1/2 lg:items-center lg:justify-center lg:p-12">
-        <div className="max-w-md text-center text-primary-foreground">
-          <h2 className="mb-4 font-heading text-3xl font-bold">Almost There!</h2>
-          <p className="mb-6 text-lg text-primary-foreground/80">
-            Complete your registration to join 200+ parents preparing their children for the AI age.
+        <div className="max-w-md text-primary-foreground">
+          <h2 className="mb-2 font-heading text-3xl font-bold">Here's What You're About to Discover</h2>
+          <p className="mb-6 text-primary-foreground/80">
+            7 practical chapters to help your family thrive in the AI age:
           </p>
-          <div className="rounded-xl bg-primary-foreground/10 p-6 backdrop-blur-sm">
-            <p className="italic text-primary-foreground/90">
-              "This course changed how we talk about technology at home. My kids are now asking the right questions about AI!"
-            </p>
-            <p className="mt-4 font-medium">- Sarah M., Mother of 2</p>
-          </div>
+          <ul className="space-y-3 text-primary-foreground/90">
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 text-xs font-bold">1</span>
+              <span>Understand why AI is unlike any tech before — and what's at stake for your child's developing brain</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 text-xs font-bold">2</span>
+              <span>Build a connection-first foundation with conversation scripts that actually work</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 text-xs font-bold">3</span>
+              <span>Develop your child's critical thinking with the "Brain First" approach</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 text-xs font-bold">4</span>
+              <span>Create boundaries they'll actually follow — because they helped build them</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 text-xs font-bold">5</span>
+              <span>Walk away with a 30-day action plan and an AI coach tailored to your family</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
