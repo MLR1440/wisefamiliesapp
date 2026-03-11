@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Play, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -45,6 +45,13 @@ const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) =
     setIsLoading(false);
     setHasError(true);
   };
+
+  // Fallback timeout: hide loading overlay after 5s even if onLoad doesn't fire
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setIsLoading(false), 5000);
+    return () => clearTimeout(timer);
+  }, [isLoading, videoUrl]);
 
   // Error state
   if (hasError) {
@@ -97,13 +104,14 @@ const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) =
         return (
           <>
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse pointer-events-none">
                 <Play className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
             <iframe
               src={embedUrl}
               {...commonProps}
+              className="h-full w-full relative z-10"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -118,13 +126,14 @@ const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) =
         return (
           <>
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse pointer-events-none">
                 <Play className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
             <iframe
               src={embedUrl}
               {...commonProps}
+              className="h-full w-full relative z-10"
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
             />

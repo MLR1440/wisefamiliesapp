@@ -268,14 +268,12 @@ const ModulePage = () => {
 
         {/* Full width video and chat */}
         <div className="space-y-8">
-          <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-            <VideoPlayer 
-              videoUrl={module.video_url} 
-              videoType={module.video_type} 
-              title={module.title} 
-              onPlay={handleVideoPlay} 
-            />
-          </div>
+          <VideoPlayer 
+            videoUrl={module.video_url} 
+            videoType={module.video_type} 
+            title={module.title} 
+            onPlay={handleVideoPlay} 
+          />
 
           {/* Read Along Section */}
           {module.transcript && module.transcript.trim() && (
