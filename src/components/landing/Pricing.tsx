@@ -98,7 +98,7 @@ const Pricing = () => {
                   Pay in 3 Installments
                 </Button>
                 <p className="text-center text-sm text-muted-foreground mt-2">
-                  3 x $47/month
+                  3 monthly payments
                 </p>
               </>
             )}
