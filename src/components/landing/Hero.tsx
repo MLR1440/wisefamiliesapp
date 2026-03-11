@@ -25,6 +25,7 @@ const trustSignals = [{
 }];
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
+  const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
   
   // Only compute these AFTER loading is complete to prevent race condition
   const heroVideoUrl = !loading ? getSetting('hero_video_url') : '';
