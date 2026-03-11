@@ -5,6 +5,7 @@ import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
   const { spots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice } = useCoursePrice();
 
   return (
     <section className="relative overflow-hidden bg-gradient-hero py-16 md:py-24">
