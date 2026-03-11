@@ -624,6 +624,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_founding_spots_remaining: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
