@@ -104,13 +104,14 @@ const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) =
         return (
           <>
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse pointer-events-none">
                 <Play className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
             <iframe
               src={embedUrl}
               {...commonProps}
+              className="h-full w-full relative z-10"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
