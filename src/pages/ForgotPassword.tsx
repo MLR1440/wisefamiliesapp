@@ -27,15 +27,20 @@ const ForgotPassword = () => {
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('send-recovery-email', {
+        body: { email },
+      });
 
-    setIsLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setSent(true);
+      if (fnError) {
+        toast.error('Something went wrong. Please try again.');
+      } else {
+        setSent(true);
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
