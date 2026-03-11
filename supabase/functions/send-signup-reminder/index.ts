@@ -73,11 +73,12 @@ serve(async (req) => {
     // Find unclaimed purchases older than the delay period
     const { data: pendingPurchases, error: fetchError } = await supabaseClient
       .from('pending_purchases')
-      .select('id, stripe_customer_email, created_at, amount_total, currency')
+      .select('id, stripe_customer_email, created_at, amount_total, currency, claim_token')
       .is('claimed_by', null)
       .is('claimed_at', null)
       .is('reminder_sent_at', null)
       .not('stripe_customer_email', 'is', null)
+      .not('claim_token', 'is', null)
       .lt('created_at', cutoffTime.toISOString())
       .limit(50); // Process in batches
 
