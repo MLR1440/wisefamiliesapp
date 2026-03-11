@@ -55,13 +55,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Defer role and payment check with setTimeout to prevent deadlock
         if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id);
-            checkPaymentStatus();
+          setTimeout(async () => {
+            await checkAdminRole(session.user.id);
+            await checkPaymentStatus();
+            setIsLoading(false);
           }, 0);
         } else {
           setIsAdmin(false);
           setHasPurchased(false);
+          setIsLoading(false);
         }
       }
     );

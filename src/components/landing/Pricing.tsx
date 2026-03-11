@@ -145,17 +145,9 @@ const Pricing = () => {
               </ul>
             </div>
 
-            {premiumLink ? (
-              <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick}>
-                Get Personalised Support
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
-                <Button variant="outline" size="xl" className="w-full gap-2">
-                  Get Personalised Support
-                </Button>
-              </Link>
-            )}
+            <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick} disabled={!premiumLink}>
+              {premiumLink ? 'Get Personalised Support' : 'Loading...'}
+            </Button>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">

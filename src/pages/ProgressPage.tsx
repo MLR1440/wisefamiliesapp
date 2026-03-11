@@ -94,7 +94,7 @@ const ProgressPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar isLoggedIn={!!user} isAdmin={isAdmin} hasPurchased={hasPurchased} userName={firstName} />
+      <Navbar isLoggedIn={!!user} isAdmin={isAdmin} hasPurchased={hasAccess} userName={firstName} />
 
       <main className="container max-w-3xl py-8 md:py-12">
         {/* Header */}
