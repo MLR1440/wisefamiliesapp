@@ -31,7 +31,7 @@ serve(async (req) => {
       console.error("Error reading course_settings:", dbError.message);
     }
     
-    const priceId = setting?.value || "price_1SaqpSQLJHCz1zk9H6YyndT4";
+    const priceId = setting?.value || "price_1SruuTQLJHCz1zk99ELRpWtl";
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -53,7 +53,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error fetching price:", errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage, amount: 99, currency: "usd" }),
+      JSON.stringify({ error: errorMessage, amount: 139, currency: "aud" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200, // Return 200 with fallback to avoid breaking UI

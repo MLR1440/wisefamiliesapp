@@ -1,22 +1,100 @@
 
 
-## Fix Wrong Prices
+# Full App Audit: Course Settings RLS Change
 
-The prices are wrong because the `stripe_price_id` stored in `course_settings` is `price_1SrXRDQLJHCz1zk9gH0xsfjk` (an old/invalid price ID). The correct live-mode price ID is `price_1SruuTQLJHCz1zk99ELRpWtl` ($139 AUD).
+## What We're Changing
+Restricting the `course_settings` table from fully public (`SELECT` with `USING (true)`) to a whitelist-based approach where only specific keys are publicly readable.
 
-When the `get-price` edge function tries to look up that invalid price in Stripe, it fails and falls back to a hardcoded `$99 USD` — which is also wrong.
+## Audit Results
 
-### Changes
+### 1. Public Landing Page (Unauthenticated Users)
 
-**1. Update `stripe_price_id` in the database**
-- Update `course_settings` row where `key = 'stripe_price_id'` to value `price_1SruuTQLJHCz1zk99ELRpWtl`
+| Component | Keys Read | Method | Impact |
+|-----------|-----------|--------|--------|
+| Hero.tsx | `hero_video_url`, `hero_video_type` | Direct DB query via `useCourseSettings` (reads ALL keys) | SAFE -- both keys are in the proposed whitelist |
+| Pricing.tsx | Payment links | Via `get-payment-links` edge function (service role) | SAFE -- bypasses RLS entirely |
+| Price display | `stripe_price_id` | Via `get-price` edge function (service role) | SAFE -- bypasses RLS entirely |
 
-**2. Fix edge function fallbacks — `supabase/functions/get-price/index.ts`**
-- Change the hardcoded fallback price ID from `price_1SaqpSQLJHCz1zk9H6YyndT4` to `price_1SruuTQLJHCz1zk99ELRpWtl`
-- Change the error fallback from `amount: 99, currency: "usd"` to `amount: 139, currency: "aud"`
+**Risk**: The `useCourseSettings` hook does `select('*')`, which means for anonymous users it will now return only whitelisted keys instead of all keys. This is fine because Hero only uses `hero_video_url` and `hero_video_type`, both whitelisted. No other public page component uses this hook.
 
-**3. Fix `src/hooks/useCoursePrice.ts` fallback** (if not already done)
-- Ensure fallback is `{ amount: 139, currency: 'aud' }` throughout
+### 2. Authenticated Student Pages
 
-These three changes will ensure the correct $139 AUD price displays everywhere.
+| Component | Keys Read | Impact |
+|-----------|-----------|--------|
+| ModulePage.tsx | `course_completion_enabled` | SAFE -- new "Course users can read all settings" policy covers this |
+| CourseComplete.tsx | `congratulations_video_url`, `congratulations_video_type`, `congratulations_title`, `congratulations_message` | SAFE -- same policy covers this |
 
+### 3. Admin Pages
+
+| Component | Keys Read | Impact |
+|-----------|-----------|--------|
+| AdminSettings.tsx | ALL keys | SAFE -- existing "Admins can manage all settings" ALL policy already grants full access |
+| useCourseExport.ts | ALL keys | SAFE -- admin-only feature, same policy |
+
+### 4. Edge Functions (All use service role key -- RLS bypassed)
+
+| Function | Keys Read | Impact |
+|----------|-----------|--------|
+| chat | `guardrail_appendix` | SAFE |
+| get-payment-links | `payment_link_*` | SAFE |
+| get-price | `stripe_price_id` | SAFE |
+| create-payment | `stripe_price_id` | SAFE |
+| check-payment | email marketing settings | SAFE |
+| verify-stripe-session | `stripe_price_id_*` | SAFE |
+| claim-purchase | email marketing settings | SAFE |
+| send-signup-reminder | `signup_reminder_*`, `course_name` | SAFE |
+
+### 5. Onboarding Flow
+
+The onboarding flow (`/onboarding` page) does NOT read from `course_settings` at all. It only writes to `user_profiles`. **No impact.**
+
+### 6. Authentication Flow
+
+Login, signup, and session validation do not interact with `course_settings`. **No impact.**
+
+---
+
+## Conclusion
+
+The proposed RLS change is safe to proceed with. All access patterns are covered:
+
+- **Anonymous users** only need `hero_video_url` and `hero_video_type` (both whitelisted)
+- **Authenticated course users** get full read access via the new `user_has_course_access` policy
+- **Admins** retain full access via existing ALL policy
+- **Edge functions** bypass RLS entirely using service role
+
+## Implementation (Single Database Migration)
+
+```sql
+-- Drop overly permissive public read policies
+DROP POLICY IF EXISTS "Anyone can read settings" ON public.course_settings;
+DROP POLICY IF EXISTS "Authenticated users can read settings" ON public.course_settings;
+
+-- Allow public access ONLY to non-sensitive setting keys
+CREATE POLICY "Public can read safe settings"
+ON public.course_settings
+FOR SELECT
+TO anon, authenticated
+USING (
+  key IN (
+    'payment_link_core',
+    'payment_link_core_installments',
+    'payment_link_premium',
+    'stripe_price_id',
+    'hero_video_url',
+    'hero_video_type',
+    'course_name',
+    'course_subtitle',
+    'branding_logo_url'
+  )
+);
+
+-- Authenticated users with course access can read all settings
+CREATE POLICY "Course users can read all settings"
+ON public.course_settings
+FOR SELECT
+TO authenticated
+USING (user_has_course_access(auth.uid()));
+```
+
+No frontend or edge function code changes are needed.
