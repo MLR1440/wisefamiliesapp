@@ -2,6 +2,7 @@ import { Lock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { Link } from 'react-router-dom';
 
 const Paywall = () => {
