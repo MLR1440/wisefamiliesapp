@@ -4,6 +4,7 @@ import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
+import { usePremiumPrice } from '@/hooks/usePremiumPrice';
 import { Progress } from '@/components/ui/progress';
 
 const coreFeatures = ["12-month course access", "Complete 7-chapter video course", "AI-powered coaching tools", "Custom Family Tech Agreement builder", "Conversation script generator", "Private parent community (12 months)", "Downloadable resources & frameworks", "90-day money-back guarantee"];
@@ -13,6 +14,7 @@ const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
   const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
+  const { formattedPrice: formattedPremiumPrice, loading: premiumPriceLoading } = usePremiumPrice();
 
   const handleCoreClick = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
@@ -128,8 +130,7 @@ const Pricing = () => {
                 + 1:1 Strategy Session
               </h3>
               <div className="mb-2">
-                <span className="text-4xl font-bold text-primary">Contact Us</span>
-                <span className="text-muted-foreground ml-1">AUD</span>
+                <span className="text-4xl font-bold text-primary">{premiumPriceLoading ? '...' : formattedPremiumPrice}</span>
               </div>
             </div>
 
