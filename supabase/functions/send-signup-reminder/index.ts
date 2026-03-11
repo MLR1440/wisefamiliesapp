@@ -100,9 +100,9 @@ serve(async (req) => {
 
     logStep("Found unclaimed purchases", { count: pendingPurchases.length });
 
-    // Get app URL from environment or settings
-    const appUrl = Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '') || '';
-    const signupUrl = `https://wisefamiliesapp.lovable.app/signup`;
+    const appUrl = 'https://wisefamiliesapp.lovable.app';
+    
+    const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
     
     const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
     const courseName = settingsMap['course_name'] || 'Wise Families';
