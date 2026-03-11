@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users } from 'lucide-react';
+import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users, Zap } from 'lucide-react';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { Progress } from '@/components/ui/progress';
 
 const trustSignals = [{
   icon: BookOpen,
@@ -23,6 +25,7 @@ const trustSignals = [{
 }];
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
+  const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
   
   // Only compute these AFTER loading is complete to prevent race condition
   const heroVideoUrl = !loading ? getSetting('hero_video_url') : '';
@@ -123,7 +126,7 @@ const Hero = () => {
         }}>The complete system for parents who want to prepare their children for an AI-powered future, without the fear, without the fights, without feeling like you're always one step behind.</p>
 
           {/* CTA Button */}
-          <div className="flex flex-col items-center gap-4 animate-fade-up mb-10" style={{
+          <div className="flex flex-col items-center gap-4 animate-fade-up mb-6" style={{
           animationDelay: '0.2s'
         }}>
             <a href="#course-content">
@@ -132,6 +135,28 @@ const Hero = () => {
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </a>
+          </div>
+
+          {/* Founding Member Counter Bar */}
+          <div className="w-full max-w-md mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.22s' }}>
+            {isSoldOut ? (
+              <div className="px-6 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-center">
+                <p className="text-sm font-semibold text-destructive">Founding member spots are full</p>
+              </div>
+            ) : (
+              <div className="px-6 py-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
+                    {spots} of 100 spots remaining
+                  </span>
+                  <span className="text-muted-foreground">{spotsTaken} claimed</span>
+                </div>
+                <Progress value={spotsTaken} className="h-2.5" />
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Founding member pricing — 60% off before spots fill up
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Hero Video */}
@@ -153,12 +178,13 @@ const Hero = () => {
               </a>)}
           </div>
 
-          {/* Founding member text */}
-          <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
-          animationDelay: '0.4s'
-        }}>
-            🎉 Join the first 100 founding families and lock in 60% off before the price increases.
-          </p>
+          {!isSoldOut && (
+            <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
+            animationDelay: '0.4s'
+          }}>
+              🎉 {spots} founding member spots left — lock in 60% off before the price increases.
+            </p>
+          )}
         </div>
       </div>
     </section>;
