@@ -25,7 +25,7 @@ export const useCoursePrice = () => {
   }).format(price?.amount ?? 139);
 
   return { 
-    price: price ?? { amount: 99, currency: 'usd' }, 
+    price: price ?? { amount: 139, currency: 'aud' }, 
     formattedPrice, 
     loading 
   };

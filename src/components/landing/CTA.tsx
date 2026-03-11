@@ -41,7 +41,7 @@ const CTA = () => {
 
           {!isSoldOut && (
             <p className={`mt-4 text-sm font-medium ${isUrgent ? 'text-secondary' : 'text-primary-foreground/80'}`}>
-              {spots} founding member spots remaining at $139 AUD
+              {spots} founding member spots remaining at {formattedPrice}
             </p>
           )}
 
