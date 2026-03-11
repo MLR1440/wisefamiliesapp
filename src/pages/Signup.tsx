@@ -116,9 +116,9 @@ const Signup = () => {
           toast.error(error.message || 'Failed to create account');
         }
       } else {
-        toast.success('Account created successfully!');
-        // PaymentSuccess page handles claiming the purchase
-        navigate('/payment-success');
+        toast.success('Account created! Please check your email to verify your address.');
+        // Don't navigate — the useEffect watching `user` will redirect to /dashboard
+        // once they confirm their email and sign in
       }
     } catch (err) {
       toast.error('An unexpected error occurred');
