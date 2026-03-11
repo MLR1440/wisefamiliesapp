@@ -59,9 +59,38 @@ const Signup = () => {
     }
   }, []);
 
-  // Redirect if already logged in - to dashboard (where paywall shows if not paid)
+  const claimingRef = useRef(false);
+
+  // Redirect if already logged in — claim purchase first if token exists
   useEffect(() => {
-    if (user) {
+    if (!user || claimingRef.current) return;
+
+    const claimToken = localStorage.getItem('purchase_claim_token');
+    if (claimToken) {
+      claimingRef.current = true;
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('claim-purchase', {
+            body: { token: claimToken },
+          });
+          if (error) {
+            console.error('Claim purchase error:', error);
+            toast.error('Could not link your purchase. Please contact support.');
+          } else if (data?.success) {
+            toast.success('Purchase linked to your account!');
+          } else {
+            console.warn('Claim returned:', data);
+          }
+        } catch (err) {
+          console.error('Claim purchase exception:', err);
+        } finally {
+          localStorage.removeItem('purchase_claim_token');
+          localStorage.removeItem('purchase_stripe_email');
+          claimingRef.current = false;
+          navigate('/onboarding');
+        }
+      })();
+    } else {
       navigate('/dashboard');
     }
   }, [user, navigate]);
