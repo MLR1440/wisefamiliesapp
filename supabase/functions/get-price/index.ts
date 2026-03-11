@@ -53,7 +53,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error fetching price:", errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage, amount: 99, currency: "usd" }),
+      JSON.stringify({ error: errorMessage, amount: 139, currency: "aud" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200, // Return 200 with fallback to avoid breaking UI
