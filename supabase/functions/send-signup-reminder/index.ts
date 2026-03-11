@@ -103,8 +103,6 @@ serve(async (req) => {
     const appUrl = 'https://wisefamiliesapp.lovable.app';
     
     const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
-    
-    const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
     const courseName = settingsMap['course_name'] || 'Wise Families';
 
     let sentCount = 0;
