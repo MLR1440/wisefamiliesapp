@@ -83,17 +83,9 @@ const Pricing = () => {
               </ul>
             </div>
 
-            {coreLink ? (
-              <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick}>
-                Join as Founding Member
-              </Button>
-            ) : (
-              <Link to="/signup" className="block">
-                <Button variant="cta" size="xl" className="w-full gap-2">
-                  Join as Founding Member
-                </Button>
-              </Link>
-            )}
+            <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick} disabled={!coreLink}>
+              {coreLink ? 'Join as Founding Member' : 'Loading...'}
+            </Button>
 
             {coreInstallmentsLink && (
               <>
