@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 const Paywall = () => {
   const { coreLink, coreInstallmentsLink, loading } = usePaymentLinks();
   const { spots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
 
   const handlePurchase = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
