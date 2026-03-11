@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users } from 'lucide-react';
+import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users, Zap } from 'lucide-react';
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { Progress } from '@/components/ui/progress';
 
 const trustSignals = [{
   icon: BookOpen,

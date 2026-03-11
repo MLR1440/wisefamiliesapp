@@ -1,0 +1,1 @@
+UPDATE public.user_purchases SET refunded = true WHERE purchased_at < '2026-03-12';
