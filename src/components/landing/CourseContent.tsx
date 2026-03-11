@@ -8,7 +8,7 @@ const chapters = [
     modules: [
       "Why AI is different from every technology that came before",
       "The \"cognitive offloading\" risk most parents miss",
-      "Your child's brain during the 8-14 construction window",
+      "Your child's brain during the 8-16 construction window",
     ],
   },
   {
