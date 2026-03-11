@@ -46,6 +46,13 @@ const VideoPlayer = ({ videoUrl, videoType, title, onPlay }: VideoPlayerProps) =
     setHasError(true);
   };
 
+  // Fallback timeout: hide loading overlay after 5s even if onLoad doesn't fire
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setIsLoading(false), 5000);
+    return () => clearTimeout(timer);
+  }, [isLoading, videoUrl]);
+
   // Error state
   if (hasError) {
     return (
