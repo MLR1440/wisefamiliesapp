@@ -17,27 +17,27 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [hasSession, setHasSession] = useState(false);
+  const [hasRecoverySession, setHasRecoverySession] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     // Listen for the PASSWORD_RECOVERY event from the magic link
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        setHasSession(true);
+        setHasRecoverySession(true);
         setChecking(false);
       }
     });
 
-    // Also check if we already have a session (user may have already been authed by the link)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setHasSession(true);
-      }
+    // Timeout: if PASSWORD_RECOVERY doesn't fire within 3s, show invalid link
+    const timeout = setTimeout(() => {
       setChecking(false);
-    });
+    }, 3000);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
