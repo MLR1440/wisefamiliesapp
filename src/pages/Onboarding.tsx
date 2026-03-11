@@ -109,7 +109,12 @@ const Onboarding = () => {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    if (user) {
+      await supabase
+        .from('user_profiles')
+        .upsert({ user_id: user.id, onboarding_completed: true }, { onConflict: 'user_id' });
+    }
     navigate('/dashboard');
   };
 

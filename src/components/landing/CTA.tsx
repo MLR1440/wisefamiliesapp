@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
   const { spots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice } = useCoursePrice();
 
   return (
     <section className="relative overflow-hidden bg-gradient-hero py-16 md:py-24">
@@ -39,7 +41,7 @@ const CTA = () => {
 
           {!isSoldOut && (
             <p className={`mt-4 text-sm font-medium ${isUrgent ? 'text-secondary' : 'text-primary-foreground/80'}`}>
-              {spots} founding member spots remaining at $139 AUD
+              {spots} founding member spots remaining at {formattedPrice}
             </p>
           )}
 

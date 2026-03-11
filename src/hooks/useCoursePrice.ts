@@ -12,7 +12,7 @@ export const useCoursePrice = () => {
     queryFn: async (): Promise<PriceData> => {
       const { data, error } = await supabase.functions.invoke('get-price');
       if (error || !data?.amount) {
-        return { amount: 99, currency: 'usd' };
+        return { amount: 139, currency: 'aud' };
       }
       return { amount: data.amount, currency: data.currency || 'usd' };
     },
@@ -21,11 +21,11 @@ export const useCoursePrice = () => {
 
   const formattedPrice = new Intl.NumberFormat(undefined, {
     style: 'currency',
-    currency: price?.currency?.toUpperCase() || 'USD',
-  }).format(price?.amount ?? 99);
+    currency: price?.currency?.toUpperCase() || 'AUD',
+  }).format(price?.amount ?? 139);
 
   return { 
-    price: price ?? { amount: 99, currency: 'usd' }, 
+    price: price ?? { amount: 139, currency: 'aud' }, 
     formattedPrice, 
     loading 
   };

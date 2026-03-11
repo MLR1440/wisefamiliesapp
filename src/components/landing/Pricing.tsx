@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { Progress } from '@/components/ui/progress';
 
 const coreFeatures = ["12-month course access", "Complete 7-chapter video course", "AI-powered coaching tools", "Custom Family Tech Agreement builder", "Conversation script generator", "Private parent community (12 months)", "Downloadable resources & frameworks", "90-day money-back guarantee"];
@@ -11,6 +12,7 @@ const premiumExtras = ["36-month course access (3 years)", "1-hour private video
 const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
   const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
 
   const handleCoreClick = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
@@ -64,11 +66,9 @@ const Pricing = () => {
             <div className="text-center mb-8 pt-4">
               <h3 className="font-heading text-2xl font-bold text-foreground mb-2">AI-Ready Families Framework</h3>
               <div className="mb-2">
-                <span className="text-4xl font-bold text-primary">$139</span>
-                <span className="text-muted-foreground ml-1">AUD</span>
+                <span className="text-4xl font-bold text-primary">{priceLoading ? '...' : formattedPrice}</span>
               </div>
-              <p className="text-sm text-secondary font-medium">60% OFF founding member price</p>
-              <p className="text-sm text-muted-foreground line-through">Regular price: $347</p>
+              <p className="text-sm text-secondary font-medium">Founding member price</p>
             </div>
 
             <div className="mb-8">
@@ -98,7 +98,7 @@ const Pricing = () => {
                   Pay in 3 Installments
                 </Button>
                 <p className="text-center text-sm text-muted-foreground mt-2">
-                  3 x $47/month
+                  3 monthly payments
                 </p>
               </>
             )}
@@ -128,7 +128,7 @@ const Pricing = () => {
                 + 1:1 Strategy Session
               </h3>
               <div className="mb-2">
-                <span className="text-4xl font-bold text-primary">$991</span>
+                <span className="text-4xl font-bold text-primary">Contact Us</span>
                 <span className="text-muted-foreground ml-1">AUD</span>
               </div>
             </div>
@@ -166,8 +166,8 @@ const Pricing = () => {
               <Zap className="h-5 w-5" />
               <span className="text-sm font-medium">
                 {isUrgent
-                  ? `Only ${spots} founding member spots left — price increases to $347 AUD when they're gone.`
-                  : `Founding member pricing ends when we reach 100 families. After that, the price increases to $347 AUD.`}
+                  ? `Only ${spots} founding member spots left — price increases when they're gone.`
+                  : `Founding member pricing ends when we reach 100 families.`}
               </span>
             </div>
           </div>
