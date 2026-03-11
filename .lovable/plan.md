@@ -1,100 +1,49 @@
 
 
-# Full App Audit: Course Settings RLS Change
+## Full App Bug Scan Results (Round 2)
 
-## What We're Changing
-Restricting the `course_settings` table from fully public (`SELECT` with `USING (true)`) to a whitelist-based approach where only specific keys are publicly readable.
+After reviewing all pages, hooks, and components, here are the remaining bugs:
 
-## Audit Results
+### Bug 1: Footer "Get Started" links to `/signup` which bounces users without a payment token
+**File:** `src/components/layout/Footer.tsx` line 64
+**Issue:** For logged-out users, the footer shows a "Get Started" link pointing to `/signup`. But `/signup` requires a `purchase_claim_token` in localStorage — without one, the user is immediately redirected to `/` with a toast saying "Please complete payment first." This is confusing.
+**Fix:** Change the link to point to `/#pricing` instead.
 
-### 1. Public Landing Page (Unauthenticated Users)
+### Bug 2: Paywall and Pricing fallback links go to `/signup` (same bounce issue)
+**Files:** `src/components/Paywall.tsx` line 72, `src/components/landing/Pricing.tsx` lines 91 and 161
+**Issue:** When no Stripe payment link is loaded yet (e.g. while loading or if the edge function fails), the fallback `<Link to="/signup">` sends users to the signup page — which will bounce them right back. These should link to `/#pricing` or show a disabled state instead.
+**Fix:** Change fallback links from `/signup` to `/#pricing`, or disable the button while loading.
 
-| Component | Keys Read | Method | Impact |
-|-----------|-----------|--------|--------|
-| Hero.tsx | `hero_video_url`, `hero_video_type` | Direct DB query via `useCourseSettings` (reads ALL keys) | SAFE -- both keys are in the proposed whitelist |
-| Pricing.tsx | Payment links | Via `get-payment-links` edge function (service role) | SAFE -- bypasses RLS entirely |
-| Price display | `stripe_price_id` | Via `get-price` edge function (service role) | SAFE -- bypasses RLS entirely |
+### Bug 3: Paywall installment price is hardcoded `$47`
+**File:** `src/components/Paywall.tsx` line 84
+**Issue:** `"or pay in 3 installments of $47"` is a hardcoded string. If the installment price changes in Stripe, this will be wrong. Same issue as the previously-fixed main price.
+**Fix:** Either fetch the installment price dynamically or remove the specific dollar amount and just say "or pay in installments".
 
-**Risk**: The `useCourseSettings` hook does `select('*')`, which means for anonymous users it will now return only whitelisted keys instead of all keys. This is fine because Hero only uses `hero_video_url` and `hero_video_type`, both whitelisted. No other public page component uses this hook.
+### Bug 4: ForgotPassword — no password update handling after redirect
+**File:** `src/pages/ForgotPassword.tsx` line 30-31
+**Issue:** The `redirectTo` is set to `${origin}/login`. When the user clicks the reset link in their email, they land on `/login` but there's no mechanism to capture the recovery token and prompt them to set a new password. The auth flow needs to detect `type=recovery` in the URL hash and show a "Set new password" form. Currently the user lands on login with no indication they can set a new password.
+**Fix:** Add a password update flow — either on `/login` (detect recovery event in `onAuthStateChange`) or create a dedicated `/reset-password` page.
 
-### 2. Authenticated Student Pages
+### Bug 5: ProgressPage uses `hasPurchased` instead of `hasAccess` for navbar
+**File:** `src/pages/ProgressPage.tsx` line 97
+**Issue:** `<Navbar ... hasPurchased={hasPurchased} ...>` uses `hasPurchased` directly instead of `hasAccess`. This means admins who haven't purchased won't see the Dashboard/Progress/Community nav links, even though they have access.
+**Fix:** Change to `hasPurchased={hasAccess}` to match all other pages.
 
-| Component | Keys Read | Impact |
-|-----------|-----------|--------|
-| ModulePage.tsx | `course_completion_enabled` | SAFE -- new "Course users can read all settings" policy covers this |
-| CourseComplete.tsx | `congratulations_video_url`, `congratulations_video_type`, `congratulations_title`, `congratulations_message` | SAFE -- same policy covers this |
-
-### 3. Admin Pages
-
-| Component | Keys Read | Impact |
-|-----------|-----------|--------|
-| AdminSettings.tsx | ALL keys | SAFE -- existing "Admins can manage all settings" ALL policy already grants full access |
-| useCourseExport.ts | ALL keys | SAFE -- admin-only feature, same policy |
-
-### 4. Edge Functions (All use service role key -- RLS bypassed)
-
-| Function | Keys Read | Impact |
-|----------|-----------|--------|
-| chat | `guardrail_appendix` | SAFE |
-| get-payment-links | `payment_link_*` | SAFE |
-| get-price | `stripe_price_id` | SAFE |
-| create-payment | `stripe_price_id` | SAFE |
-| check-payment | email marketing settings | SAFE |
-| verify-stripe-session | `stripe_price_id_*` | SAFE |
-| claim-purchase | email marketing settings | SAFE |
-| send-signup-reminder | `signup_reminder_*`, `course_name` | SAFE |
-
-### 5. Onboarding Flow
-
-The onboarding flow (`/onboarding` page) does NOT read from `course_settings` at all. It only writes to `user_profiles`. **No impact.**
-
-### 6. Authentication Flow
-
-Login, signup, and session validation do not interact with `course_settings`. **No impact.**
+### Bug 6: `isLoading` set to `false` only in `getSession` path, not in `onAuthStateChange`
+**File:** `src/contexts/AuthContext.tsx`
+**Issue:** If `onAuthStateChange` fires with a valid session before `getSession().then()` resolves, the app shows a loading spinner until `getSession` completes. In most cases this is brief, but on slow connections it can cause a noticeable delay. Already noted in previous scan as low severity — still unfixed.
+**Fix:** Set `setIsLoading(false)` at the end of the `onAuthStateChange` handler when a session is present.
 
 ---
 
-## Conclusion
+### Summary
 
-The proposed RLS change is safe to proceed with. All access patterns are covered:
+| # | Severity | Bug | Files |
+|---|----------|-----|-------|
+| 1 | **Medium** | Footer "Get Started" → bounces from `/signup` | `Footer.tsx` |
+| 2 | **Medium** | Paywall/Pricing fallback links → `/signup` bounce | `Paywall.tsx`, `Pricing.tsx` |
+| 3 | **Low** | Hardcoded installment price "$47" | `Paywall.tsx` |
+| 4 | **High** | Password reset flow incomplete — no new password form | `ForgotPassword.tsx`, `Login.tsx` or new page |
+| 5 | **Low** | ProgressPage navbar uses `hasPurchased` not `hasAccess` | `ProgressPage.tsx` |
+| 6 | **Low** | `isLoading` not cleared in `onAuthStateChange` | `AuthContext.tsx` |
 
-- **Anonymous users** only need `hero_video_url` and `hero_video_type` (both whitelisted)
-- **Authenticated course users** get full read access via the new `user_has_course_access` policy
-- **Admins** retain full access via existing ALL policy
-- **Edge functions** bypass RLS entirely using service role
-
-## Implementation (Single Database Migration)
-
-```sql
--- Drop overly permissive public read policies
-DROP POLICY IF EXISTS "Anyone can read settings" ON public.course_settings;
-DROP POLICY IF EXISTS "Authenticated users can read settings" ON public.course_settings;
-
--- Allow public access ONLY to non-sensitive setting keys
-CREATE POLICY "Public can read safe settings"
-ON public.course_settings
-FOR SELECT
-TO anon, authenticated
-USING (
-  key IN (
-    'payment_link_core',
-    'payment_link_core_installments',
-    'payment_link_premium',
-    'stripe_price_id',
-    'hero_video_url',
-    'hero_video_type',
-    'course_name',
-    'course_subtitle',
-    'branding_logo_url'
-  )
-);
-
--- Authenticated users with course access can read all settings
-CREATE POLICY "Course users can read all settings"
-ON public.course_settings
-FOR SELECT
-TO authenticated
-USING (user_has_course_access(auth.uid()));
-```
-
-No frontend or edge function code changes are needed.
