@@ -14,6 +14,7 @@ const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
   const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
+  const { formattedPrice: formattedPremiumPrice, loading: premiumPriceLoading } = usePremiumPrice();
 
   const handleCoreClick = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
