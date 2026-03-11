@@ -112,6 +112,21 @@ serve(async (req) => {
 
     for (const purchase of pendingPurchases) {
       try {
+        // Extend token expiry to 72 hours from now
+        const newExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+        const { error: expiryError } = await supabaseClient
+          .from('pending_purchases')
+          .update({ expires_at: newExpiry })
+          .eq('id', purchase.id);
+
+        if (expiryError) {
+          logStep("Warning: Could not extend token expiry", { 
+            purchaseId: purchase.id, 
+            error: expiryError.message 
+          });
+        }
+
+        const signupUrl = `${appUrl}/signup?token=${purchase.claim_token}`;
         logStep("Sending reminder email", { email: purchase.stripe_customer_email });
 
         const emailResponse = await resend.emails.send({
