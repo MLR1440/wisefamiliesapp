@@ -11,7 +11,7 @@ import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 const Login = () => {
@@ -233,9 +233,9 @@ const Login = () => {
 
           {/* Sign up link */}
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/signup" className="font-medium text-primary transition-colors hover:text-primary/80">
-              Create account
+            Need access?{' '}
+            <Link to="/#pricing" className="font-medium text-primary transition-colors hover:text-primary/80">
+              View pricing
             </Link>
           </p>
         </div>

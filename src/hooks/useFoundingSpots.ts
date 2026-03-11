@@ -9,8 +9,8 @@ export const useFoundingSpots = () => {
       if (error) throw error;
       return data as number;
     },
-    staleTime: 60_000,
-    refetchInterval: 60_000,
+    staleTime: 5 * 60_000,
+    refetchInterval: 10 * 60_000,
   });
 
   const spots = spotsRemaining ?? 100;

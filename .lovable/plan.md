@@ -1,51 +1,100 @@
 
 
-## Full App Bug Scan Results
+# Full App Audit: Course Settings RLS Change
 
-### Bug 1: "Forgot Password" link goes to a non-existent route
-**File:** `src/pages/Login.tsx` line 163
-**Issue:** `<Link to="/forgot-password">` points to a route that does not exist in `App.tsx`. Clicking it shows the 404 page.
-**Fix:** Either create a `/forgot-password` page that calls `supabase.auth.resetPasswordForEmail()`, or remove the link until one is built.
+## What We're Changing
+Restricting the `course_settings` table from fully public (`SELECT` with `USING (true)`) to a whitelist-based approach where only specific keys are publicly readable.
 
-### Bug 2: Password validation mismatch across signup forms
-**Files:** `src/pages/Signup.tsx` vs `src/pages/PaymentSuccess.tsx` and `src/pages/Login.tsx`
-**Issue:** Signup.tsx validates `min(8)` characters, but PaymentSuccess.tsx and Login.tsx validate `min(6)`. A user could create an account via PaymentSuccess with a 6-character password, but the Signup page would reject it (and vice versa). All should consistently use `min(8)` to match the Signup page's UI hint ("Must be at least 8 characters").
-**Fix:** Update PaymentSuccess.tsx and Login.tsx schemas to `min(8)`.
+## Audit Results
 
-### Bug 3: Login page "Create account" link goes to `/signup` which requires a payment token
-**File:** `src/pages/Login.tsx` line 237
-**Issue:** The login page links to `/signup`, but the signup page redirects users away if they don't have a `purchase_claim_token` in localStorage. Users who click "Create account" from the login page will be bounced back to the landing page with "Please complete payment first." This is confusing.
-**Fix:** Either remove the "Create account" link from Login, or change it to link to `/#pricing` with appropriate copy like "Need to purchase? View pricing".
+### 1. Public Landing Page (Unauthenticated Users)
 
-### Bug 4: Operator precedence bug in AuthContext
-**File:** `src/contexts/AuthContext.tsx` line 48
-**Issue:** `event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session` is evaluated as `SIGNED_OUT || (TOKEN_REFRESHED && !session)` due to JS precedence, which happens to be correct logically. However, it should have explicit parentheses for clarity and safety.
-**Fix:** Add parentheses: `event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)`.
+| Component | Keys Read | Method | Impact |
+|-----------|-----------|--------|--------|
+| Hero.tsx | `hero_video_url`, `hero_video_type` | Direct DB query via `useCourseSettings` (reads ALL keys) | SAFE -- both keys are in the proposed whitelist |
+| Pricing.tsx | Payment links | Via `get-payment-links` edge function (service role) | SAFE -- bypasses RLS entirely |
+| Price display | `stripe_price_id` | Via `get-price` edge function (service role) | SAFE -- bypasses RLS entirely |
 
-### Bug 5: `isLoading` never set to `false` when `onAuthStateChange` fires first
-**File:** `src/contexts/AuthContext.tsx`
-**Issue:** `isLoading` is only set to `false` inside the `getSession().then()` block. If `onAuthStateChange` fires with a valid session before `getSession` resolves, the user state updates but `isLoading` remains `true` until `getSession` finishes. This is mostly fine but could cause a brief flash of the loading spinner. Not critical but worth noting.
+**Risk**: The `useCourseSettings` hook does `select('*')`, which means for anonymous users it will now return only whitelisted keys instead of all keys. This is fine because Hero only uses `hero_video_url` and `hero_video_type`, both whitelisted. No other public page component uses this hook.
 
-### Bug 6: `get_founding_spots_remaining` polls every 60 seconds even on the landing page
-**File:** `src/hooks/useFoundingSpots.ts`
-**Issue:** The `refetchInterval: 60_000` causes a network request every minute as long as any component using this hook is mounted (visible in the network logs — 20+ identical requests). This is wasteful for a number that barely changes.
-**Fix:** Increase `refetchInterval` to 5 or 10 minutes, or remove it entirely and rely on `staleTime` alone.
+### 2. Authenticated Student Pages
 
-### Bug 7: Paywall shows hardcoded "$139 AUD" instead of dynamic pricing
-**File:** `src/components/Paywall.tsx` line 50
-**Issue:** The price is hardcoded as `$139 AUD` rather than fetched from Stripe/course_settings. This violates the real-data requirement and will be wrong if pricing changes.
-**Fix:** Use the `useStripePrices` or `useCoursePrice` hook to fetch the actual price dynamically.
+| Component | Keys Read | Impact |
+|-----------|-----------|--------|
+| ModulePage.tsx | `course_completion_enabled` | SAFE -- new "Course users can read all settings" policy covers this |
+| CourseComplete.tsx | `congratulations_video_url`, `congratulations_video_type`, `congratulations_title`, `congratulations_message` | SAFE -- same policy covers this |
+
+### 3. Admin Pages
+
+| Component | Keys Read | Impact |
+|-----------|-----------|--------|
+| AdminSettings.tsx | ALL keys | SAFE -- existing "Admins can manage all settings" ALL policy already grants full access |
+| useCourseExport.ts | ALL keys | SAFE -- admin-only feature, same policy |
+
+### 4. Edge Functions (All use service role key -- RLS bypassed)
+
+| Function | Keys Read | Impact |
+|----------|-----------|--------|
+| chat | `guardrail_appendix` | SAFE |
+| get-payment-links | `payment_link_*` | SAFE |
+| get-price | `stripe_price_id` | SAFE |
+| create-payment | `stripe_price_id` | SAFE |
+| check-payment | email marketing settings | SAFE |
+| verify-stripe-session | `stripe_price_id_*` | SAFE |
+| claim-purchase | email marketing settings | SAFE |
+| send-signup-reminder | `signup_reminder_*`, `course_name` | SAFE |
+
+### 5. Onboarding Flow
+
+The onboarding flow (`/onboarding` page) does NOT read from `course_settings` at all. It only writes to `user_profiles`. **No impact.**
+
+### 6. Authentication Flow
+
+Login, signup, and session validation do not interact with `course_settings`. **No impact.**
 
 ---
 
-### Summary of fixes needed
+## Conclusion
 
-| # | Severity | Bug | Files |
-|---|----------|-----|-------|
-| 1 | **High** | Forgot password link → 404 | `Login.tsx` |
-| 2 | **Medium** | Password min length mismatch (6 vs 8) | `PaymentSuccess.tsx`, `Login.tsx` |
-| 3 | **Medium** | Login "Create account" → bounces from signup | `Login.tsx` |
-| 4 | **Low** | Missing parentheses in auth check | `AuthContext.tsx` |
-| 5 | **Low** | Excessive polling (every 60s) | `useFoundingSpots.ts` |
-| 6 | **Medium** | Hardcoded price in Paywall | `Paywall.tsx` |
+The proposed RLS change is safe to proceed with. All access patterns are covered:
 
+- **Anonymous users** only need `hero_video_url` and `hero_video_type` (both whitelisted)
+- **Authenticated course users** get full read access via the new `user_has_course_access` policy
+- **Admins** retain full access via existing ALL policy
+- **Edge functions** bypass RLS entirely using service role
+
+## Implementation (Single Database Migration)
+
+```sql
+-- Drop overly permissive public read policies
+DROP POLICY IF EXISTS "Anyone can read settings" ON public.course_settings;
+DROP POLICY IF EXISTS "Authenticated users can read settings" ON public.course_settings;
+
+-- Allow public access ONLY to non-sensitive setting keys
+CREATE POLICY "Public can read safe settings"
+ON public.course_settings
+FOR SELECT
+TO anon, authenticated
+USING (
+  key IN (
+    'payment_link_core',
+    'payment_link_core_installments',
+    'payment_link_premium',
+    'stripe_price_id',
+    'hero_video_url',
+    'hero_video_type',
+    'course_name',
+    'course_subtitle',
+    'branding_logo_url'
+  )
+);
+
+-- Authenticated users with course access can read all settings
+CREATE POLICY "Course users can read all settings"
+ON public.course_settings
+FOR SELECT
+TO authenticated
+USING (user_has_course_access(auth.uid()));
+```
+
+No frontend or edge function code changes are needed.

@@ -2,11 +2,13 @@ import { Lock, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
+import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { Link } from 'react-router-dom';
 
 const Paywall = () => {
   const { coreLink, coreInstallmentsLink, loading } = usePaymentLinks();
   const { spots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { formattedPrice, loading: priceLoading } = useCoursePrice();
 
   const handlePurchase = () => {
     if (coreLink) window.open(coreLink, '_blank', 'noopener,noreferrer');
@@ -47,7 +49,7 @@ const Paywall = () => {
       </div>
 
       <div className="mb-6">
-        <div className="text-4xl font-bold text-foreground">$139 AUD</div>
+        <div className="text-4xl font-bold text-foreground">{priceLoading ? '...' : formattedPrice}</div>
         <div className="text-sm text-muted-foreground">one-time payment</div>
         {!isSoldOut && (
           <div className={`mt-2 text-sm font-medium ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
