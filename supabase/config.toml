@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.submit-quiz]
 verify_jwt = false
+
+[functions.get-premium-price]
+verify_jwt = false

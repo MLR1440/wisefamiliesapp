@@ -130,8 +130,7 @@ const Pricing = () => {
                 + 1:1 Strategy Session
               </h3>
               <div className="mb-2">
-                <span className="text-4xl font-bold text-primary">Contact Us</span>
-                <span className="text-muted-foreground ml-1">AUD</span>
+                <span className="text-4xl font-bold text-primary">{premiumPriceLoading ? '...' : formattedPremiumPrice}</span>
               </div>
             </div>
 
