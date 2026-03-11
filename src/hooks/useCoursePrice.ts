@@ -12,7 +12,7 @@ export const useCoursePrice = () => {
     queryFn: async (): Promise<PriceData> => {
       const { data, error } = await supabase.functions.invoke('get-price');
       if (error || !data?.amount) {
-        return { amount: 99, currency: 'usd' };
+        return { amount: 139, currency: 'aud' };
       }
       return { amount: data.amount, currency: data.currency || 'usd' };
     },
