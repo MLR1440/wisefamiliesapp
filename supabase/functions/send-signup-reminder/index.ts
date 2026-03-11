@@ -75,6 +75,7 @@ serve(async (req) => {
       .from('pending_purchases')
       .select('id, stripe_customer_email, created_at, amount_total, currency')
       .is('claimed_by', null)
+      .is('claimed_at', null)
       .is('reminder_sent_at', null)
       .not('stripe_customer_email', 'is', null)
       .lt('created_at', cutoffTime.toISOString())
