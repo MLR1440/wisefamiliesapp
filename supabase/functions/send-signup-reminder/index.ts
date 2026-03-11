@@ -73,11 +73,12 @@ serve(async (req) => {
     // Find unclaimed purchases older than the delay period
     const { data: pendingPurchases, error: fetchError } = await supabaseClient
       .from('pending_purchases')
-      .select('id, stripe_customer_email, created_at, amount_total, currency')
+      .select('id, stripe_customer_email, created_at, amount_total, currency, claim_token')
       .is('claimed_by', null)
       .is('claimed_at', null)
       .is('reminder_sent_at', null)
       .not('stripe_customer_email', 'is', null)
+      .not('claim_token', 'is', null)
       .lt('created_at', cutoffTime.toISOString())
       .limit(50); // Process in batches
 
@@ -99,9 +100,9 @@ serve(async (req) => {
 
     logStep("Found unclaimed purchases", { count: pendingPurchases.length });
 
-    // Get app URL from environment or settings
-    const appUrl = Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '') || '';
-    const signupUrl = `https://wisefamiliesapp.lovable.app/signup`;
+    const appUrl = 'https://wisefamiliesapp.lovable.app';
+    
+    const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
     
     const fromEmail = settingsMap['signup_reminder_from_email'] || 'noreply@wisefamilies.com';
     const courseName = settingsMap['course_name'] || 'Wise Families';
@@ -111,6 +112,21 @@ serve(async (req) => {
 
     for (const purchase of pendingPurchases) {
       try {
+        // Extend token expiry to 72 hours from now
+        const newExpiry = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
+        const { error: expiryError } = await supabaseClient
+          .from('pending_purchases')
+          .update({ expires_at: newExpiry })
+          .eq('id', purchase.id);
+
+        if (expiryError) {
+          logStep("Warning: Could not extend token expiry", { 
+            purchaseId: purchase.id, 
+            error: expiryError.message 
+          });
+        }
+
+        const signupUrl = `${appUrl}/signup?token=${purchase.claim_token}`;
         logStep("Sending reminder email", { email: purchase.stripe_customer_email });
 
         const emailResponse = await resend.emails.send({

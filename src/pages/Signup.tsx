@@ -32,9 +32,20 @@ const Signup = () => {
     password: '',
   });
 
-  // Check for payment token on mount
+  // Check for payment token on mount — from localStorage or URL query param
   useEffect(() => {
-    const token = localStorage.getItem('purchase_claim_token');
+    let token = localStorage.getItem('purchase_claim_token');
+
+    // Fallback: check URL query params (e.g. from reminder email link)
+    if (!token) {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token');
+      if (urlToken) {
+        token = urlToken;
+        localStorage.setItem('purchase_claim_token', urlToken);
+      }
+    }
+
     if (token) {
       setHasPaymentToken(true);
       // Pre-fill email from Stripe if available
