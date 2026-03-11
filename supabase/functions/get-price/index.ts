@@ -31,7 +31,7 @@ serve(async (req) => {
       console.error("Error reading course_settings:", dbError.message);
     }
     
-    const priceId = setting?.value || "price_1SaqpSQLJHCz1zk9H6YyndT4";
+    const priceId = setting?.value || "price_1SruuTQLJHCz1zk99ELRpWtl";
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
