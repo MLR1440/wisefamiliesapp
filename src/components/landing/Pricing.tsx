@@ -166,8 +166,8 @@ const Pricing = () => {
               <Zap className="h-5 w-5" />
               <span className="text-sm font-medium">
                 {isUrgent
-                  ? `Only ${spots} founding member spots left — price increases to $347 AUD when they're gone.`
-                  : `Founding member pricing ends when we reach 100 families. After that, the price increases to $347 AUD.`}
+                  ? `Only ${spots} founding member spots left — price increases when they're gone.`
+                  : `Founding member pricing ends when we reach 100 families.`}
               </span>
             </div>
           </div>
