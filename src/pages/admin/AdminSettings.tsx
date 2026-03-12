@@ -41,6 +41,7 @@ const AdminSettings = () => {
   // Course settings
   const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
+  const [foundingSpotsLimit, setFoundingSpotsLimit] = useState('100');
   const [isSavingCourse, setIsSavingCourse] = useState(false);
 
   // Payment Links settings
@@ -97,6 +98,7 @@ const AdminSettings = () => {
       // Course settings
       setCourseTitle(getSetting('course_title') || 'A.I - Ready Family Framework');
       setCourseDescription(getSetting('course_description') || '');
+      setFoundingSpotsLimit(getSetting('founding_spots_limit') || '100');
       
       // Payment Links
       setPaymentLinkCore(getSetting('payment_link_core') || '');
@@ -165,6 +167,7 @@ const AdminSettings = () => {
       await Promise.all([
         updateSetting('course_title', courseTitle),
         updateSetting('course_description', courseDescription),
+        updateSetting('founding_spots_limit', foundingSpotsLimit),
       ]);
       toast.success('Course settings saved!');
     } catch (error) {
@@ -478,6 +481,21 @@ const AdminSettings = () => {
                   placeholder="Enter course description..."
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="foundingSpotsLimit">Founding Member Spots Limit</Label>
+                <Input
+                  id="foundingSpotsLimit"
+                  type="number"
+                  min="1"
+                  value={foundingSpotsLimit}
+                  onChange={(e) => setFoundingSpotsLimit(e.target.value)}
+                  placeholder="100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Total number of founding member spots available. The landing page counter and pricing will update dynamically.
+                </p>
               </div>
 
               <Button onClick={handleSaveCourse} disabled={isSavingCourse} className="gap-2">

@@ -12,7 +12,7 @@ const premiumExtras = ["36-month course access (3 years)", "1-hour private video
 
 const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
-  const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
+  const { spots, spotsTaken, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
   const { formattedPrice: formattedPremiumPrice, loading: premiumPriceLoading } = usePremiumPrice();
 
@@ -45,11 +45,11 @@ const Pricing = () => {
               <div className="mx-auto max-w-md">
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                    {spots} of 100 spots remaining
+                    {spots} of {totalSpots} spots remaining
                   </span>
                   <span className="text-muted-foreground">{spotsTaken} claimed</span>
                 </div>
-                <Progress value={spotsTaken} className="h-3" />
+                <Progress value={(spotsTaken / totalSpots) * 100} className="h-3" />
               </div>
             </>
           )}
@@ -168,7 +168,7 @@ const Pricing = () => {
               <span className="text-sm font-medium">
                 {isUrgent
                   ? `Only ${spots} founding member spots left — price increases when they're gone.`
-                  : `Founding member pricing ends when we reach 100 families.`}
+                  : `Founding member pricing ends when we reach ${totalSpots} families.`}
               </span>
             </div>
           </div>

@@ -25,7 +25,7 @@ const trustSignals = [{
 }];
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
-  const { spots, spotsTaken, isUrgent, isSoldOut } = useFoundingSpots();
+  const { spots, spotsTaken, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
   
   // Only compute these AFTER loading is complete to prevent race condition
   const heroVideoUrl = !loading ? getSetting('hero_video_url') : '';
@@ -147,11 +147,11 @@ const Hero = () => {
               <div className="px-6 py-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50">
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                    {spots} of 100 spots remaining
+                    {spots} of {totalSpots} spots remaining
                   </span>
                   <span className="text-muted-foreground">{spotsTaken} claimed</span>
                 </div>
-                <Progress value={spotsTaken} className="h-2.5" />
+                <Progress value={(spotsTaken / totalSpots) * 100} className="h-2.5" />
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Founding member pricing — 60% off before spots fill up
                 </p>
@@ -182,7 +182,7 @@ const Hero = () => {
             <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
             animationDelay: '0.4s'
           }}>
-              🎉 97 founding member spots left — lock in 60% saving. (Normal Price $347)
+              🎉 {spots} founding member spots left — lock in 60% saving. (Normal Price $347)
             </p>
           )}
         </div>
