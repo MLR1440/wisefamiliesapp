@@ -6,8 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { Progress } from '@/components/ui/progress';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
-import { useFoundingSpots } from '@/hooks/useFoundingSpots';
-import { Progress } from '@/components/ui/progress';
 
 const trustSignals = [{
   icon: BookOpen,
