@@ -483,6 +483,21 @@ const AdminSettings = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="foundingSpotsLimit">Founding Member Spots Limit</Label>
+                <Input
+                  id="foundingSpotsLimit"
+                  type="number"
+                  min="1"
+                  value={foundingSpotsLimit}
+                  onChange={(e) => setFoundingSpotsLimit(e.target.value)}
+                  placeholder="100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Total number of founding member spots available. The landing page counter and pricing will update dynamically.
+                </p>
+              </div>
+
               <Button onClick={handleSaveCourse} disabled={isSavingCourse} className="gap-2">
                 {isSavingCourse ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
