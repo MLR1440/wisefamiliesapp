@@ -90,7 +90,7 @@ const MessageBubble = ({
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : isUser ? 'bg-primary text-primary-foreground' : 'bg-aipurple/10 text-foreground'}`}>
         <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
         {message.created_at && <p className={`text-sm mt-1.5 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
             {new Date(message.created_at).toLocaleTimeString([], {
@@ -275,7 +275,7 @@ const ChatInterface = ({
     return <ChatSkeleton />;
   }
 
-  return <div className="overflow-hidden rounded-xl border border-border bg-card">
+  return <div className="overflow-hidden rounded-xl border-2 border-aipurple/30 bg-card">
       {/* Offline banner */}
       {!isOnline && <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center gap-2">
           <WifiOff className="h-4 w-4 text-destructive" />
@@ -283,11 +283,11 @@ const ChatInterface = ({
         </div>}
 
       {/* Minimal header */}
-      <div className="border-b border-border/50 px-4 py-3 md:px-5">
+      <div className="border-b border-aipurple/20 bg-aipurple/10 px-4 py-3 md:px-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h2 className="font-medium text-foreground text-sm">AI Assistant</h2>
+            <Sparkles className="h-4 w-4 text-aipurple" />
+            <h2 className="font-medium text-aipurple text-sm">AI Assistant</h2>
           </div>
           {hasHistory && <Button variant="ghost" size="sm" onClick={handleClearAndRestart} className="text-muted-foreground hover:text-foreground h-8 px-2 text-xs">
               <RefreshCw className="h-3.5 w-3.5 mr-1" />
@@ -302,7 +302,7 @@ const ChatInterface = ({
             <p className="text-center text-muted-foreground text-base">Start a conversation with one of these prompts or ask your own:</p>
             {/* Mobile: single column, Desktop: two columns */}
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-              {starterPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
+              {starterPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-aipurple/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
                   <span className="text-base font-medium text-foreground">{prompt.label}</span>
                 </button>)}
             </div>
@@ -321,7 +321,7 @@ const ChatInterface = ({
       {messages.length > 0 && remainingPrompts.length > 0 && <div className="border-t border-border bg-muted/20 px-4 py-3 md:px-6 md:py-4">
           <p className="text-sm text-muted-foreground mb-2.5">More prompts to explore:</p>
           <div className="flex flex-wrap gap-2">
-            {remainingPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
+            {remainingPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-lg border border-border bg-background px-3 py-2.5 text-left transition-all duration-200 hover:border-aipurple/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
                 <span className="text-sm font-medium text-foreground">{prompt.label}</span>
               </button>)}
           </div>
