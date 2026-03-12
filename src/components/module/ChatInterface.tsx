@@ -283,11 +283,11 @@ const ChatInterface = ({
         </div>}
 
       {/* Minimal header */}
-      <div className="border-b border-border/50 px-4 py-3 md:px-5">
+      <div className="border-b border-aipurple/20 bg-aipurple/10 px-4 py-3 md:px-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h2 className="font-medium text-foreground text-sm">AI Assistant</h2>
+            <Sparkles className="h-4 w-4 text-aipurple" />
+            <h2 className="font-medium text-aipurple text-sm">AI Assistant</h2>
           </div>
           {hasHistory && <Button variant="ghost" size="sm" onClick={handleClearAndRestart} className="text-muted-foreground hover:text-foreground h-8 px-2 text-xs">
               <RefreshCw className="h-3.5 w-3.5 mr-1" />
