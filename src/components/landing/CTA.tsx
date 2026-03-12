@@ -4,7 +4,7 @@ import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
-  const { spots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { spots, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
   const { formattedPrice } = useCoursePrice();
 
   return (
