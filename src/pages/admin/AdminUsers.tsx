@@ -378,13 +378,29 @@ const AdminUsers = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <DeleteUserDialog
-                          userId={u.id}
-                          userName={u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
-                          userEmail={u.email}
-                          currentUserId={user?.id || ''}
-                          onUserDeleted={fetchUsers}
-                        />
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={sendingEmailTo === u.id}
+                            onClick={() => handleResendEmail(u.id, u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0])}
+                            title="Resend welcome email"
+                          >
+                            {sendingEmailTo === u.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <DeleteUserDialog
+                            userId={u.id}
+                            userName={u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
+                            userEmail={u.email}
+                            currentUserId={user?.id || ''}
+                            onUserDeleted={fetchUsers}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
