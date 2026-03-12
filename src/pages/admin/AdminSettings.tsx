@@ -41,6 +41,7 @@ const AdminSettings = () => {
   // Course settings
   const [courseTitle, setCourseTitle] = useState('');
   const [courseDescription, setCourseDescription] = useState('');
+  const [foundingSpotsLimit, setFoundingSpotsLimit] = useState('100');
   const [isSavingCourse, setIsSavingCourse] = useState(false);
 
   // Payment Links settings
