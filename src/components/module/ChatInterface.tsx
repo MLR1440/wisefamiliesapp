@@ -90,7 +90,7 @@ const MessageBubble = ({
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${isError ? 'bg-destructive/10 text-destructive border border-destructive/20' : isUser ? 'bg-primary text-primary-foreground' : 'bg-aipurple/10 text-foreground'}`}>
         <p className="text-base leading-relaxed whitespace-pre-wrap">{message.content}</p>
         {message.created_at && <p className={`text-sm mt-1.5 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
             {new Date(message.created_at).toLocaleTimeString([], {
