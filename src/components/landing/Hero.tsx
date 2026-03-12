@@ -151,7 +151,7 @@ const Hero = () => {
                   </span>
                   <span className="text-muted-foreground">{spotsTaken} claimed</span>
                 </div>
-                <Progress value={spotsTaken} className="h-2.5" />
+                <Progress value={(spotsTaken / totalSpots) * 100} className="h-2.5" />
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Founding member pricing — 60% off before spots fill up
                 </p>
