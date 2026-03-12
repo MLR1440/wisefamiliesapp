@@ -49,7 +49,7 @@ const Pricing = () => {
                   </span>
                   <span className="text-muted-foreground">{spotsTaken} claimed</span>
                 </div>
-                <Progress value={spotsTaken} className="h-3" />
+                <Progress value={(spotsTaken / totalSpots) * 100} className="h-3" />
               </div>
             </>
           )}
