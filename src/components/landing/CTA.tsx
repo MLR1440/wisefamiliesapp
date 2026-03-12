@@ -34,7 +34,7 @@ const CTA = () => {
 
           <a href="#pricing" className="inline-block">
             <Button variant="cta" size="xl" className="gap-2 shadow-lg">
-              Join the Founding 100
+              Join the Founding {totalSpots}
               <ArrowRight className="h-5 w-5" />
             </Button>
           </a>

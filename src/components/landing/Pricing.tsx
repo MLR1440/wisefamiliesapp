@@ -168,7 +168,7 @@ const Pricing = () => {
               <span className="text-sm font-medium">
                 {isUrgent
                   ? `Only ${spots} founding member spots left — price increases when they're gone.`
-                  : `Founding member pricing ends when we reach 100 families.`}
+                  : `Founding member pricing ends when we reach ${totalSpots} families.`}
               </span>
             </div>
           </div>
