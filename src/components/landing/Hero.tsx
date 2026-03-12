@@ -182,7 +182,7 @@ const Hero = () => {
             <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
             animationDelay: '0.4s'
           }}>
-              🎉 {spots} founding member spots left — lock in 60% off before the price increases.
+              🎉 97 founding member spots left — lock in 60% saving. (Normal Price $347)
             </p>
           )}
         </div>
