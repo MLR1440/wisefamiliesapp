@@ -45,7 +45,7 @@ const Pricing = () => {
               <div className="mx-auto max-w-md">
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                    {spots} of 100 spots remaining
+                    {spots} of {totalSpots} spots remaining
                   </span>
                   <span className="text-muted-foreground">{spotsTaken} claimed</span>
                 </div>
