@@ -56,8 +56,8 @@ serve(async (req) => {
       });
     }
 
-    // Verify it's a one-time payment
-    if (session.mode !== "payment") {
+    // Verify it's a valid payment mode (one-time or subscription/installments)
+    if (session.mode !== "payment" && session.mode !== "subscription") {
       return new Response(JSON.stringify({ 
         valid: false, 
         error: "Invalid payment mode" 
