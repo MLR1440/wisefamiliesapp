@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -45,6 +46,28 @@ const faqs = [
 ];
 
 const FAQ = () => {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-faq-schema', 'true');
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer,
+        },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   return (
     <section className="py-16 md:py-24 bg-background">
       <div className="container px-4 sm:px-6">
