@@ -275,7 +275,7 @@ const ChatInterface = ({
     return <ChatSkeleton />;
   }
 
-  return <div className="overflow-hidden rounded-xl border border-border bg-card">
+  return <div className="overflow-hidden rounded-xl border-2 border-aipurple/30 bg-card">
       {/* Offline banner */}
       {!isOnline && <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 flex items-center gap-2">
           <WifiOff className="h-4 w-4 text-destructive" />
