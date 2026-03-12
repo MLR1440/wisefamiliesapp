@@ -167,6 +167,7 @@ const AdminSettings = () => {
       await Promise.all([
         updateSetting('course_title', courseTitle),
         updateSetting('course_description', courseDescription),
+        updateSetting('founding_spots_limit', foundingSpotsLimit),
       ]);
       toast.success('Course settings saved!');
     } catch (error) {
