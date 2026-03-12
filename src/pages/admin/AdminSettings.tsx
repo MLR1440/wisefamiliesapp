@@ -98,6 +98,7 @@ const AdminSettings = () => {
       // Course settings
       setCourseTitle(getSetting('course_title') || 'A.I - Ready Family Framework');
       setCourseDescription(getSetting('course_description') || '');
+      setFoundingSpotsLimit(getSetting('founding_spots_limit') || '100');
       
       // Payment Links
       setPaymentLinkCore(getSetting('payment_link_core') || '');
