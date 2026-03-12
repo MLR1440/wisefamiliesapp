@@ -130,13 +130,21 @@ const Hero = () => {
         }}>The complete system for parents who want to prepare their children for an AI-powered future, without the fear, without the fights, without feeling like you're always one step behind.</p>
 
           {/* CTA Button */}
-          <div className="flex flex-col items-center gap-4 animate-fade-up mb-6" style={{
+          <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-up mb-6" style={{
           animationDelay: '0.2s'
         }}>
+            {!isSoldOut && (
+              <a href="#pricing">
+                <Button variant="cta" size="xl" className="gap-3 text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  {priceLoading ? 'Join as Founding Member' : `Join as Founding Member — ${formattedPrice}`}
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </a>
+            )}
             <a href="#course-content">
-              <Button variant="cta" size="xl" className="gap-3 text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <Button variant="outline-primary" size="lg" className="gap-2">
                 See What's Inside
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </a>
           </div>
