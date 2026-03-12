@@ -302,7 +302,7 @@ const ChatInterface = ({
             <p className="text-center text-muted-foreground text-base">Start a conversation with one of these prompts or ask your own:</p>
             {/* Mobile: single column, Desktop: two columns */}
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-              {starterPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-primary/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
+              {starterPrompts.map(prompt => <button key={prompt.id} onClick={() => handlePromptClick(prompt)} disabled={isLoading || !isOnline} className="rounded-xl border border-border bg-background p-4 text-left transition-all duration-200 hover:border-aipurple/50 hover:shadow-soft disabled:opacity-50 active:scale-[0.98]">
                   <span className="text-base font-medium text-foreground">{prompt.label}</span>
                 </button>)}
             </div>
