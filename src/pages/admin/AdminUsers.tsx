@@ -155,6 +155,29 @@ const AdminUsers = () => {
     });
   };
 
+  const handleResendEmail = async (userId: string, userName: string) => {
+    setSendingEmailTo(userId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in');
+        return;
+      }
+      const response = await supabase.functions.invoke('resend-welcome-email', {
+        body: { userId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+      toast.success(`Welcome email resent to ${userName}`);
+    } catch (error) {
+      console.error('Error resending email:', error);
+      toast.error('Failed to resend welcome email');
+    } finally {
+      setSendingEmailTo(null);
+    }
+  };
+
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleTimeString('en-US', {
