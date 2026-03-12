@@ -48,6 +48,7 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sendingEmailTo, setSendingEmailTo] = useState<string | null>(null);
   
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
 
