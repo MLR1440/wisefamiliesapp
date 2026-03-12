@@ -48,6 +48,7 @@ const AdminUsers = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sendingEmailTo, setSendingEmailTo] = useState<string | null>(null);
   
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Admin';
 
@@ -152,6 +153,29 @@ const AdminUsers = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleResendEmail = async (userId: string, userName: string) => {
+    setSendingEmailTo(userId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in');
+        return;
+      }
+      const response = await supabase.functions.invoke('resend-welcome-email', {
+        body: { userId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+      toast.success(`Welcome email resent to ${userName}`);
+    } catch (error) {
+      console.error('Error resending email:', error);
+      toast.error('Failed to resend welcome email');
+    } finally {
+      setSendingEmailTo(null);
+    }
   };
 
   const formatTime = (dateString: string | null) => {
@@ -354,13 +378,29 @@ const AdminUsers = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <DeleteUserDialog
-                          userId={u.id}
-                          userName={u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
-                          userEmail={u.email}
-                          currentUserId={user?.id || ''}
-                          onUserDeleted={fetchUsers}
-                        />
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={sendingEmailTo === u.id}
+                            onClick={() => handleResendEmail(u.id, u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0])}
+                            title="Resend welcome email"
+                          >
+                            {sendingEmailTo === u.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <DeleteUserDialog
+                            userId={u.id}
+                            userName={u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
+                            userEmail={u.email}
+                            currentUserId={user?.id || ''}
+                            onUserDeleted={fetchUsers}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
