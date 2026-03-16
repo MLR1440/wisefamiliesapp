@@ -104,15 +104,15 @@ const MessageBubble = ({
 };
 
 const TypingIndicator = () => <div className="flex justify-start">
-    <div className="rounded-2xl bg-muted px-4 py-3">
+    <div className="rounded-2xl bg-aipurple/10 px-4 py-3">
       <div className="flex gap-1">
-        <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{
+        <span className="h-2 w-2 animate-bounce rounded-full bg-aipurple" style={{
         animationDelay: '0ms'
       }} />
-        <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{
+        <span className="h-2 w-2 animate-bounce rounded-full bg-aipurple" style={{
         animationDelay: '150ms'
       }} />
-        <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" style={{
+        <span className="h-2 w-2 animate-bounce rounded-full bg-aipurple" style={{
         animationDelay: '300ms'
       }} />
       </div>
