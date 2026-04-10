@@ -124,7 +124,7 @@ export function Quiz() {
                 </p>
 
                 <p className="text-muted-foreground mb-6 text-sm">
-                  We'll send you 3 practical actions you can take this week — plus a personalised AI-readiness breakdown — straight to your inbox.
+                  We'll send you 3 practical actions you can take this week - straight to your inbox.
                 </p>
 
                 <div className="space-y-4">
