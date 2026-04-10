@@ -113,8 +113,8 @@ Deno.serve(async (req) => {
         // Build tag names based on quiz answers
         const tagNames: string[] = [];
 
-        if (answers.childAge) {
-          tagNames.push(`age:${answers.childAge}`);
+        if (answers.motivationLevel) {
+          tagNames.push(`motivation:${answers.motivationLevel}`);
         }
         if (answers.biggestConcern) {
           tagNames.push(`concern:${answers.biggestConcern}`);
