@@ -13,6 +13,7 @@ export interface QuizAnswer {
 export interface QuizResult {
   score: number;
   category: 'ai-ready' | 'growing' | 'early';
+  description: string;
   recommendations: string[];
 }
 
@@ -131,30 +132,35 @@ export function useQuiz() {
     let category: QuizResult['category'];
     let recommendations: string[];
 
+    let description: string;
+
     if (score >= 7) {
       category = 'ai-ready';
+      description = "You've built a strong foundation — you're already paying attention and having conversations most parents haven't started yet. The course will sharpen your approach as AI continues to evolve.";
       recommendations = [
-        "You've built a strong foundation—this course will help you refine and strengthen it.",
-        "Learn advanced strategies to keep pace as AI evolves rapidly.",
-        "Join a community of like-minded parents to share insights.",
+        "Have a 5-minute 'curiosity' conversation with your child tonight — ask what they'd use AI for at school.",
+        "Try an AI tool together at the kitchen table to remove the mystery.",
+        "Set one simple trust guideline: 'We check AI answers together before trusting them.'",
       ];
     } else if (score >= 4) {
       category = 'growing';
+      description = "You're aware AI matters and you've taken some steps. A structured approach will help you turn that awareness into confident, everyday guidance for your family.";
       recommendations = [
-        "You're on the right track! The course fills crucial gaps in AI parenting.",
-        "Get practical frameworks to turn monitoring into meaningful guidance.",
-        "Build confidence with step-by-step conversation starters.",
+        "Start a low-pressure conversation tonight — ask your child what they've heard about AI at school.",
+        "Pick one AI tool and explore it together this week — keep it fun and low-stakes.",
+        "Agree on one family rule about AI, like always checking answers together.",
       ];
     } else {
       category = 'early';
+      description = "AI is already part of your child's world, even if it doesn't feel like it yet. The good news? Starting now puts you ahead of most families. You don't need to be technical — you just need a plan.";
       recommendations = [
-        "Great timing! Starting now gives you a real advantage.",
-        "The course provides a complete roadmap—no AI expertise required.",
-        "Transform uncertainty into confident, proactive parenting.",
+        "Ask your child tonight: 'Have you heard about AI at school?' — just listen, no judgment.",
+        "Spend 5 minutes exploring ChatGPT yourself so you know what your child might encounter.",
+        "Set one simple rule to start: 'We explore new tech together first.'",
       ];
     }
 
-    return { score, category, recommendations };
+    return { score, category, description, recommendations };
   }, []);
 
   const handleAnswer = useCallback((value: string) => {

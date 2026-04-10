@@ -73,14 +73,24 @@ export function QuizResults({ result, emailCaptured }: QuizResultsProps) {
         </div>
       </div>
 
-      <p className="text-lg text-muted-foreground mb-8">
+      <p className="text-lg text-muted-foreground mb-2">
         {config.subtitle}
+      </p>
+
+      {/* Reassuring message */}
+      <p className="text-sm font-medium text-foreground/80 mb-4">
+        The fact that you took this quiz already puts you ahead of most parents.
+      </p>
+
+      {/* Category description */}
+      <p className="text-muted-foreground mb-8">
+        {result.description}
       </p>
 
       {/* Recommendations */}
       <div className="bg-card border border-border rounded-2xl p-6 mb-8 text-left">
         <h4 className="font-heading font-semibold text-foreground mb-4">
-          Based on your answers:
+          Here's what you can do right now:
         </h4>
         <ul className="space-y-3">
           {result.recommendations.map((rec, index) => (
@@ -104,9 +114,21 @@ export function QuizResults({ result, emailCaptured }: QuizResultsProps) {
       
       {emailCaptured && (
         <p className="mt-4 text-sm text-muted-foreground">
-          Check your email for your detailed AI-readiness report!
+          Check your inbox — we've sent you 3 practical actions you can take this week plus your full AI-readiness breakdown.
         </p>
       )}
+
+      {/* Blog link */}
+      <div className="mt-6">
+        <a
+          href="https://wisefamilies.co/blog/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary hover:text-primary/80 transition-colors"
+        >
+          Want to learn more? Explore our blog →
+        </a>
+      </div>
     </div>
   );
 }

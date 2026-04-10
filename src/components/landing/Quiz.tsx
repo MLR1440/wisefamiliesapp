@@ -114,8 +114,17 @@ export function Quiz() {
                 <h3 className="text-xl sm:text-2xl font-heading font-semibold text-foreground mb-2">
                   Your AI-Readiness Score
                 </h3>
-                <p className="text-muted-foreground mb-6">
-                  Want personalized recommendations and tips sent to your inbox?
+
+                {/* Category description */}
+                <p className="text-muted-foreground mb-2">
+                  {result.description}
+                </p>
+                <p className="text-sm font-medium text-foreground/80 mb-6">
+                  The fact that you took this quiz already puts you ahead of most parents.
+                </p>
+
+                <p className="text-muted-foreground mb-6 text-sm">
+                  We'll send you 3 practical actions you can take this week — plus a personalised AI-readiness breakdown — straight to your inbox.
                 </p>
 
                 <div className="space-y-4">
@@ -142,7 +151,7 @@ export function Quiz() {
                       </>
                     ) : (
                       <>
-                        Get My Personalized Report
+                        Send Me My Action Plan
                         <ArrowRight className="h-5 w-5" />
                       </>
                     )}
@@ -154,10 +163,19 @@ export function Quiz() {
                   >
                     Skip — just show my results
                   </button>
-                  
+
                   <p className="text-xs text-muted-foreground">
                     We respect your privacy. Unsubscribe anytime.
                   </p>
+
+                  <a
+                    href="https://wisefamilies.co/blog/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Just want to explore? Visit our blog for free tips and guides →
+                  </a>
                 </div>
 
                 {/* Back button */}
