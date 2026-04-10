@@ -125,7 +125,7 @@ export function useQuiz() {
     });
 
     // Max possible score is ~11, normalize to 10
-    const score = Math.min(10, Math.round((totalPoints / 11) * 10));
+    const score = Math.min(10, Math.round((totalPoints / 17) * 10));
     
     let category: QuizResult['category'];
     let recommendations: string[];
