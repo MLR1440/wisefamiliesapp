@@ -136,7 +136,7 @@ export function useQuiz() {
 
     if (score >= 7) {
       category = 'ai-ready';
-      description = "You've built a strong foundation — you're already paying attention and having conversations most parents haven't started yet. The course will sharpen your approach as AI continues to evolve.";
+      description = "You've built a strong foundation — you're already paying attention and having conversations most parents haven't started yet. The framework will sharpen your approach as AI continues to evolve.";
       recommendations = [
         "Have a 5-minute 'curiosity' conversation with your child tonight — ask what they'd use AI for at school.",
         "Try an AI tool together at the kitchen table to remove the mystery.",
