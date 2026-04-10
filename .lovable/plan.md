@@ -1,56 +1,35 @@
 
 
-## Quiz Updates: Replace Age Question + Show Score Before Email
+## Reword Quiz Final Screens + Add Blog Link
 
-### 1. Replace the `childAge` question
+### What changes
 
-Remove the "What age range is your child?" question and replace it with a more engagement-relevant question. Suggestion:
+**1. `src/hooks/useQuiz.ts`** — Add category descriptions that give immediate meaning to the score
 
-**`motivationLevel`** — "What motivated you to look into AI guidance for your family?"
-- "A news story or social media post worried me" (1 pt)
-- "My child started using AI tools on their own" (2 pts)  
-- "I want to be proactive before it becomes a problem" (2 pts)
-- "A friend or educator recommended it" (1 pt)
+Each category gets a `description` field mirroring the email's tone:
+- **AI-Ready (7-10):** "You've built a strong foundation — you're already paying attention and having conversations most parents haven't started yet. The course will sharpen your approach as AI continues to evolve."
+- **Growing (4-6):** "You're aware AI matters and you've taken some steps. A structured approach will help you turn that awareness into confident, everyday guidance for your family."
+- **Early (0-3):** "AI is already part of your child's world, even if it doesn't feel like it yet. The good news? Starting now puts you ahead of most families. You don't need to be technical — you just need a plan."
 
-This keeps the quiz at 8 questions and replaces a demographic question with a motivation/intent signal that's more useful for segmentation.
+Update `QuizResult` type to include `description: string`.
 
-### 2. Show the basic score/category BEFORE asking for email
+**2. `src/components/landing/Quiz.tsx`** — Reword the email capture preview screen
 
-Currently the flow is: 8 questions → email step → results. Change it to: 8 questions → basic result + email prompt → full detailed results.
+- Change the prompt text from "Want personalized recommendations and tips sent to your inbox?" to: **"We'll send you 3 practical actions you can take this week — plus a personalised AI-readiness breakdown — straight to your inbox."**
+- Show the category description below the score so parents immediately understand what their result means
+- Change CTA button from "Get My Personalized Report" to **"Send Me My Action Plan"**
+- Add a blog link below the skip button: **"Just want to explore? Visit our blog for free tips and guides."** linking to `https://wisefamilies.co/blog/`
 
-After the last question, show:
-- The score circle and category label (e.g. "Growing Awareness — 6/10")
-- A teaser like "Want personalized recommendations and tips sent to your inbox?"
-- The email input + submit button
-- After submitting email, reveal the full recommendations list
+**3. `src/components/landing/QuizResults.tsx`** — Reword the full results screen
 
-### Technical changes
+- Add the category `description` paragraph between the subtitle and recommendations
+- Change the heading "Based on your answers:" to **"Here's what you can do right now:"**
+- Update email confirmation text to: **"Check your inbox — we've sent you 3 practical actions you can take this week plus your full AI-readiness breakdown."**
+- Add a secondary blog link below the main CTA: **"Want to learn more? Explore our blog →"** linking to `https://wisefamilies.co/blog/`
+- Add reassuring text echoing the email tone: **"The fact that you took this quiz already puts you ahead of most parents."**
 
-**`src/hooks/useQuiz.ts`**:
-- Replace the `childAge` question object with `motivationLevel`
-- Add a new state `showingPreview` (true after last question, before email submit)
-- Calculate and expose the result immediately after last question is answered (no email needed)
-- Keep email submission for Kit sync but decouple it from result display
-- Update score normalization divisor (max points changes slightly from 17 to 16)
-
-**`src/components/landing/Quiz.tsx`**:
-- Add a new "preview results + email capture" step between questions and full results
-- Show the score circle, category badge, and subtitle
-- Below that, show email input with CTA "Get Your Personalized Report"
-- After email submit (or skip), transition to full QuizResults view
-
-**`src/components/landing/QuizResults.tsx`**:
-- No structural changes needed — it already renders based on the result prop
-
-**`supabase/functions/submit-quiz/index.ts`**:
-- Update the `childAge` tag logic (line 116-118) to use `motivationLevel` tag instead: `motivation:${answers.motivationLevel}`
-
-### Flow summary
-
-```text
-Q1-Q8 → Score Preview (6/10 "Growing Awareness") 
-         + "Enter email for detailed tips"
-         → [Submit email] → Full recommendations + CTA
-         → [Skip] → Full recommendations + CTA (no email captured)
-```
+### Files changed
+- `src/hooks/useQuiz.ts` — add `description` to QuizResult type and category results
+- `src/components/landing/Quiz.tsx` — reword email capture screen, add blog link
+- `src/components/landing/QuizResults.tsx` — reword results, add description, add blog link
 
