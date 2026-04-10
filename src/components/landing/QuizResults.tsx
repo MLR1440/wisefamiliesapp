@@ -5,6 +5,7 @@ import type { QuizResult } from '@/hooks/useQuiz';
 
 interface QuizResultsProps {
   result: QuizResult;
+  emailCaptured?: boolean;
 }
 
 const categoryConfig = {
@@ -34,7 +35,7 @@ const categoryConfig = {
   },
 };
 
-export function QuizResults({ result }: QuizResultsProps) {
+export function QuizResults({ result, emailCaptured }: QuizResultsProps) {
   const config = categoryConfig[result.category];
   const Icon = config.icon;
 
@@ -43,9 +44,7 @@ export function QuizResults({ result }: QuizResultsProps) {
       {/* Score Display */}
       <div className={cn(
         "inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6",
-        config.bgColor,
-        config.borderColor,
-        "border"
+        config.bgColor, config.borderColor, "border"
       )}>
         <Icon className={cn("h-6 w-6", config.color)} />
         <span className={cn("font-semibold text-lg", config.color)}>
@@ -60,24 +59,10 @@ export function QuizResults({ result }: QuizResultsProps) {
       {/* Score Circle */}
       <div className="relative w-32 h-32 mx-auto my-8">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          {/* Background circle */}
+          <circle cx="50" cy="50" r="45" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
           <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke="hsl(var(--border))"
-            strokeWidth="8"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="8"
-            strokeLinecap="round"
+            cx="50" cy="50" r="45" fill="none"
+            stroke="hsl(var(--primary))" strokeWidth="8" strokeLinecap="round"
             strokeDasharray={`${(result.score / 10) * 283} 283`}
             className="transition-all duration-1000 ease-out"
           />
@@ -117,9 +102,11 @@ export function QuizResults({ result }: QuizResultsProps) {
         </Button>
       </a>
       
-      <p className="mt-4 text-sm text-muted-foreground">
-        Check your email for your detailed AI-readiness report!
-      </p>
+      {emailCaptured && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Check your email for your detailed AI-readiness report!
+        </p>
+      )}
     </div>
   );
 }

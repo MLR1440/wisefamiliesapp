@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface QuizAnswer {
-  childAge: string;
+  motivationLevel: string;
   aiUsage: string;
   biggestConcern: string;
   currentApproach: string;
@@ -18,13 +18,13 @@ export interface QuizResult {
 
 const QUIZ_QUESTIONS = [
   {
-    id: 'childAge',
-    question: "What age range is your child?",
+    id: 'motivationLevel',
+    question: "What motivated you to look into AI guidance for your family?",
     options: [
-      { value: 'under-8', label: 'Under 8 years old', points: 1 },
-      { value: '8-11', label: '8-11 years old', points: 2 },
-      { value: '12-14', label: '12-14 years old', points: 2 },
-      { value: '15-plus', label: '15+ years old', points: 2 },
+      { value: 'news', label: 'A news story or social media post worried me', points: 1 },
+      { value: 'child-using', label: 'My child started using AI tools on their own', points: 2 },
+      { value: 'proactive', label: 'I want to be proactive before it becomes a problem', points: 2 },
+      { value: 'recommended', label: 'A friend or educator recommended it', points: 1 },
     ],
   },
   {
@@ -106,12 +106,13 @@ export function useQuiz() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [showingPreview, setShowingPreview] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
-  const totalSteps = QUIZ_QUESTIONS.length + 1; // +1 for email capture
+  const totalSteps = QUIZ_QUESTIONS.length + 1; // +1 for preview/email step
 
   const currentQuestion = QUIZ_QUESTIONS[currentStep] || null;
-  const isEmailStep = currentStep === QUIZ_QUESTIONS.length;
+  const isPreviewStep = currentStep === QUIZ_QUESTIONS.length;
 
   const calculateResult = useCallback((answers: Record<string, string>): QuizResult => {
     let totalPoints = 0;
@@ -124,8 +125,8 @@ export function useQuiz() {
       }
     });
 
-    // Max possible score is ~11, normalize to 10
-    const score = Math.min(10, Math.round((totalPoints / 17) * 10));
+    // Max possible score is 16, normalize to 10
+    const score = Math.min(10, Math.round((totalPoints / 16) * 10));
     
     let category: QuizResult['category'];
     let recommendations: string[];
@@ -159,65 +160,75 @@ export function useQuiz() {
   const handleAnswer = useCallback((value: string) => {
     if (!currentQuestion) return;
     
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: value,
-    }));
+    const newAnswers = { ...answers, [currentQuestion.id]: value };
+    setAnswers(newAnswers);
     
     // Auto-advance to next step
     setTimeout(() => {
-      setCurrentStep((prev) => prev + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // If we just answered the last question, calculate result for preview
+      if (nextStep === QUIZ_QUESTIONS.length) {
+        const quizResult = calculateResult(newAnswers);
+        setResult(quizResult);
+        setShowingPreview(true);
+      }
     }, 300);
-  }, [currentQuestion]);
+  }, [currentQuestion, currentStep, answers, calculateResult]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
+      if (isPreviewStep) {
+        setShowingPreview(false);
+        setResult(null);
+      }
       setCurrentStep((prev) => prev - 1);
     }
-  }, [currentStep]);
+  }, [currentStep, isPreviewStep]);
 
   const handleSubmit = useCallback(async () => {
-    if (!email || isSubmitting) return;
+    if (!email || isSubmitting || !result) return;
 
     setIsSubmitting(true);
     
     try {
-      const quizResult = calculateResult(answers);
-      
-      // Call the edge function to submit quiz and sync to Kit
       const { data, error } = await supabase.functions.invoke('submit-quiz', {
         body: {
           email,
           answers,
-          score: quizResult.score,
+          score: result.score,
           source: 'hero',
         },
       });
 
       if (error) {
         console.error('Quiz submission error:', error);
-        // Still show result even if backend fails
         toast.error('Could not save your results, but here they are!');
       }
 
-      setResult(quizResult);
+      setShowingPreview(false);
       setIsComplete(true);
     } catch (error) {
       console.error('Quiz submission error:', error);
-      // Calculate and show result anyway
-      const quizResult = calculateResult(answers);
-      setResult(quizResult);
+      setShowingPreview(false);
       setIsComplete(true);
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, answers, isSubmitting, calculateResult]);
+  }, [email, answers, isSubmitting, result]);
+
+  const handleSkipEmail = useCallback(() => {
+    setShowingPreview(false);
+    setIsComplete(true);
+  }, []);
 
   const resetQuiz = useCallback(() => {
     setCurrentStep(0);
     setAnswers({});
     setEmail('');
     setResult(null);
+    setShowingPreview(false);
     setIsComplete(false);
   }, []);
 
@@ -225,7 +236,8 @@ export function useQuiz() {
     currentStep,
     totalSteps,
     currentQuestion,
-    isEmailStep,
+    isPreviewStep,
+    showingPreview,
     answers,
     email,
     setEmail,
@@ -235,6 +247,7 @@ export function useQuiz() {
     handleAnswer,
     handleBack,
     handleSubmit,
+    handleSkipEmail,
     resetQuiz,
     questions: QUIZ_QUESTIONS,
   };
