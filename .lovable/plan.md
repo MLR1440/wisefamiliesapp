@@ -1,24 +1,34 @@
 
-## Make Quiz Section Directly Linkable
 
-The Quiz component already has `id="quiz"` on its `<section>` element, so linking to `/#quiz` or `https://wisefamiliesapp.lovable.app/#quiz` will scroll directly to it.
+## Expand Quiz to 8 Questions
 
-However, since the app uses `BrowserRouter`, hash-based scrolling doesn't happen automatically on page load. We need to add a small scroll-on-mount effect.
+Add 3 new questions to the quiz, bringing the total from 5 to 8 (plus the email step = 9 steps total). The user selected "AI knowledge level" as a topic; we'll round out the other two with complementary themes that strengthen the assessment.
 
-### Change in `src/pages/Index.tsx`
+### New Questions (added after the existing 5)
 
-Add a `useEffect` that checks `window.location.hash` on mount and scrolls to the matching element:
+1. **`aiKnowledge`** — "How would you describe your own understanding of AI?"
+   - "I could explain it to a friend" (3 pts)
+   - "I know the basics" (2 pts)
+   - "I've heard of it but not much more" (1 pt)
+   - "I'm pretty lost" (0 pts)
 
-```tsx
-useEffect(() => {
-  const hash = window.location.hash;
-  if (hash) {
-    const el = document.querySelector(hash);
-    if (el) {
-      setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
-    }
-  }
-}, []);
-```
+2. **`familyDiscussion`** — "How often does your family talk about technology or AI?"
+   - "Regularly — it comes up often" (3 pts)
+   - "Sometimes, when something prompts it" (2 pts)
+   - "Rarely" (1 pt)
+   - "Never" (0 pts)
 
-This is the only change needed — the quiz section already has `id="quiz"`, so visitors arriving at `/wisefamiliesapp.lovable.app/#quiz` will scroll directly to it.
+3. **`desiredOutcome`** — "What would success look like for you after this course?"
+   - "Confident conversations about AI with my child" (1 pt)
+   - "Clear rules and boundaries around AI use" (1 pt)
+   - "Knowing how to keep my child safe online" (1 pt)
+   - "Understanding AI well enough to guide them" (1 pt)
+
+### Technical Changes
+
+**`src/hooks/useQuiz.ts`**:
+- Add the 3 new question objects to `QUIZ_QUESTIONS` array
+- Update the score normalization divisor from 11 to ~17 (new max possible points) to keep the 0–10 scale accurate
+
+No other files need changes — the Quiz component, QuizQuestion, and QuizResults all dynamically render based on the questions array.
+
