@@ -14,6 +14,8 @@ export interface QuizResult {
   score: number;
   category: 'ai-ready' | 'growing' | 'early';
   description: string;
+  insight: string;
+  oneStepToday: string;
   recommendations: string[];
 }
 
@@ -134,9 +136,14 @@ export function useQuiz() {
 
     let description: string;
 
+    let insight: string;
+    let oneStepToday: string;
+
     if (score >= 7) {
       category = 'ai-ready';
       description = "You've built a strong foundation — you're already paying attention and having conversations most parents haven't started yet. The framework will sharpen your approach as AI continues to evolve.";
+      insight = `Your score of ${score}/10 means you're already having the right conversations and building good habits around technology. Most parents haven't even started thinking about this — you're well ahead. The challenge now is keeping pace as AI tools evolve rapidly. What worked last year might not be enough next year.`;
+      oneStepToday = "Ask your child to show you one AI tool they've used recently. Explore it together and talk about what it does well — and where it gets things wrong.";
       recommendations = [
         "Have a 5-minute 'curiosity' conversation with your child tonight — ask what they'd use AI for at school.",
         "Try an AI tool together at the kitchen table to remove the mystery.",
@@ -145,6 +152,8 @@ export function useQuiz() {
     } else if (score >= 4) {
       category = 'growing';
       description = "You're aware AI matters and you've taken some steps. A structured approach will help you turn that awareness into confident, everyday guidance for your family.";
+      insight = `Your score of ${score}/10 means you have good instincts — you know AI matters and you've started paying attention. But there are gaps between awareness and action. Without a structured approach, it's easy to stay in 'I'll deal with it later' mode while your child figures it out alone.`;
+      oneStepToday = "Tonight, ask your child: 'What have you heard about AI at school?' Then just listen — no lectures, no judgment. You'll learn more in 5 minutes of listening than an hour of Googling.";
       recommendations = [
         "Start a low-pressure conversation tonight — ask your child what they've heard about AI at school.",
         "Pick one AI tool and explore it together this week — keep it fun and low-stakes.",
@@ -153,6 +162,8 @@ export function useQuiz() {
     } else {
       category = 'early';
       description = "AI is already part of your child's world, even if it doesn't feel like it yet. The good news? Starting now puts you ahead of most families. You don't need to be technical — you just need a plan.";
+      insight = `Your score of ${score}/10 means AI is newer territory for your family — and that's completely fine. What matters is that you're here now. AI tools are already showing up in classrooms, homework apps, and social media. You don't need to become an expert — you just need to know enough to guide the conversation.`;
+      oneStepToday = "Spend 5 minutes trying ChatGPT yourself today. Ask it something simple — a recipe, a homework question, anything. Experiencing it firsthand is the fastest way to understand what your child might encounter.";
       recommendations = [
         "Ask your child tonight: 'Have you heard about AI at school?' — just listen, no judgment.",
         "Spend 5 minutes exploring ChatGPT yourself so you know what your child might encounter.",
@@ -160,7 +171,7 @@ export function useQuiz() {
       ];
     }
 
-    return { score, category, description, recommendations };
+    return { score, category, description, insight, oneStepToday, recommendations };
   }, []);
 
   const handleAnswer = useCallback((value: string) => {
