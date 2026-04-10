@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, TrendingUp, Rocket } from 'lucide-react';
+import { ArrowRight, Sparkles, TrendingUp, Rocket, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { QuizResult } from '@/hooks/useQuiz';
 
@@ -83,9 +83,29 @@ export function QuizResults({ result, emailCaptured }: QuizResultsProps) {
       </p>
 
       {/* Category description */}
-      <p className="text-muted-foreground mb-8">
+      <p className="text-muted-foreground mb-6">
         {result.description}
       </p>
+
+      {/* What your score means */}
+      <div className="bg-card border border-border rounded-2xl p-6 mb-6 text-left">
+        <h4 className="font-heading font-semibold text-foreground mb-3">
+          What your score means
+        </h4>
+        <p className="text-muted-foreground mb-4">
+          {result.insight}
+        </p>
+        <div className={cn(
+          "flex items-start gap-3 rounded-xl p-4",
+          config.bgColor, config.borderColor, "border"
+        )}>
+          <Lightbulb className={cn("h-5 w-5 mt-0.5 flex-shrink-0", config.color)} />
+          <div>
+            <span className={cn("font-semibold text-sm", config.color)}>Your one step today:</span>
+            <p className="text-foreground/80 text-sm mt-1">{result.oneStepToday}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Recommendations */}
       <div className="bg-card border border-border rounded-2xl p-6 mb-8 text-left">
