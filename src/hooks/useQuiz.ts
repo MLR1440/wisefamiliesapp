@@ -68,6 +68,36 @@ const QUIZ_QUESTIONS = [
       { value: '1', label: 'Not confident at all', points: 0 },
     ],
   },
+  {
+    id: 'aiKnowledge',
+    question: "How would you describe your own understanding of AI?",
+    options: [
+      { value: 'strong', label: 'I could explain it to a friend', points: 3 },
+      { value: 'basics', label: 'I know the basics', points: 2 },
+      { value: 'heard', label: "I've heard of it but not much more", points: 1 },
+      { value: 'lost', label: "I'm pretty lost", points: 0 },
+    ],
+  },
+  {
+    id: 'familyDiscussion',
+    question: "How often does your family talk about technology or AI?",
+    options: [
+      { value: 'regularly', label: 'Regularly — it comes up often', points: 3 },
+      { value: 'sometimes', label: 'Sometimes, when something prompts it', points: 2 },
+      { value: 'rarely', label: 'Rarely', points: 1 },
+      { value: 'never', label: 'Never', points: 0 },
+    ],
+  },
+  {
+    id: 'desiredOutcome',
+    question: "What would success look like for you after this course?",
+    options: [
+      { value: 'conversations', label: 'Confident conversations about AI with my child', points: 1 },
+      { value: 'boundaries', label: 'Clear rules and boundaries around AI use', points: 1 },
+      { value: 'safety', label: 'Knowing how to keep my child safe online', points: 1 },
+      { value: 'understanding', label: 'Understanding AI well enough to guide them', points: 1 },
+    ],
+  },
 ] as const;
 
 export function useQuiz() {
@@ -95,7 +125,7 @@ export function useQuiz() {
     });
 
     // Max possible score is ~11, normalize to 10
-    const score = Math.min(10, Math.round((totalPoints / 11) * 10));
+    const score = Math.min(10, Math.round((totalPoints / 17) * 10));
     
     let category: QuizResult['category'];
     let recommendations: string[];
