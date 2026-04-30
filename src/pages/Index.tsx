@@ -7,6 +7,7 @@ import WhoThisIsFor from '@/components/landing/WhoThisIsFor';
 import ProblemValidation from '@/components/landing/ProblemValidation';
 import Solution from '@/components/landing/Solution';
 import Transformation from '@/components/landing/Transformation';
+import ThirtyDayTimeline from '@/components/landing/ThirtyDayTimeline';
 import CourseContent from '@/components/landing/CourseContent';
 import WhatMakesThisDifferent from '@/components/landing/WhatMakesThisDifferent';
 import Pricing from '@/components/landing/Pricing';
@@ -36,6 +37,7 @@ const Index = () => {
         <WhoThisIsFor />
         <ProblemValidation />
         <Solution />
+        <ThirtyDayTimeline />
         <Transformation />
         <CourseContent />
         <WhatMakesThisDifferent />
