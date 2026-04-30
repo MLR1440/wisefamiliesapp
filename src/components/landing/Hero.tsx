@@ -4,7 +4,6 @@ import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users, Zap } from
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
-import { Progress } from '@/components/ui/progress';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const trustSignals = [{
@@ -26,7 +25,7 @@ const trustSignals = [{
 }];
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
-  const { spots, spotsTaken, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { totalSpots, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
   
   // Only compute these AFTER loading is complete to prevent race condition
@@ -112,6 +111,11 @@ const Hero = () => {
 
       <div className="container px-4 sm:px-6">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+          {/* Eyebrow */}
+          <span className="mb-5 inline-block px-4 py-1.5 rounded-full bg-secondary/15 text-secondary text-xs sm:text-sm font-bold tracking-wider uppercase animate-fade-up">
+            The 30-Day AI-Ready Family Reset
+          </span>
+
           {/* Headline */}
           <h1 className="mb-6 sm:mb-8 font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground animate-fade-up leading-[1.1]">
             Raise Kids Who Are{' '}
@@ -125,7 +129,7 @@ const Hero = () => {
           {/* Subheadline */}
           <p className="mb-8 sm:mb-10 text-lg sm:text-xl md:text-2xl text-muted-foreground animate-fade-up max-w-3xl leading-relaxed" style={{
           animationDelay: '0.1s'
-        }}>The complete system for parents who want to prepare their children for an AI-powered future, without the fear, without the fights, without feeling like you're always one step behind.</p>
+        }}>In 30 days, know exactly how your child is using AI, install a family AI agreement everyone follows, end the homework-cheating panic, and teach them to use AI without outsourcing their thinking. 10 minutes a day. No tech skills required.</p>
 
           {/* CTA Button */}
           <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-up mb-6" style={{
@@ -155,15 +159,11 @@ const Hero = () => {
               </div>
             ) : (
               <div className="px-6 py-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                    {spots} of {totalSpots} spots remaining
-                  </span>
-                  <span className="text-muted-foreground">{spotsTaken} claimed</span>
-                </div>
-                <Progress value={(spotsTaken / totalSpots) * 100} className="h-2.5" />
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Founding member pricing — 60% off before spots fill up
+                <p className="text-sm font-semibold text-primary text-center">
+                  Founding cohort now open
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5 text-center leading-relaxed">
+                  Capped at {totalSpots} families while we refine the program personally — 60% off before the cohort fills.
                 </p>
               </div>
             )}
@@ -192,7 +192,7 @@ const Hero = () => {
             <p className="mt-8 text-base sm:text-lg text-secondary font-semibold animate-fade-up" style={{
             animationDelay: '0.4s'
           }}>
-              🎉 {spots} founding member spots left — lock in 60% saving. (Normal Price $347)
+              🎉 Founding cohort pricing — lock in 60% off before the cohort fills. (Normal price $347)
             </p>
           )}
         </div>
