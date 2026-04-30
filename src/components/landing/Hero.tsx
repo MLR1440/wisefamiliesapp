@@ -4,7 +4,6 @@ import { ArrowRight, Shield, CheckCircle, Play, BookOpen, Bot, Users, Zap } from
 import { useCourseSettings } from '@/hooks/useCourseSettings';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
-import { Progress } from '@/components/ui/progress';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const trustSignals = [{
@@ -26,7 +25,7 @@ const trustSignals = [{
 }];
 const Hero = () => {
   const { getSetting, loading } = useCourseSettings();
-  const { spots, spotsTaken, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { totalSpots, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
   
   // Only compute these AFTER loading is complete to prevent race condition
