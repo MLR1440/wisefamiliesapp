@@ -4,7 +4,7 @@ import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
 
 const CTA = () => {
-  const { spots, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { totalSpots, isSoldOut } = useFoundingSpots();
   const { formattedPrice } = useCoursePrice();
 
   return (
@@ -40,8 +40,8 @@ const CTA = () => {
           </a>
 
           {!isSoldOut && (
-            <p className={`mt-4 text-sm font-medium ${isUrgent ? 'text-secondary' : 'text-primary-foreground/80'}`}>
-              {spots} founding member spots remaining at {formattedPrice}
+            <p className="mt-4 text-sm font-medium text-primary-foreground/80">
+              Founding cohort pricing — {formattedPrice}. Capped at {totalSpots} families.
             </p>
           )}
 
