@@ -1,18 +1,41 @@
 import { Button } from '@/components/ui/button';
 
-import { Check, Shield, Lock, Zap, Star } from 'lucide-react';
+import { Check, Shield, Lock, Zap, Star, Gift } from 'lucide-react';
 import { usePaymentLinks } from '@/hooks/usePaymentLinks';
 import { useFoundingSpots } from '@/hooks/useFoundingSpots';
 import { useCoursePrice } from '@/hooks/useCoursePrice';
 import { usePremiumPrice } from '@/hooks/usePremiumPrice';
-import { Progress } from '@/components/ui/progress';
 
-const coreFeatures = ["12-month course access", "Complete 7-chapter video course", "AI-powered coaching tools", "Custom Family Tech Agreement builder", "Conversation script generator", "Private parent community (12 months)", "Downloadable resources & frameworks", "90-day money-back guarantee"];
-const premiumExtras = ["36-month course access (3 years)", "1-hour private video consultation with a qualified child psychologist", "Personalised assessment of your child's AI use", "Custom action plan designed specifically for your family", "Priority community support", "Extended community access (36 months)"];
+const coreFeatures = [
+  "12-month course access",
+  "Complete 7-chapter video course",
+  "AI-powered coaching tools",
+  "Family AI Agreement Builder — no blank-page rules",
+  "Conversation Script Generator — never wonder what to say",
+  "Private parent community (12 months)",
+  "Downloadable resources & frameworks",
+  "90-day money-back guarantee",
+];
+
+const foundingBonuses = [
+  '"What to Say When Your Child Says Everyone Else Uses ChatGPT" — script pack',
+  "School AI Policy Decoder",
+  "Partner Alignment Guide — for when one parent is stricter than the other",
+  "AI Homework Cheat Sheet — by age group",
+];
+
+const premiumExtras = [
+  "Pre-call family AI assessment",
+  "60-minute private consultation with a qualified child psychologist",
+  "Written, custom Family AI Plan tailored to your child",
+  "30-day follow-up check-in",
+  "Priority community support",
+  "36-month course access (3 years)",
+];
 
 const Pricing = () => {
   const { coreLink, coreInstallmentsLink, premiumLink } = usePaymentLinks();
-  const { spots, spotsTaken, totalSpots, isUrgent, isSoldOut } = useFoundingSpots();
+  const { totalSpots, isSoldOut } = useFoundingSpots();
   const { formattedPrice, loading: priceLoading } = useCoursePrice();
   const { formattedPrice: formattedPremiumPrice, loading: premiumPriceLoading } = usePremiumPrice();
 
@@ -39,18 +62,12 @@ const Pricing = () => {
             </p>
           ) : (
             <>
-              <p className="text-lg text-muted-foreground mb-4">
-                Founding Member Pricing — Limited Spots Remaining
+              <p className="text-lg text-muted-foreground mb-2">
+                Founding Member Pricing
               </p>
-              <div className="mx-auto max-w-md">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className={`font-bold ${isUrgent ? 'text-destructive' : 'text-primary'}`}>
-                    {spots} of {totalSpots} spots remaining
-                  </span>
-                  <span className="text-muted-foreground">{spotsTaken} claimed</span>
-                </div>
-                <Progress value={(spotsTaken / totalSpots) * 100} className="h-3" />
-              </div>
+              <p className="text-base text-muted-foreground/90 max-w-xl mx-auto">
+                Founding cohort capped at {totalSpots} families while we refine the program personally.
+              </p>
             </>
           )}
         </div>
@@ -67,6 +84,9 @@ const Pricing = () => {
 
             <div className="text-center mb-8 pt-4">
               <h3 className="font-heading text-2xl font-bold text-foreground mb-2">AI-Ready Families Framework</h3>
+              <p className="text-sm font-semibold text-secondary mb-3 tracking-wide uppercase">
+                The 30-Day AI-Ready Family Reset
+              </p>
               <div className="mb-2">
                 <span className="text-4xl font-bold text-primary">{priceLoading ? '...' : formattedPrice}</span>
               </div>
@@ -83,6 +103,21 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-6 rounded-xl bg-secondary/10 border border-secondary/30 p-5">
+                <p className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-secondary" />
+                  Founding member bonuses (included)
+                </p>
+                <ul className="space-y-2.5">
+                  {foundingBonuses.map((bonus, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <Check className="h-4 w-4 text-secondary flex-shrink-0 mt-1" />
+                      <span className="text-foreground/80 text-sm">{bonus}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick} disabled={!coreLink}>
@@ -127,11 +162,14 @@ const Pricing = () => {
 
             <div className="text-center mb-8">
               <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
-                + 1:1 Strategy Session
+                Family AI Strategy Intensive
               </h3>
               <div className="mb-2">
                 <span className="text-4xl font-bold text-primary">{premiumPriceLoading ? '...' : formattedPremiumPrice}</span>
               </div>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                Walk away with a personalised AI safety, homework, privacy & boundaries plan for your specific child.
+              </p>
             </div>
 
             <div className="mb-4">
@@ -147,7 +185,7 @@ const Pricing = () => {
             </div>
 
             <Button variant="outline" size="xl" className="w-full gap-2" onClick={handlePremiumClick} disabled={!premiumLink}>
-              {premiumLink ? 'Get Personalised Support' : 'Loading...'}
+              {premiumLink ? 'Book Your Strategy Intensive' : 'Loading...'}
             </Button>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
@@ -163,12 +201,10 @@ const Pricing = () => {
         {/* Urgency */}
         {!isSoldOut && (
           <div className="mt-12 text-center">
-            <div className={`inline-flex items-center gap-2 px-6 py-3 rounded-full ${isUrgent ? 'bg-destructive/10 text-destructive' : 'bg-secondary/10 text-secondary-foreground'}`}>
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-secondary/10 text-secondary-foreground">
               <Zap className="h-5 w-5" />
               <span className="text-sm font-medium">
-                {isUrgent
-                  ? `Only ${spots} founding member spots left — price increases when they're gone.`
-                  : `Founding member pricing ends when we reach ${totalSpots} families.`}
+                Founding cohort pricing ends when the cohort fills — then it returns to $347.
               </span>
             </div>
           </div>
