@@ -8,6 +8,14 @@ import {
 
 const faqs = [
   {
+    question: "How much time do I need each day?",
+    answer: "About 10 minutes a day. The whole 30-day reset is designed for busy parents — short scripts, prebuilt templates, and quick wins from night one. You're not adding a second job; you're replacing the daily AI stress with a system."
+  },
+  {
+    question: "What if my child catches on or pushes back?",
+    answer: "The course gives you exact word-for-word scripts for the most common pushbacks (\"Everyone uses ChatGPT\", \"It's just for ideas\", \"But the teacher said it's fine\"). You'll never have to wing it in the moment."
+  },
+  {
     question: "What ages is this course designed for?",
     answer: "The AI-Ready Families System is specifically designed for parents of children aged 8-16. The frameworks adapt to different developmental stages — from \"Curious Navigators\" (8-9) through \"Co-Pilots\" (10-12) to \"Balancers\" (13-14) and \"Mentors\" (15-16)."
   },
