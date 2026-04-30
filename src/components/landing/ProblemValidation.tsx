@@ -1,4 +1,4 @@
-import { MessageCircleQuestion, Timer, Newspaper, Zap } from 'lucide-react';
+import { MessageCircleQuestion, Timer, Newspaper, Zap, AlertTriangle } from 'lucide-react';
 const problems = [{
   icon: MessageCircleQuestion,
   text: "Your child just asked ChatGPT to help with homework. Is that cheating? Is it smart? You genuinely don't know."
@@ -11,6 +11,9 @@ const problems = [{
 }, {
   icon: Zap,
   text: "You want to guide them, but the technology is moving so fast you feel like you're already behind."
+}, {
+  icon: AlertTriangle,
+  text: "Every week without a plan is another week of homework-cheating risk, privacy slip-ups, and AI doing the thinking your child's brain should be doing."
 }];
 const ProblemValidation = () => {
   return <section className="py-16 md:py-24 bg-background">
