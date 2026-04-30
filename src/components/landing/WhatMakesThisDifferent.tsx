@@ -2,15 +2,15 @@ import { Bot, Users, BookOpen } from 'lucide-react';
 const features = [{
   icon: Bot,
   title: "AI-Powered Coaching Tools",
-  description: "Get personalised guidance, not generic advice. Our AI tools help you create custom family tech agreements, conversation scripts, and action plans tailored to YOUR child's age, challenges, and situation."
+  description: "Get personalised guidance, not generic advice. Custom family tech agreements, conversation scripts, and action plans tailored to YOUR child. So you get a personalised next step the moment something goes wrong — instead of Googling at midnight."
 }, {
   icon: Users,
   title: "Private Parent Community",
-  description: "Connect with other parents navigating the same challenges. Share what's working, ask questions, and know you're not doing this alone. (12 months access included)"
+  description: "Connect with other parents navigating the same challenges. Share what's working, ask questions, and swap scripts. Real parents, real situations — so you're never the only one figuring this out at 10pm. (12 months access included)"
 }, {
   icon: BookOpen,
   title: "Evidence-Based, Not Fear-Based",
-  description: "Every framework is grounded in developmental psychology and neuroscience, not clickbait headlines. We tell you what the research actually says, not what gets the most engagement."
+  description: "Every framework is grounded in developmental psychology and neuroscience — not clickbait headlines. You get what the research actually says, translated into things you can do tonight."
 }];
 const WhatMakesThisDifferent = () => {
   return <section className="py-16 md:py-24 bg-muted/30">
