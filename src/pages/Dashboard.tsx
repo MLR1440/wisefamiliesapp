@@ -5,6 +5,7 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock, Users, MessageSquare, FileText, Download, Trash2 } from 'lucide-react';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
