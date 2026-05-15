@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const signupSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50, 'First name too long'),
@@ -201,6 +202,7 @@ const Signup = () => {
 
   return (
     <div className="flex min-h-screen">
+      <SEO title="Create your account — WiseFamilies" description="Set up your WiseFamilies account and start the 30-Day AI-Ready Family Reset." path="/signup" noindex />
       {/* Left side - Form */}
       <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 lg:px-16">
         <div className="mx-auto w-full max-w-md">

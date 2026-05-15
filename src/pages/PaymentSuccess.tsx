@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const signupSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -304,6 +305,7 @@ const PaymentSuccess = () => {
   // Main signup form for new users after payment
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <SEO title="Payment confirmed — WiseFamilies" description="Your purchase is complete. Set up your WiseFamilies account to begin the 30-Day AI-Ready Family Reset." path="/payment-success" noindex />
       <div className="max-w-md w-full space-y-8">
         {/* Success Header */}
         <div className="text-center">
