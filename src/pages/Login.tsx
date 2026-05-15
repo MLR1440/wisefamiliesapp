@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -109,6 +110,7 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen">
+      <SEO title="Log in — WiseFamilies" description="Log in to your WiseFamilies account to continue the AI-Ready Family Framework." path="/login" noindex />
       {/* Left side - Form */}
       <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 lg:px-16">
         <div className="mx-auto w-full max-w-md">
