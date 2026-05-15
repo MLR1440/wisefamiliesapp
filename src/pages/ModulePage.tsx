@@ -131,6 +131,17 @@ const ModulePage = () => {
   // Check if next module is in a different chapter (chapter transition)
   const isLastModuleInChapter = nextModule && currentModule?.chapter_id !== nextModule.chapter_id;
   const isLastModuleInCourse = moduleIndex === modules.length - 1;
+  const moduleNumber = moduleIndex >= 0 ? moduleIndex + 1 : 0;
+  const totalModules = modules.length;
+
+  // Sticky compact header trigger
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowStickyHeader(window.scrollY > 220);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleFirstInteraction = () => {
     markStarted();
   };
@@ -237,6 +248,37 @@ const ModulePage = () => {
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
 
+      {/* Sticky compact header */}
+      <div
+        className={`sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-all duration-200 ${
+          showStickyHeader ? 'opacity-100 translate-y-0' : 'pointer-events-none -translate-y-2 opacity-0'
+        }`}
+      >
+        <div className="container max-w-5xl flex items-center gap-3 py-3">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground truncate">
+              {currentChapter ? `${currentChapter.title} · ` : ''}Module {moduleNumber} of {totalModules}
+            </p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {module.title}
+            </p>
+          </div>
+          {isCompleted && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-success shrink-0">
+              <CheckCircle2 className="h-4 w-4" />
+              Complete
+            </span>
+          )}
+        </div>
+      </div>
+
       <main className="container max-w-5xl py-6 md:py-10">
         {/* Header with back navigation and module info */}
         <header className="mb-8">
@@ -249,14 +291,21 @@ const ModulePage = () => {
           </Link>
 
           <div className="space-y-3">
-            {currentChapter && (
-              <div className="inline-flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                <span className="text-sm font-medium text-primary">
-                  {currentChapter.title}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              {currentChapter && (
+                <div className="inline-flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    {currentChapter.title}
+                  </span>
+                </div>
+              )}
+              {totalModules > 0 && (
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Module {moduleNumber} of {totalModules}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
             <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-foreground">
               {module.title}
             </h1>
