@@ -267,62 +267,73 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Clean progress section */}
-        <div className="mb-6 rounded-xl border border-border bg-card p-6">
-          {/* Stats row */}
-          <div className="flex gap-6 mb-4 pb-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              <div>
-                <p className="text-2xl font-semibold text-success">{completedModules}</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
+        {/* Progress hero with ring + Continue */}
+        <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            <CircularProgress value={progressPercentage} size={104} strokeWidth={9}>
+              <div className="text-center">
+                <p className="font-heading text-2xl font-semibold text-foreground leading-none">
+                  {Math.round(progressPercentage)}%
+                </p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                  Complete
+                </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <div>
-                <p className="text-2xl font-semibold text-primary">{inProgressModules}</p>
-                <p className="text-xs text-muted-foreground">In Progress</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-semibold text-muted-foreground">{remainingModules}</p>
-                <p className="text-xs text-muted-foreground">Remaining</p>
-              </div>
-            </div>
-          </div>
+            </CircularProgress>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <Progress value={progressPercentage} className="h-2 flex-1 max-w-xs" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  {completedModules}/{totalModules}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3 text-sm">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                  <span className="font-medium text-foreground">{completedModules}</span>
+                  <span className="text-muted-foreground">done</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-medium text-foreground">{inProgressModules}</span>
+                  <span className="text-muted-foreground">in progress</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{remainingModules}</span>
+                  <span className="text-muted-foreground">remaining</span>
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {completedModules === totalModules 
-                  ? 'Course completed!' 
-                  : `${totalModules - completedModules} modules remaining`
-                }
-              </p>
+
+              {currentModule && completedModules < totalModules ? (
+                <>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                    Up next
+                  </p>
+                  <Link
+                    to={`/course/${currentModule.id}`}
+                    className="group block"
+                  >
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground truncate">
+                          {currentModule.title}
+                        </p>
+                      </div>
+                      <Button size="sm" className="gap-2 shrink-0">
+                        Continue
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </Button>
+                    </div>
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {completedModules === totalModules ? 'Course completed — well done!' : 'Ready when you are.'}
+                </p>
+              )}
             </div>
-            
-            {currentModule && (
-              <Link to={`/course/${currentModule.id}`}>
-                <Button className="gap-2">
-                  Continue
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
 
-        {/* Child Profile Section */}
-        <div className="mb-10 rounded-xl border border-border bg-card p-6">
+        {/* Quick access row: Profile / Documents / Community */}
+        <div className="mb-10 grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
           {profileLoading ? (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
