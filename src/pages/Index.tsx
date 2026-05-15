@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import SEO from '@/components/SEO';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/landing/Hero';
 import Quiz from '@/components/landing/Quiz';
@@ -30,6 +31,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="WiseFamilies — The 30-Day AI-Ready Family Reset"
+        description="Install a family AI agreement, end homework-cheating panic, and raise kids who think for themselves. 10 minutes a day. No tech skills required."
+        path="/"
+      />
       <Navbar />
       <main>
         <Hero />
