@@ -624,6 +624,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_community_member_first_name: {
+        Args: { _member_id: string }
+        Returns: string
+      }
       get_founding_spots_remaining: { Args: never; Returns: number }
       has_role: {
         Args: {
