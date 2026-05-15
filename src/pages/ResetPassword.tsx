@@ -7,6 +7,7 @@ import { Lock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const passwordSchema = z.string().min(8, 'Password must be at least 8 characters');
 
