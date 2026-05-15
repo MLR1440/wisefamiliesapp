@@ -52,22 +52,18 @@ export function useTopics(category?: string) {
       // Get reply counts and author names
       const topicsWithDetails = await Promise.all(
         (data || []).map(async (topic) => {
-          const [repliesRes, profileRes] = await Promise.all([
+          const [repliesRes, nameRes] = await Promise.all([
             supabase
               .from('community_replies')
               .select('id', { count: 'exact', head: true })
               .eq('topic_id', topic.id),
-            supabase
-              .from('user_profiles')
-              .select('first_name')
-              .eq('user_id', topic.user_id)
-              .single()
+            supabase.rpc('get_community_member_first_name', { _member_id: topic.user_id }),
           ]);
 
           return {
             ...topic,
             reply_count: repliesRes.count || 0,
-            author_name: profileRes.data?.first_name || 'Member',
+            author_name: (nameRes.data as string | null) || 'Member',
           };
         })
       );
@@ -109,15 +105,13 @@ export function useReplies(topicId: string) {
       // Enrich replies with author names
       const repliesWithAuthors = await Promise.all(
         (data || []).map(async (reply) => {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('first_name')
-            .eq('user_id', reply.user_id)
-            .single();
+          const { data: firstName } = await supabase.rpc('get_community_member_first_name', {
+            _member_id: reply.user_id,
+          });
 
           return {
             ...reply,
-            author_name: profile?.first_name || 'Member',
+            author_name: (firstName as string | null) || 'Member',
           };
         })
       );
