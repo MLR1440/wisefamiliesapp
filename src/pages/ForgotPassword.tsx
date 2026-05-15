@@ -7,6 +7,7 @@ import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const emailSchema = z.string().email('Please enter a valid email address');
 
@@ -46,6 +47,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
+      <SEO title="Reset your password — WiseFamilies" description="Request a password reset link for your WiseFamilies account." path="/forgot-password" noindex />
       <div className="w-full max-w-md">
         <Link
           to="/login"
