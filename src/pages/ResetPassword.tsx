@@ -93,6 +93,7 @@ const ResetPassword = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
+      <SEO title="Set a new password — WiseFamilies" description="Choose a new password for your WiseFamilies account." path="/reset-password" noindex />
       <div className="w-full max-w-md">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-6">
