@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Play, CheckCircle2, Lock, ArrowRight, Loader2, ChevronDown, User, Heart, AlertCircle, Pencil, Clock, Users, MessageSquare, FileText, Download, Trash2 } from 'lucide-react';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Paywall from '@/components/Paywall';
@@ -266,223 +266,198 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Clean progress section */}
-        <div className="mb-6 rounded-xl border border-border bg-card p-6">
-          {/* Stats row */}
-          <div className="flex gap-6 mb-4 pb-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              <div>
-                <p className="text-2xl font-semibold text-success">{completedModules}</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
+        {/* Progress hero with ring + Continue */}
+        <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            <CircularProgress value={progressPercentage} size={104} strokeWidth={9}>
+              <div className="text-center">
+                <p className="font-heading text-2xl font-semibold text-foreground leading-none">
+                  {Math.round(progressPercentage)}%
+                </p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                  Complete
+                </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <div>
-                <p className="text-2xl font-semibold text-primary">{inProgressModules}</p>
-                <p className="text-xs text-muted-foreground">In Progress</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-2xl font-semibold text-muted-foreground">{remainingModules}</p>
-                <p className="text-xs text-muted-foreground">Remaining</p>
-              </div>
-            </div>
-          </div>
+            </CircularProgress>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <Progress value={progressPercentage} className="h-2 flex-1 max-w-xs" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  {completedModules}/{totalModules}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3 text-sm">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                  <span className="font-medium text-foreground">{completedModules}</span>
+                  <span className="text-muted-foreground">done</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-medium text-foreground">{inProgressModules}</span>
+                  <span className="text-muted-foreground">in progress</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{remainingModules}</span>
+                  <span className="text-muted-foreground">remaining</span>
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {completedModules === totalModules 
-                  ? 'Course completed!' 
-                  : `${totalModules - completedModules} modules remaining`
-                }
-              </p>
+
+              {currentModule && completedModules < totalModules ? (
+                <>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                    Up next
+                  </p>
+                  <Link
+                    to={`/course/${currentModule.id}`}
+                    className="group block"
+                  >
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground truncate">
+                          {currentModule.title}
+                        </p>
+                      </div>
+                      <Button size="sm" className="gap-2 shrink-0">
+                        Continue
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </Button>
+                    </div>
+                  </Link>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {completedModules === totalModules ? 'Course completed — well done!' : 'Ready when you are.'}
+                </p>
+              )}
             </div>
-            
-            {currentModule && (
-              <Link to={`/course/${currentModule.id}`}>
-                <Button className="gap-2">
-                  Continue
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
 
-        {/* Child Profile Section */}
-        <div className="mb-10 rounded-xl border border-border bg-card p-6">
-          {profileLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        {/* Quick access row: Profile / Documents / Community */}
+        <div className="mb-10 grid gap-4 md:grid-cols-3">
+          {/* Child profile summary */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Child Profile</h3>
             </div>
-          ) : profile?.onboarding_completed ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  <h3 className="font-medium text-foreground">Your Child's Profile</h3>
+            {profileLoading ? (
+              <div className="flex items-center justify-center py-4 flex-1">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : profile?.onboarding_completed ? (
+              <>
+                <div className="flex-1 space-y-1.5 mb-3 text-sm">
+                  {profile.child_age && (
+                    <p className="text-muted-foreground">
+                      <span className="text-foreground font-medium">{profile.child_age}</span>
+                      {profile.child_gender ? ` · ${profile.child_gender}` : ''}
+                    </p>
+                  )}
+                  {profile.child_likes && (
+                    <p className="text-muted-foreground line-clamp-2">
+                      <Heart className="inline h-3 w-3 text-success mr-1 -mt-0.5" />
+                      {profile.child_likes}
+                    </p>
+                  )}
                 </div>
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Link to="/profile" className="mt-auto">
+                  <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 text-muted-foreground hover:text-foreground">
                     <Pencil className="h-3.5 w-3.5" />
-                    Edit
+                    Edit profile
                   </Button>
                 </Link>
-              </div>
-              
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-3">
-                  {profile.child_age && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Age Range</p>
-                      <p className="text-sm text-foreground">{profile.child_age}</p>
-                    </div>
-                  )}
-                  {profile.child_gender && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-0.5">Gender</p>
-                      <p className="text-sm text-foreground">{profile.child_gender}</p>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="space-y-3">
-                  {profile.child_likes && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <Heart className="h-3 w-3 text-success" />
-                        <p className="text-xs text-muted-foreground">Interests</p>
-                      </div>
-                      <p className="text-sm text-foreground line-clamp-2">{profile.child_likes}</p>
-                    </div>
-                  )}
-                  {profile.current_issues && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <AlertCircle className="h-3 w-3 text-warning" />
-                        <p className="text-xs text-muted-foreground">Current Challenges</p>
-                      </div>
-                      <p className="text-sm text-foreground line-clamp-2">{profile.current_issues}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-4">
-              <User className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Complete your child's profile to get personalized AI coaching
-              </p>
-              <Link to="/profile">
-                <Button variant="outline" size="sm" className="gap-2">
-                  Set Up Profile
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* My Documents Section */}
-        <div className="mb-10 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-5 w-5 text-primary" />
-            <h3 className="font-medium text-foreground">My Documents</h3>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mb-3 flex-1">
+                  Personalize the AI coach for your child.
+                </p>
+                <Link to="/profile" className="mt-auto">
+                  <Button variant="outline" size="sm" className="gap-2 w-full">
+                    Set up profile
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
-          
-          {docsLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : documents.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Complete Module 16 or 21 to create your personalized documents.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {documents.map(doc => (
-                <div 
-                  key={doc.id} 
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <FileText className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground text-sm truncate">{doc.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Created {formatDate(doc.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDocumentDownload(doc)}
-                      disabled={downloadingDocId === doc.id}
-                      className="gap-1.5"
-                    >
-                      {downloadingDocId === doc.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Download className="h-3.5 w-3.5" />
-                      )}
-                      Download
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDocumentDelete(doc.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Community Section */}
-        <div className="mb-10 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <h3 className="font-medium text-foreground">Community</h3>
+          {/* Documents summary */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">My Documents</h3>
+              {documents.length > 0 && (
+                <span className="ml-auto text-xs text-muted-foreground">{documents.length}</span>
+              )}
             </div>
-            <Link to="/community">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                View All
-                <ArrowRight className="h-3.5 w-3.5" />
+            {docsLoading ? (
+              <div className="flex items-center justify-center py-4 flex-1">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : documents.length === 0 ? (
+              <p className="text-sm text-muted-foreground flex-1">
+                Complete Module 16 or 21 to create personalized documents.
+              </p>
+            ) : (
+              <div className="space-y-2 flex-1">
+                {documents.slice(0, 2).map(doc => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatDate(doc.created_at)}</p>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDocumentDownload(doc)}
+                        disabled={downloadingDocId === doc.id}
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      >
+                        {downloadingDocId === doc.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Download className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDocumentDelete(doc.id)}
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {documents.length > 2 && (
+                  <p className="text-xs text-muted-foreground pl-1">
+                    + {documents.length - 2} more
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Community summary */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Community</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3 flex-1">
+              Connect with other parents navigating AI together.
+            </p>
+            <Link to="/community" className="mt-auto">
+              <Button variant="outline" size="sm" className="gap-2 w-full">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Join discussion
               </Button>
             </Link>
           </div>
-          
-          <p className="text-sm text-muted-foreground mb-4">
-            Connect with other parents navigating AI and parenting together.
-          </p>
-          
-          <Link to="/community">
-            <Button variant="outline" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Join Discussion
-            </Button>
-          </Link>
         </div>
 
         {/* Course content */}
