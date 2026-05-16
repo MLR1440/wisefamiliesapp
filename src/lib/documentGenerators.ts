@@ -511,5 +511,28 @@ export const downloadDocument = async (data: DocumentData, filename?: string): P
     data.type === 'family_agreement'
       ? 'Family-Technology-Agreement.docx'
       : '30-Day-Family-Tech-Plan.docx';
-  saveAs(blob, filename || defaultFilename);
+  const finalName = filename || defaultFilename;
+
+  // Detect sandboxed iframe (e.g. Lovable preview) where <a download> clicks
+  // are silently blocked. In that case open the blob in a new tab so the
+  // browser can handle the download normally.
+  let inIframe = false;
+  try {
+    inIframe = window.self !== window.top;
+  } catch {
+    inIframe = true;
+  }
+
+  if (inIframe) {
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (!win) {
+      // Popup blocked — fall back to saveAs (may still work on published site)
+      saveAs(blob, finalName);
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return;
+  }
+
+  saveAs(blob, finalName);
 };
