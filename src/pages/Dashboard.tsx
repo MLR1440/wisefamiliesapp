@@ -189,9 +189,16 @@ const Dashboard = () => {
            <Play className="h-3.5 w-3.5" />}
         </div>
         <div className="flex-1 min-w-0">
-          <span className={`text-sm font-medium ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
-            {module.title}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`text-sm font-medium truncate ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}>
+              {module.title}
+            </span>
+            {status === 'current' && (
+              <span className="shrink-0 rounded-full bg-primary/15 text-primary text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5">
+                Current
+              </span>
+            )}
+          </div>
         </div>
         {status === 'current' && !progress.find(p => p.module_id === module.id)?.started_at && (
           <span className="text-xs text-primary font-medium">Start</span>
@@ -476,6 +483,8 @@ const Dashboard = () => {
                 const chapterModules = getModulesForChapter(chapter.id);
                 if (chapterModules.length === 0) return null;
                 const completedInChapter = chapterModules.filter(m => progress.find(p => p.module_id === m.id)?.completed_at).length;
+                const chapterPct = chapterModules.length > 0 ? (completedInChapter / chapterModules.length) * 100 : 0;
+                const chapterDone = completedInChapter === chapterModules.length;
                 
                 return (
                   <Collapsible 
@@ -488,13 +497,26 @@ const Dashboard = () => {
                         <button className="flex items-center gap-3 w-full p-4 hover:bg-muted/30 transition-colors text-left">
                           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground">
-                              {chapter.title}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-foreground truncate">
+                                {chapter.title}
+                              </h3>
+                              {chapterDone && (
+                                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                              )}
+                            </div>
+                            <div className="mt-2 flex items-center gap-3">
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className={`h-full transition-all duration-500 ${chapterDone ? 'bg-success' : 'bg-primary'}`}
+                                  style={{ width: `${chapterPct}%` }}
+                                />
+                              </div>
+                              <span className="text-[11px] font-medium text-muted-foreground shrink-0 tabular-nums">
+                                {completedInChapter}/{chapterModules.length}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {completedInChapter}/{chapterModules.length}
-                          </span>
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>

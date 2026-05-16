@@ -328,16 +328,21 @@ const ModulePage = () => {
           {module.transcript && module.transcript.trim() && (
             <Collapsible>
               <CollapsibleTrigger asChild>
-                <button className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition-colors hover:bg-muted/50 group">
+                <button className="flex w-full items-center justify-between rounded-xl border border-border border-l-4 border-l-primary bg-primary/5 px-5 py-4 text-left transition-colors hover:bg-primary/10 group">
                   <div className="flex items-center gap-3">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-foreground">Read Along</span>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <BookOpen className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground leading-tight">Read Along</p>
+                      <p className="text-xs text-muted-foreground">Optional transcript companion</p>
+                    </div>
                   </div>
                   <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </button>
               </CollapsibleTrigger>
               <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <div className="mt-2 rounded-xl border border-border bg-card p-5 md:p-6">
+                <div className="mt-2 rounded-xl border border-border border-l-4 border-l-primary bg-primary/5 p-5 md:p-6">
                   <div 
                     className="prose prose-sm max-w-none text-muted-foreground [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:my-1 [&_p]:my-2"
                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(module.transcript) }}
@@ -365,20 +370,24 @@ const ModulePage = () => {
         </div>
 
         {/* Bottom navigation section */}
-        <footer className="mt-12 rounded-2xl border border-border bg-card/50 p-6 md:p-8">
+        <footer className="mt-12 rounded-2xl border border-border bg-transparent p-6 md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             {/* Previous module */}
-            <div className="order-2 md:order-1 md:flex-1">
+            <div className="order-2 md:order-1 md:flex-1 md:max-w-[260px]">
               {prevModule ? (
-                <Link to={`/course/${prevModule.id}`}>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full md:w-auto gap-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">Previous:</span>
-                    <span className="truncate max-w-[150px]">{prevModule.title}</span>
-                  </Button>
+                <Link
+                  to={`/course/${prevModule.id}`}
+                  className="group flex items-center gap-3 rounded-xl border border-border bg-card/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5"
+                >
+                  <ArrowLeft className="h-4 w-4 text-muted-foreground transition-transform group-hover:-translate-x-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Previous · {String(moduleNumber - 1).padStart(2, '0')}
+                    </p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {prevModule.title}
+                    </p>
+                  </div>
                 </Link>
               ) : (
                 <div />
@@ -389,43 +398,41 @@ const ModulePage = () => {
             <div className="order-1 md:order-2 flex justify-center">
               <div 
                 className={`
-                  flex items-center gap-4 rounded-full px-6 py-3 transition-all duration-300
-                  ${isCompleted 
-                    ? 'bg-success/10 border-2 border-success/30' 
-                    : hasInteracted 
-                      ? 'bg-primary/5 border-2 border-primary/20 hover:border-primary/40' 
-                      : 'bg-muted/50 border-2 border-border'
-                  }
+                  flex flex-col items-center gap-2
                 `}
               >
+                <div className={`
+                  flex items-center gap-3 rounded-full px-6 py-3 transition-all duration-300 shadow-sm
+                  ${isCompleted 
+                    ? 'bg-success/10 border-2 border-success/40 shadow-success/10' 
+                    : hasInteracted 
+                      ? 'bg-primary text-primary-foreground border-2 border-primary hover:bg-primary/90 cursor-pointer' 
+                      : 'bg-muted border-2 border-border'
+                  }
+                `}
+                onClick={() => !isCompleted && hasInteracted && handleComplete(true)}
+                role={!isCompleted && hasInteracted ? 'button' : undefined}
+                >
                 {isCompleted ? (
                   <CheckCircle2 className="h-5 w-5 text-success" />
                 ) : (
-                  <Checkbox 
-                    id="complete" 
-                    checked={isCompleted} 
-                    onCheckedChange={handleComplete} 
-                    disabled={!hasInteracted && !isCompleted}
-                    className="data-[state=checked]:bg-success data-[state=checked]:border-success"
-                  />
+                  <CheckCircle2 className={`h-5 w-5 ${hasInteracted ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                 )}
-                <label 
-                  htmlFor="complete" 
-                  className={`
-                    text-sm font-semibold cursor-pointer select-none
-                    ${isCompleted 
-                      ? 'text-success' 
-                      : hasInteracted 
-                        ? 'text-foreground' 
-                        : 'text-muted-foreground'
-                    }
-                  `}
-                >
+                <span className={`
+                  text-sm font-semibold select-none
+                  ${isCompleted 
+                    ? 'text-success' 
+                    : hasInteracted 
+                      ? 'text-primary-foreground' 
+                      : 'text-muted-foreground'
+                  }
+                `}>
                   {isCompleted ? 'Module Complete!' : 'Mark as Complete'}
-                </label>
+                </span>
+                </div>
                 {!hasInteracted && !isCompleted && (
-                  <span className="text-xs text-muted-foreground hidden sm:inline">
-                    (watch or chat first)
+                  <span className="text-xs text-muted-foreground">
+                    Watch the video or chat with the coach to unlock
                   </span>
                 )}
               </div>
@@ -434,24 +441,34 @@ const ModulePage = () => {
             {/* Next module */}
             <div className="order-3 md:flex-1 flex justify-end">
               {nextModule ? (
-                <div className="w-full md:w-auto flex flex-col items-end gap-2">
-                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Up Next
-                  </span>
-                  {hasInteracted ? (
-                    <Link to={`/course/${nextModule.id}`} className="w-full md:w-auto">
-                      <Button variant="default" className="w-full md:w-auto gap-2 group">
-                        <span className="truncate max-w-[150px]">{nextModule.title}</span>
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button variant="outline" className="w-full md:w-auto gap-2" disabled>
-                      <span className="truncate max-w-[150px]">{nextModule.title}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                hasInteracted ? (
+                  <Link
+                    to={`/course/${nextModule.id}`}
+                    className="group flex w-full md:max-w-[260px] items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 transition-all hover:border-primary hover:bg-primary/10"
+                  >
+                    <div className="min-w-0 flex-1 text-right">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                        Up Next · {String(moduleNumber + 1).padStart(2, '0')}
+                      </p>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {nextModule.title}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                ) : (
+                  <div className="flex w-full md:max-w-[260px] items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 p-3 opacity-70">
+                    <div className="min-w-0 flex-1 text-right">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Up Next · {String(moduleNumber + 1).padStart(2, '0')}
+                      </p>
+                      <p className="text-sm font-medium text-muted-foreground truncate">
+                        {nextModule.title}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )
               ) : isLastModuleInCourse ? (
                 <div className="flex flex-col items-end gap-2">
                   <span className="text-xs font-medium uppercase tracking-wider text-success">
