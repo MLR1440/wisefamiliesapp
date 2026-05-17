@@ -274,9 +274,9 @@ const Dashboard = () => {
         </div>
 
         {/* Progress hero with ring + Continue */}
-        <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-6 shadow-card">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <CircularProgress value={progressPercentage} size={104} strokeWidth={9}>
+            <CircularProgress value={progressPercentage} size={104} strokeWidth={9} gradient className="shadow-glow rounded-full">
               <div className="text-center">
                 <p className="font-heading text-2xl font-semibold text-foreground leading-none">
                   {Math.round(progressPercentage)}%
