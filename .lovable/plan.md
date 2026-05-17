@@ -1,32 +1,36 @@
-## Problem
+## Dashboard Color & Visual Polish Plan
 
-`downloadDocument` (in `src/lib/documentGenerators.ts`) uses `file-saver`'s `saveAs`, which triggers a hidden `<a download>` click. The Lovable preview iframe is sandboxed without download permission, so the click is silently blocked even though the DOCX blob is built successfully. That's why you see the "Document downloaded!" toast but no file.
+### Problem
+The dashboard is functional but visually flat — heavy on cream, white cards, and muted greens. The brand's richer palette (gold, blue accent, coral, orange-warm) is underused, making the page feel monochrome and less engaging.
 
-This affects both call sites:
-- Dashboard "My Documents" list (`src/pages/Dashboard.tsx` → `handleDocumentDownload`)
-- Module `DocumentPreview` card (`src/components/module/DocumentPreview.tsx`)
+### Proposed Changes
 
-It will already work correctly on the published site (`wisefamilies.app`) and when the preview is opened in its own browser tab. The fix is to also make it work inside the embedded preview.
+1. **Progress Hero Card — Gradient Ring & Gold Highlight**
+   - Replace the solid green progress ring with a `bg-gradient-cta` (gold gradient) stroke for the completed portion.
+   - Add a subtle warm glow behind the ring using the existing `--shadow-glow` token.
+   - Make the "Continue" button use the `variant="cta"` (gold fill) instead of default primary to make the main action pop.
 
-## Fix
+2. **Quick-Access Cards — Distinct Color Coding**
+   - **Child Profile card**: use a soft blue-tinted background (`bg-accent/5`) with a blue icon container (`bg-accent/10`).
+   - **My Documents card**: use a soft gold-tinted background (`bg-gold-50`) with a gold icon container (`bg-gold-100`).
+   - **Community card**: use a soft green-tinted background (`bg-green-50`) with a green icon container (`bg-green-100`).
+   - This creates instant visual scannability — each card has its own personality while staying on-brand.
 
-Update `downloadDocument` to be iframe-safe:
+3. **Chapter Headers — Completion State Color**
+   - When a chapter is fully complete, tint the entire header with a very subtle success green (`bg-success/5`) and keep the progress bar solid success green.
+   - For incomplete chapters, keep the current neutral style — the contrast makes completed chapters feel rewarding.
 
-1. Generate the DOCX blob (unchanged).
-2. Create a blob URL.
-3. Detect if we're running inside an iframe (`window.self !== window.top`).
-4. If inside an iframe: `window.open(blobUrl, '_blank')` — opens the file in a new tab where the browser can save it normally. If the popup is blocked, fall back to showing a toast with a manual "Open file" action link.
-5. If not in an iframe: keep current `saveAs` behavior (clean direct download).
-6. Revoke the blob URL after a short delay.
+4. **Current Module Item — More Prominence**
+   - The "Current" pill and module row already have `bg-primary/5`; bump this to `bg-primary/10` and add a subtle left border (`border-l-2 border-primary`) so the active module is instantly findable when a chapter is expanded.
 
-No UI changes, no backend changes, no new dependencies. Pure presentation-layer fix in one file.
+5. **Stats Row Icons — Colorful Micro-accents**
+   - The "done / in progress / remaining" row uses muted icons. Color them distinctly:
+     - `CheckCircle2` → `text-success`
+     - `Clock` → `text-gold-400`
+     - `Lock` → keep muted (it's a passive stat)
 
-## Files touched
-
-- `src/lib/documentGenerators.ts` — replace the body of `downloadDocument` with the iframe-aware logic above.
-
-## Verification
-
-- In the Lovable preview: click Download on a saved document → new tab opens with the .docx (browser will download or preview it).
-- In the published app / standalone tab: behavior is unchanged (direct download).
-- Toast messaging stays the same.
+### Technical Details
+- All colors come from existing CSS variables and Tailwind config (`--accent`, `--success`, `gold-*`, `green-*`).
+- No new dependencies.
+- Single file change: `src/pages/Dashboard.tsx`.
+- Estimated effort: small — mostly className updates.

@@ -174,7 +174,7 @@ const Dashboard = () => {
           status === 'locked' 
             ? 'cursor-not-allowed opacity-50' 
             : status === 'current' 
-              ? 'bg-primary/5 hover:bg-primary/10' 
+              ? 'bg-primary/10 hover:bg-primary/15 border-l-2 border-primary' 
               : 'hover:bg-muted/50'
         }`} 
         onClick={e => status === 'locked' && e.preventDefault()}
@@ -274,9 +274,9 @@ const Dashboard = () => {
         </div>
 
         {/* Progress hero with ring + Continue */}
-        <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-6 shadow-card">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <CircularProgress value={progressPercentage} size={104} strokeWidth={9}>
+            <CircularProgress value={progressPercentage} size={104} strokeWidth={9} gradient className="shadow-glow rounded-full">
               <div className="text-center">
                 <p className="font-heading text-2xl font-semibold text-foreground leading-none">
                   {Math.round(progressPercentage)}%
@@ -295,7 +295,7 @@ const Dashboard = () => {
                   <span className="text-muted-foreground">done</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <Clock className="h-3.5 w-3.5 text-gold-400" />
                   <span className="font-medium text-foreground">{inProgressModules}</span>
                   <span className="text-muted-foreground">in progress</span>
                 </span>
@@ -315,13 +315,13 @@ const Dashboard = () => {
                     to={`/course/${currentModule.id}`}
                     className="group block"
                   >
-                    <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors p-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary/10 hover:bg-secondary/20 transition-colors p-3 border border-secondary/30">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground truncate">
                           {currentModule.title}
                         </p>
                       </div>
-                      <Button size="sm" className="gap-2 shrink-0">
+                      <Button size="sm" variant="cta" className="gap-2 shrink-0">
                         Continue
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Button>
@@ -340,9 +340,11 @@ const Dashboard = () => {
         {/* Quick access row: Profile / Documents / Community */}
         <div className="mb-10 grid gap-4 md:grid-cols-3">
           {/* Child profile summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <User className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <User className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">Child Profile</h3>
             </div>
             {profileLoading ? (
@@ -388,9 +390,11 @@ const Dashboard = () => {
           </div>
 
           {/* Documents summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <FileText className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold-100 text-gold-600">
+                <FileText className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">My Documents</h3>
               {documents.length > 0 && (
                 <span className="ml-auto text-xs text-muted-foreground">{documents.length}</span>
@@ -450,9 +454,11 @@ const Dashboard = () => {
           </div>
 
           {/* Community summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                <Users className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">Community</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-3 flex-1">
@@ -492,7 +498,7 @@ const Dashboard = () => {
                     open={openChapters.has(chapter.id)} 
                     onOpenChange={() => toggleChapter(chapter.id)}
                   >
-                    <div className="rounded-xl border border-border overflow-hidden">
+                    <div className={`rounded-xl border overflow-hidden transition-colors ${chapterDone ? 'border-success/30 bg-success/5' : 'border-border bg-card'}`}>
                       <CollapsibleTrigger asChild>
                         <button className="flex items-center gap-3 w-full p-4 hover:bg-muted/30 transition-colors text-left">
                           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
