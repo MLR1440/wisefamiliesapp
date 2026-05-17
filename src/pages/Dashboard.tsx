@@ -174,7 +174,7 @@ const Dashboard = () => {
           status === 'locked' 
             ? 'cursor-not-allowed opacity-50' 
             : status === 'current' 
-              ? 'bg-primary/5 hover:bg-primary/10' 
+              ? 'bg-primary/10 hover:bg-primary/15 border-l-2 border-primary' 
               : 'hover:bg-muted/50'
         }`} 
         onClick={e => status === 'locked' && e.preventDefault()}
