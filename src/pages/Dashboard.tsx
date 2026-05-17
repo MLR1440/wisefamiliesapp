@@ -498,7 +498,7 @@ const Dashboard = () => {
                     open={openChapters.has(chapter.id)} 
                     onOpenChange={() => toggleChapter(chapter.id)}
                   >
-                    <div className="rounded-xl border border-border overflow-hidden">
+                    <div className={`rounded-xl border overflow-hidden transition-colors ${chapterDone ? 'border-success/30 bg-success/5' : 'border-border bg-card'}`}>
                       <CollapsibleTrigger asChild>
                         <button className="flex items-center gap-3 w-full p-4 hover:bg-muted/30 transition-colors text-left">
                           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
