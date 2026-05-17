@@ -295,7 +295,7 @@ const Dashboard = () => {
                   <span className="text-muted-foreground">done</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  <Clock className="h-3.5 w-3.5 text-gold-400" />
                   <span className="font-medium text-foreground">{inProgressModules}</span>
                   <span className="text-muted-foreground">in progress</span>
                 </span>
@@ -315,13 +315,13 @@ const Dashboard = () => {
                     to={`/course/${currentModule.id}`}
                     className="group block"
                   >
-                    <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors p-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary/10 hover:bg-secondary/20 transition-colors p-3 border border-secondary/30">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground truncate">
                           {currentModule.title}
                         </p>
                       </div>
-                      <Button size="sm" className="gap-2 shrink-0">
+                      <Button size="sm" variant="cta" className="gap-2 shrink-0">
                         Continue
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Button>
