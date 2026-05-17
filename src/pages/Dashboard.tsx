@@ -340,9 +340,11 @@ const Dashboard = () => {
         {/* Quick access row: Profile / Documents / Community */}
         <div className="mb-10 grid gap-4 md:grid-cols-3">
           {/* Child profile summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <User className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                <User className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">Child Profile</h3>
             </div>
             {profileLoading ? (
@@ -388,9 +390,11 @@ const Dashboard = () => {
           </div>
 
           {/* Documents summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <FileText className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold-100 text-gold-600">
+                <FileText className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">My Documents</h3>
               {documents.length > 0 && (
                 <span className="ml-auto text-xs text-muted-foreground">{documents.length}</span>
@@ -450,9 +454,11 @@ const Dashboard = () => {
           </div>
 
           {/* Community summary */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-primary" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 text-green-700">
+                <Users className="h-3.5 w-3.5" />
+              </div>
               <h3 className="text-sm font-semibold text-foreground">Community</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-3 flex-1">
