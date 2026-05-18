@@ -262,9 +262,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navbar isLoggedIn hasPurchased={hasAccess} userName={userName} isAdmin={isAdmin} />
       
-      <main className="container max-w-4xl py-8 md:py-12">
+      <main className="container max-w-4xl py-6 sm:py-8 md:py-12">
         {/* Simple welcome */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <h1 className="mb-1 font-heading text-2xl font-semibold text-foreground">
             Welcome back, {userName}
           </h1>
@@ -274,8 +274,8 @@ const Dashboard = () => {
         </div>
 
         {/* Progress hero with ring + Continue */}
-        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-6 shadow-card">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6 shadow-card">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
             <CircularProgress value={progressPercentage} size={104} strokeWidth={9} gradient className="shadow-glow rounded-full">
               <div className="text-center">
                 <p className="font-heading text-2xl font-semibold text-foreground leading-none">
@@ -288,7 +288,7 @@ const Dashboard = () => {
             </CircularProgress>
 
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3 text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3 text-sm">
                 <span className="inline-flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                   <span className="font-medium text-foreground">{completedModules}</span>
@@ -338,9 +338,9 @@ const Dashboard = () => {
         </div>
 
         {/* Quick access row: Profile / Documents / Community */}
-        <div className="mb-10 grid gap-4 md:grid-cols-3">
+        <div className="mb-8 sm:mb-10 grid gap-3 sm:gap-4 md:grid-cols-3">
           {/* Child profile summary */}
-          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 sm:p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
                 <User className="h-3.5 w-3.5" />
@@ -390,7 +390,7 @@ const Dashboard = () => {
           </div>
 
           {/* Documents summary */}
-          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-gold-200 bg-gold-50 p-4 sm:p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold-100 text-gold-600">
                 <FileText className="h-3.5 w-3.5" />
@@ -454,7 +454,7 @@ const Dashboard = () => {
           </div>
 
           {/* Community summary */}
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl border border-green-200 bg-green-50 p-4 sm:p-5 shadow-sm flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 text-green-700">
                 <Users className="h-3.5 w-3.5" />
@@ -475,7 +475,7 @@ const Dashboard = () => {
 
         {/* Course content */}
         <div>
-          <h2 className="mb-4 text-lg font-medium text-foreground">
+          <h2 className="mb-3 sm:mb-4 text-lg font-medium text-foreground">
             Course Content
           </h2>
           
@@ -484,7 +484,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground">No content available yet.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {chapters.map(chapter => {
                 const chapterModules = getModulesForChapter(chapter.id);
                 if (chapterModules.length === 0) return null;
@@ -500,7 +500,7 @@ const Dashboard = () => {
                   >
                     <div className={`rounded-xl border overflow-hidden transition-colors ${chapterDone ? 'border-success/30 bg-success/5' : 'border-border bg-card'}`}>
                       <CollapsibleTrigger asChild>
-                        <button className="flex items-center gap-3 w-full p-4 hover:bg-muted/30 transition-colors text-left">
+                        <button className="flex items-center gap-3 w-full p-3 sm:p-4 hover:bg-muted/30 transition-colors text-left">
                           <ChevronDown className={`h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform ${openChapters.has(chapter.id) ? '' : '-rotate-90'}`} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -526,7 +526,7 @@ const Dashboard = () => {
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="px-4 pb-4 space-y-1">
+                        <div className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-1">
                           {chapterModules.map(module => renderModuleItem(module))}
                         </div>
                       </CollapsibleContent>

@@ -1,36 +1,39 @@
-## Dashboard Color & Visual Polish Plan
+## Responsive Dashboard Spacing Tweaks
 
-### Problem
-The dashboard is functional but visually flat — heavy on cream, white cards, and muted greens. The brand's richer palette (gold, blue accent, coral, orange-warm) is underused, making the page feel monochrome and less engaging.
+### Goal
+Keep the dashboard visually identical to the current desktop layout when viewed on small screens (< 640px). Today, paddings, gaps, and the progress hero feel oversized on mobile because they use fixed (non-responsive) values.
 
-### Proposed Changes
+### Changes (single file: `src/pages/Dashboard.tsx`)
 
-1. **Progress Hero Card — Gradient Ring & Gold Highlight**
-   - Replace the solid green progress ring with a `bg-gradient-cta` (gold gradient) stroke for the completed portion.
-   - Add a subtle warm glow behind the ring using the existing `--shadow-glow` token.
-   - Make the "Continue" button use the `variant="cta"` (gold fill) instead of default primary to make the main action pop.
+1. **Main container** — tighten top/bottom padding on mobile.
+   - `py-8 md:py-12` → `py-6 sm:py-8 md:py-12`.
 
-2. **Quick-Access Cards — Distinct Color Coding**
-   - **Child Profile card**: use a soft blue-tinted background (`bg-accent/5`) with a blue icon container (`bg-accent/10`).
-   - **My Documents card**: use a soft gold-tinted background (`bg-gold-50`) with a gold icon container (`bg-gold-100`).
-   - **Community card**: use a soft green-tinted background (`bg-green-50`) with a green icon container (`bg-green-100`).
-   - This creates instant visual scannability — each card has its own personality while staying on-brand.
+2. **Welcome block** — reduce bottom margin on mobile.
+   - `mb-8` → `mb-6 sm:mb-8`.
 
-3. **Chapter Headers — Completion State Color**
-   - When a chapter is fully complete, tint the entire header with a very subtle success green (`bg-success/5`) and keep the progress bar solid success green.
-   - For incomplete chapters, keep the current neutral style — the contrast makes completed chapters feel rewarding.
+3. **Progress hero card** (`mb-6 ... p-6`)
+   - Padding: `p-6` → `p-4 sm:p-6`.
+   - Inner stack: `flex-col gap-6` → `flex-col gap-4 sm:gap-6`.
+   - Center the ring on mobile: add `items-center` to mobile column (`flex-col items-center sm:items-start`).
+   - Stats row: `gap-x-5 gap-y-2 mb-3` → `gap-x-4 gap-y-1.5 mb-3` and ensure it wraps cleanly (already does).
+   - Continue row: `p-3` is fine; ensure Button stays `shrink-0` (already).
 
-4. **Current Module Item — More Prominence**
-   - The "Current" pill and module row already have `bg-primary/5`; bump this to `bg-primary/10` and add a subtle left border (`border-l-2 border-primary`) so the active module is instantly findable when a chapter is expanded.
+4. **Quick-access grid** — reduce gap and card padding on mobile, and bottom margin.
+   - Grid: `mb-10 grid gap-4 md:grid-cols-3` → `mb-8 sm:mb-10 grid gap-3 sm:gap-4 md:grid-cols-3`.
+   - Each of the three cards: `p-5` → `p-4 sm:p-5`.
 
-5. **Stats Row Icons — Colorful Micro-accents**
-   - The "done / in progress / remaining" row uses muted icons. Color them distinctly:
-     - `CheckCircle2` → `text-success`
-     - `Clock` → `text-gold-400`
-     - `Lock` → keep muted (it's a passive stat)
+5. **Course content section**
+   - Heading: `mb-4` → `mb-3 sm:mb-4`.
+   - Chapter list: `space-y-3` → `space-y-2.5 sm:space-y-3`.
+   - Chapter header button: `p-4` → `p-3 sm:p-4`.
+   - Chapter expanded content: `px-4 pb-4` → `px-3 pb-3 sm:px-4 sm:pb-4`.
+   - Module row: `p-3` → `p-2.5 sm:p-3`, icon size stays 8×8.
 
-### Technical Details
-- All colors come from existing CSS variables and Tailwind config (`--accent`, `--success`, `gold-*`, `green-*`).
-- No new dependencies.
-- Single file change: `src/pages/Dashboard.tsx`.
-- Estimated effort: small — mostly className updates.
+6. **Welcome heading** size — already `text-2xl`; leave as-is (matches screenshot).
+
+### Out of Scope
+- No color, copy, layout-structure, or business-logic changes.
+- No new components or dependencies.
+
+### Verification
+- After edit, view preview at 375px and 986px viewports and confirm parity with the approved screenshot layout.
