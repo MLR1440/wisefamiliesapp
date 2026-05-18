@@ -170,7 +170,7 @@ const Dashboard = () => {
       <Link 
         key={module.id} 
         to={status !== 'locked' ? `/course/${module.id}` : '#'} 
-        className={`group flex items-center gap-3 rounded-lg p-3 transition-colors ${
+        className={`group flex items-center gap-3 rounded-lg p-2.5 sm:p-3 transition-colors ${
           status === 'locked' 
             ? 'cursor-not-allowed opacity-50' 
             : status === 'current' 
