@@ -157,19 +157,27 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Extract user ID from JWT for rate limiting
+  // Cryptographically verify JWT via Supabase auth (do NOT trust unsigned payload)
   const authHeader = req.headers.get('authorization');
-  let userId = 'anonymous';
-  
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      userId = payload.sub || 'anonymous';
-    } catch {
-      console.warn('Failed to extract user ID from token');
-    }
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
+  const token = authHeader.replace('Bearer ', '');
+  const authClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+  );
+  const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userId = userData.user.id;
 
   // Check rate limit
   const rateLimitResult = checkRateLimit(userId);

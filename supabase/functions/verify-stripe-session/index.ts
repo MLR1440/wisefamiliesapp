@@ -45,6 +45,46 @@ serve(async (req) => {
       mode: session.mode 
     });
 
+    // Freshness check: only allow verification of recently-created sessions to limit
+    // the window in which a leaked session_id could be replayed to fetch a claim token.
+    const sessionCreatedMs = (session.created ?? 0) * 1000;
+    const SESSION_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
+    if (!sessionCreatedMs || Date.now() - sessionCreatedMs > SESSION_MAX_AGE_MS) {
+      logStep("Session too old to verify", { sessionCreatedMs });
+      return new Response(JSON.stringify({
+        valid: false,
+        error: "This checkout session has expired. Please contact support.",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 410,
+      });
+    }
+
+    // If the caller is authenticated, require their email to match the Stripe customer.
+    // (Payment-first flow allows anonymous callers; in that case the claim token must
+    // still be redeemed via the authenticated claim-purchase function.)
+    const sessionEmail = (session.customer_email || session.customer_details?.email || "").toLowerCase();
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const authClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      );
+      const { data: userData } = await authClient.auth.getUser(token);
+      const userEmail = userData?.user?.email?.toLowerCase();
+      if (userEmail && sessionEmail && userEmail !== sessionEmail) {
+        logStep("Email mismatch between caller and Stripe session");
+        return new Response(JSON.stringify({
+          valid: false,
+          error: "This purchase belongs to a different account.",
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
+    }
+
     // Verify payment was successful
     if (session.payment_status !== "paid") {
       return new Response(JSON.stringify({ 
