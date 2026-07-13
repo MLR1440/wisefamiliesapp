@@ -1,36 +1,42 @@
-## Dashboard Color & Visual Polish Plan
+# Fix Installment Plan — Cap at 3 Payments
 
-### Problem
-The dashboard is functional but visually flat — heavy on cream, white cards, and muted greens. The brand's richer palette (gold, blue accent, coral, orange-warm) is underused, making the page feel monochrome and less engaging.
+Stripe Prices are **immutable** once created — that's why the billing period field is greyed out. You can't edit an existing price; you have to create a new one with the 3-payment cap, then swap the Payment Link to use it.
 
-### Proposed Changes
+## What we'll do
 
-1. **Progress Hero Card — Gradient Ring & Gold Highlight**
-   - Replace the solid green progress ring with a `bg-gradient-cta` (gold gradient) stroke for the completed portion.
-   - Add a subtle warm glow behind the ring using the existing `--shadow-glow` token.
-   - Make the "Continue" button use the `variant="cta"` (gold fill) instead of default primary to make the main action pop.
+### 1. Create a new capped installment Price in Stripe
+- Duplicate the existing "Core – Installments" price.
+- On the new price, set **"Cancel subscription after a specific number of payments" = 3** (API field: `iterations: 3` on the schedule).
+- Same amount, same currency, same interval as today.
+- I can do this for you via the Stripe tools — just confirm the amount and interval (e.g. $46.33 AUD / month × 3).
 
-2. **Quick-Access Cards — Distinct Color Coding**
-   - **Child Profile card**: use a soft blue-tinted background (`bg-accent/5`) with a blue icon container (`bg-accent/10`).
-   - **My Documents card**: use a soft gold-tinted background (`bg-gold-50`) with a gold icon container (`bg-gold-100`).
-   - **Community card**: use a soft green-tinted background (`bg-green-50`) with a green icon container (`bg-green-100`).
-   - This creates instant visual scannability — each card has its own personality while staying on-brand.
+### 2. Create a new Payment Link using the new price
+- Payment Links snapshot the price at creation time, so the existing link will keep using the old uncapped price forever. A new link is required.
+- Same success URL as the current installments link (points to `/payment-success` on your app).
 
-3. **Chapter Headers — Completion State Color**
-   - When a chapter is fully complete, tint the entire header with a very subtle success green (`bg-success/5`) and keep the progress bar solid success green.
-   - For incomplete chapters, keep the current neutral style — the contrast makes completed chapters feel rewarding.
+### 3. Update the app to use the new Payment Link
+- The link is stored in `course_settings` under key `payment_link_core_installments` and served by the `get-payment-links` edge function.
+- Update that single row to the new URL. No frontend code changes needed — `usePaymentLinks` will pick it up automatically.
+- Archive the old price and old Payment Link in Stripe so nobody can hit them again.
 
-4. **Current Module Item — More Prominence**
-   - The "Current" pill and module row already have `bg-primary/5`; bump this to `bg-primary/10` and add a subtle left border (`border-l-2 border-primary`) so the active module is instantly findable when a chapter is expanded.
+### 4. Fix customers who were already over-charged
+For each affected customer we need to:
+- **Cancel** the active subscription (`sub_...`) so no further charges occur.
+- **Refund** any charges beyond payment #3.
 
-5. **Stats Row Icons — Colorful Micro-accents**
-   - The "done / in progress / remaining" row uses muted icons. Color them distinctly:
-     - `CheckCircle2` → `text-success`
-     - `Clock` → `text-gold-400`
-     - `Lock` → keep muted (it's a passive stat)
+I'll need from you either:
+- The customer emails / `sub_...` / `pi_...` IDs, **or**
+- Permission to search Stripe for all active subscriptions on the current installments price and list them back to you for approval before refunding/cancelling.
 
-### Technical Details
-- All colors come from existing CSS variables and Tailwind config (`--accent`, `--success`, `gold-*`, `green-*`).
-- No new dependencies.
-- Single file change: `src/pages/Dashboard.tsx`.
-- Estimated effort: small — mostly className updates.
+Refunds and cancellations require your explicit approval per action.
+
+## Technical details
+
+- **Files touched:** none in the codebase. Only Stripe (new price, new payment link, archive old ones) + one row in `course_settings.payment_link_core_installments`.
+- **Why no webhook route:** Setting `iterations: 3` on the price's schedule makes Stripe auto-cancel the subscription after the 3rd successful invoice. No app-side webhook needed, and this behaves correctly for all future customers.
+- **Existing customers are not retroactively capped** — the `iterations` value is copied onto the subscription at creation time. That's why step 4 is manual cleanup.
+
+## What I need from you to proceed
+
+1. Confirm the installment amount + interval (so I create the new price correctly).
+2. Say whether I should search Stripe for currently-active installment subscribers, or you'll supply the list.
