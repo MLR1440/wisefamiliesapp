@@ -26,6 +26,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,9 @@ const App = () => (
             
             {/* Payment success - Public (validates session_id before allowing signup) */}
             <Route path="/payment-success" element={<PaymentSuccess />} />
+
+            {/* OAuth consent page for MCP / external clients */}
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             
             {/* Student pages - Protected */}
             <Route path="/onboarding" element={
