@@ -32,6 +32,16 @@ const Login = () => {
   useEffect(() => {
     const checkAndRedirect = async () => {
       if (user && !authLoading && !checkingPayment) {
+        // Honour ?next= (used by OAuth consent flow); must be a same-origin relative path.
+        const params = new URLSearchParams(location.search);
+        const nextRaw = params.get('next');
+        const next = nextRaw && nextRaw.startsWith('/') && !nextRaw.startsWith('//')
+          ? nextRaw
+          : null;
+        if (next) {
+          window.location.replace(next);
+          return;
+        }
         const from = (location.state as { from?: { pathname: string } })?.from?.pathname;
         
         // Admins always go to admin dashboard
@@ -101,7 +111,13 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    const { error } = await signInWithGoogle();
+    const params = new URLSearchParams(location.search);
+    const nextRaw = params.get('next');
+    const next = nextRaw && nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : null;
+    const redirectTo = next
+      ? `${window.location.origin}${next}`
+      : `${window.location.origin}/onboarding`;
+    const { error } = await signInWithGoogle(redirectTo);
     if (error) {
       toast.error(error.message || 'Failed to sign in with Google');
     }
