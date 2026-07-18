@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://vfswqkrxwrjzimpzvhen.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "wisefamilies-mcp",
+      "version": "0.1.0",
+      "title": "WiseFamilies"
+    },
+    "tools": [
+      {
+        "name": "list_chapters",
+        "title": "List course chapters",
+        "description": "List the WiseFamilies course chapters (published) with their id, title, description, and order.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_modules",
+        "title": "List course modules",
+        "description": "List published course modules, optionally filtered to a single chapter. Returns id, title, description, chapter_id, and order.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "chapter_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional chapter id to filter by."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_my_progress",
+        "title": "Get my course progress",
+        "description": "Return the signed-in parent's progress across all course modules: which they've started, which they've completed, and totals.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_documents",
+        "title": "List my documents",
+        "description": "List generated documents belonging to the signed-in parent (Family Agreements, 30-Day Plans, etc.).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_document",
+        "title": "Get a document",
+        "description": "Fetch the full contents (JSON body) of one of the signed-in parent's generated documents by id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The document id from list_my_documents."
+            }
+          },
+          "required": [
+            "document_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_memories",
+        "title": "List remembered family facts",
+        "description": "List the key facts WiseFamilies has remembered about the signed-in parent's family (child age, interests, challenges, etc.).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
