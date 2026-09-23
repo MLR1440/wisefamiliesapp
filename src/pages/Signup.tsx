@@ -70,11 +70,20 @@ const Signup = () => {
     if (claimToken) {
       claimingRef.current = true;
       (async () => {
+        let mismatch = false;
         try {
           const { data, error } = await supabase.functions.invoke('claim-purchase', {
             body: { token: claimToken },
           });
+          let body: any = data;
           if (error) {
+            try { body = await (error as any).context?.json?.(); } catch { /* ignore */ }
+          }
+          if (body?.code === 'email_mismatch') {
+            mismatch = true;
+            toast.error(body.error, { duration: 10000 });
+            await supabase.auth.signOut();
+          } else if (error) {
             console.error('Claim purchase error:', error);
             toast.error('Could not link your purchase. Please contact support.');
           } else if (data?.success) {
@@ -85,10 +94,12 @@ const Signup = () => {
         } catch (err) {
           console.error('Claim purchase exception:', err);
         } finally {
-          localStorage.removeItem('purchase_claim_token');
-          localStorage.removeItem('purchase_stripe_email');
           claimingRef.current = false;
-          navigate('/onboarding');
+          if (!mismatch) {
+            localStorage.removeItem('purchase_claim_token');
+            localStorage.removeItem('purchase_stripe_email');
+            navigate('/onboarding');
+          }
         }
       })();
     } else {
