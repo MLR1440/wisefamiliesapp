@@ -40,7 +40,7 @@ serve(async (req) => {
 
     // Get the claim token from request body
     const { token } = await req.json();
-    if (!token) {
+    if (!token || typeof token !== "string" || !/^[0-9a-f-]{36}$/i.test(token)) {
       return new Response(JSON.stringify({ success: false, error: "Missing claim token" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -96,11 +96,45 @@ serve(async (req) => {
       });
     }
 
+    // Only the purchaser (matching checkout email) may claim
+    const buyerEmail = (pending.stripe_customer_email || "").trim().toLowerCase();
+    const userEmail = (user.email || "").trim().toLowerCase();
+    if (!buyerEmail || !userEmail || buyerEmail !== userEmail) {
+      logStep("Email mismatch on claim", { userId: user.id });
+      return new Response(JSON.stringify({
+        success: false,
+        code: "email_mismatch",
+        error: "This purchase was made with a different email. Please sign up with the email you used at checkout, or contact support.",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
     logStep("Valid pending purchase found", { 
       sessionId: pending.stripe_session_id, 
       productId: pending.product_id,
       priceId: pending.price_id
     });
+
+    // Atomically mark as claimed (prevents double-claim races)
+    const { data: claimedRows, error: updateError } = await supabaseClient
+      .from('pending_purchases')
+      .update({
+        claimed_by: user.id,
+        claimed_at: new Date().toISOString(),
+      })
+      .eq('claim_token', token)
+      .is('claimed_by', null)
+      .select('id');
+
+    if (updateError) throw new Error(`Failed to claim purchase: ${updateError.message}`);
+    if (!claimedRows || claimedRows.length === 0) {
+      return new Response(JSON.stringify({ success: false, error: "This purchase has already been claimed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
 
     // Create user_purchases record
     const { error: purchaseError } = await supabaseClient
@@ -113,30 +147,16 @@ serve(async (req) => {
       });
 
     if (purchaseError) {
-      // Check if it's a duplicate key error (already claimed via check-payment)
       if (purchaseError.code === '23505') {
         logStep("Purchase already exists in user_purchases");
       } else {
-        logStep("Error creating user_purchases", { error: purchaseError.message });
+        // Roll back claim so the buyer can retry
+        await supabaseClient.from('pending_purchases')
+          .update({ claimed_by: null, claimed_at: null }).eq('claim_token', token);
         throw new Error(`Failed to create purchase record: ${purchaseError.message}`);
       }
     } else {
       logStep("User purchase created");
-    }
-
-    // Mark pending purchase as claimed
-    const { error: updateError } = await supabaseClient
-      .from('pending_purchases')
-      .update({
-        claimed_by: user.id,
-        claimed_at: new Date().toISOString(),
-      })
-      .eq('claim_token', token);
-
-    if (updateError) {
-      logStep("Warning: Could not update pending purchase", { error: updateError.message });
-    } else {
-      logStep("Pending purchase marked as claimed");
     }
 
     // ========================================
