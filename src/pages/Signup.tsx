@@ -288,7 +288,7 @@ const Signup = () => {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                This can be different from the email you used for payment
+                Use the same email you used at checkout so your purchase is linked
               </p>
             </div>
 
