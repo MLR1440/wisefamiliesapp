@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { courseRefundPolicy } from '@/lib/refundPolicy';
 import {
   Accordion,
   AccordionContent,
@@ -37,7 +38,7 @@ const faqs = [
   },
   {
     question: "Do you offer refunds?",
-    answer: "Yes. You have a full 90 days to go through the entire course and implement the strategies. If it doesn't work for your family, email us for a full refund. No questions asked."
+    answer: courseRefundPolicy
   },
   {
     question: "My partner isn't on board with this. Can I still do it alone?",
@@ -54,11 +55,7 @@ const faqs = [
 ];
 
 const FAQ = () => {
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.setAttribute('data-faq-schema', 'true');
-    script.textContent = JSON.stringify({
+  const schema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": faqs.map(faq => ({
@@ -69,15 +66,13 @@ const FAQ = () => {
           "text": faq.answer,
         },
       })),
-    });
-    document.head.appendChild(script);
-    return () => {
-      document.head.removeChild(script);
     };
-  }, []);
 
   return (
     <section className="py-16 md:py-24 bg-background">
+      <Helmet>
+        <script type="application/ld+json" data-faq-schema="true">{JSON.stringify(schema)}</script>
+      </Helmet>
       <div className="container px-4 sm:px-6">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -96,7 +91,7 @@ const FAQ = () => {
                 <AccordionTrigger className="text-left font-heading font-semibold text-foreground hover:text-primary py-5">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                <AccordionContent forceMount data-public-faq-answer className="text-muted-foreground pb-5 leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

@@ -1,4 +1,5 @@
 import { Shield, CheckCircle2 } from 'lucide-react';
+import { courseRefundPolicy } from '@/lib/refundPolicy';
 
 const Guarantee = () => {
   return (
@@ -24,25 +25,21 @@ const Guarantee = () => {
 
             <div className="pt-8 text-center">
               <h3 className="font-heading text-2xl font-bold text-foreground mb-6">
-                90-Day "Try It All" Guarantee
+                90-day course refund
               </h3>
 
               <p className="text-muted-foreground leading-relaxed mb-6">
-                I'm so confident this course will transform how your family navigates AI that I'm giving you a full 90 days to go through every lesson, complete every exercise, and implement the strategies with your child.
-              </p>
-
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                If you don't see a real difference in how your family approaches technology, email us for a full refund. No awkward conversations. No hoops to jump through.
+                {courseRefundPolicy}
               </p>
 
               <ul className="space-y-3 text-left max-w-md mx-auto mb-8">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground">Full 90 days to try everything</span>
+                  <span className="text-foreground">Request within 90 days of purchase</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground">No questions asked refund</span>
+                  <span className="text-foreground">Include a short note about what you tried</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
@@ -51,7 +48,7 @@ const Guarantee = () => {
               </ul>
 
               <p className="text-sm text-muted-foreground italic">
-                I believe in this system because it works. If it doesn't work for you, I don't want your money.
+                You do not need to complete every lesson or exercise to make a request.
               </p>
             </div>
           </div>

@@ -1,0 +1,28 @@
+import { readFile, access, readdir } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+
+const html = await readFile('dist/index.html', 'utf8');
+const head = html.split('</head>')[0];
+const body = html.split('<body>')[1];
+assert.equal((head.match(/<title\b/g) || []).length, 1, 'one title');
+assert.equal((head.match(/rel="canonical"/g) || []).length, 1, 'one canonical');
+assert.match(head, /rel="canonical" href="https:\/\/wisefamilies.app\/"/);
+assert.match(body, /<main>/);
+assert.match(body, /Your 30-Day Action Plan/);
+assert.match(body, /90-day course refund/);
+assert.match(body, /a short note about what you tried/);
+assert.doesNotMatch(body, /No questions asked/i);
+assert.match(body, /data-public-faq-answer/);
+assert.match(body, /aria-label="Open menu"/);
+const schemas = [...head.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
+const faq = schemas.find(s => s['@type'] === 'FAQPage');
+assert.ok(faq);
+const refund = faq.mainEntity.find(q => q.name === 'Do you offer refunds?').acceptedAnswer.text;
+assert.match(refund, /a short note about what you tried/);
+assert.doesNotMatch(JSON.stringify(schemas), /"@type":"Person"/);
+const sitemap = await readFile('dist/sitemap.xml', 'utf8');
+assert.deepEqual([...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]), ['https://wisefamilies.app/']);
+assert.match(await readFile('dist/robots.txt', 'utf8'), /Sitemap: https:\/\/wisefamilies.app\/sitemap.xml/);
+for (const m of html.matchAll(/(?:src|href)="(\/assets\/[^"#?]+)"/g)) await access(`dist${m[1]}`);
+assert.ok(!(await readdir('dist')).some(n => n.endsWith('.mjs')), 'server bundle is not published');
+console.log('Public HTML, canonical, FAQ schema, refund policy, sitemap and asset checks passed.');
