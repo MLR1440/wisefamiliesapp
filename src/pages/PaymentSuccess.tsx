@@ -117,9 +117,25 @@ const PaymentSuccess = () => {
         body: { token: claimToken }
       });
       
+      let body: any = data;
       if (error) {
-        console.error('Error claiming purchase:', error);
-        // Don't block - might already be claimed
+        try { body = await (error as any).context?.json?.(); } catch { /* ignore */ }
+      }
+
+      if (body?.code === 'email_mismatch') {
+        // Keep the claim token so the real buyer can retry with the right email
+        toast.error(body.error, { duration: 10000 });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (error) {
+        const alreadyClaimed = typeof body?.error === 'string' && body.error.includes('already been claimed');
+        if (!alreadyClaimed) {
+          console.error('Error claiming purchase:', error);
+          toast.error('Could not link your purchase. Please try again or contact support.');
+          return; // keep token for retry
+        }
       }
       
       // Clear stored tokens
@@ -364,9 +380,9 @@ const PaymentSuccess = () => {
             {formErrors.email && (
               <p className="text-sm text-destructive">{formErrors.email}</p>
             )}
-            {stripeEmail && stripeEmail !== email && (
-              <p className="text-sm text-muted-foreground">
-                Note: This can be different from your payment email ({stripeEmail})
+            {stripeEmail && stripeEmail.trim().toLowerCase() !== email.trim().toLowerCase() && (
+              <p className="text-sm text-destructive">
+                Please use your checkout email ({stripeEmail}) so your purchase is linked to your account.
               </p>
             )}
           </div>
