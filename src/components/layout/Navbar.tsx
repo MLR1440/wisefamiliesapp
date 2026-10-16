@@ -107,6 +107,8 @@ const Navbar = ({ isLoggedIn = false, isAdmin = false, hasPurchased = false, use
 
         {/* Mobile menu button */}
         <button
+          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileMenuOpen}
           className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted md:hidden"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >

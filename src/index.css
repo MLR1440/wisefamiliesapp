@@ -214,3 +214,7 @@
     opacity: 1;
   }
 }
+/* Keep expandable public answers in initial HTML without showing closed panels. */
+[data-public-faq-answer][data-state="closed"] {
+  display: none;
+}
