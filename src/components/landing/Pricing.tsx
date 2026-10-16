@@ -72,9 +72,9 @@ const Pricing = () => {
           )}
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 max-w-4xl mx-auto">
           {/* Core Offer */}
-          <div className="relative bg-card rounded-2xl p-8 shadow-card border-2 border-secondary">
+          <div className="relative min-w-0 bg-card rounded-2xl p-6 sm:p-8 shadow-card border-2 border-secondary">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="bg-secondary text-secondary-foreground px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5">
                 <Star className="h-4 w-4" />
@@ -120,7 +120,7 @@ const Pricing = () => {
               </div>
             </div>
 
-            <Button variant="cta" size="xl" className="w-full gap-2" onClick={handleCoreClick} disabled={!coreLink}>
+            <Button variant="cta" size="xl" className="w-full h-auto min-h-14 whitespace-normal px-4 py-4 gap-2" onClick={handleCoreClick} disabled={!coreLink}>
               {coreLink ? 'Join as Founding Member' : 'Loading...'}
             </Button>
 
@@ -153,7 +153,7 @@ const Pricing = () => {
           </div>
 
           {/* Premium Offer */}
-          <div className="bg-card rounded-2xl p-8 shadow-card border border-border">
+          <div className="min-w-0 bg-card rounded-2xl p-6 sm:p-8 shadow-card border border-border">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 md:relative md:top-0 md:left-0 md:translate-x-0 mb-4">
               <span className="bg-muted text-muted-foreground px-4 py-1.5 rounded-full text-sm font-medium">
                 Complete Package

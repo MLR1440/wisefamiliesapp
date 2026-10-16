@@ -136,8 +136,8 @@ const Hero = () => {
           animationDelay: '0.2s'
         }}>
             {!isSoldOut && (
-              <a href="#pricing">
-                <Button variant="cta" size="xl" className="gap-3 text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <a href="#pricing" className="w-full sm:w-auto">
+                <Button variant="cta" size="xl" className="w-full sm:w-auto h-auto min-h-14 whitespace-normal gap-3 text-base sm:text-lg px-4 sm:px-10 py-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                   {priceLoading ? 'Join as Founding Member' : `Join as Founding Member — ${formattedPrice}`}
                   <ArrowRight className="h-5 w-5" />
                 </Button>
